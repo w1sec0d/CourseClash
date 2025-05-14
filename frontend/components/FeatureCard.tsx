@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Image from 'next/image';
 
 interface FeatureCardProps {
   imageUrl: string;
@@ -15,7 +16,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
 }) => {
   return (
     <article className='p-8 bg-white rounded-2xl border border-solid border-purple-800 border-opacity-20 shadow-[0_4px_6px_rgba(0,0,0,0.05)]'>
-      <img
+      <Image
         alt={imageAlt}
         src={imageUrl}
         className='object-cover overflow-hidden mb-4 w-16 h-16 aspect-square'

@@ -76,16 +76,22 @@ services:
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://api_gateway:8080
     depends_on:
       - api_gateway
     networks:
       - courseclash-network
-    command: npm run dev -- --host 0.0.0.0
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Base de datos MySQL (para auth_user_service y course_service)
   mysql:
