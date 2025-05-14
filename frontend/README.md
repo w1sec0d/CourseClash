@@ -1,108 +1,109 @@
 # Frontend de CourseClash
 
-Este es el frontend de CourseClash, una plataforma educativa gamificada. Implementado como una Single Page Application (SPA) utilizando React y TypeScript.
+El componente frontend de CourseClash está construido con React y Next.js, proporcionando una interfaz de usuario moderna y responsive para la plataforma gamificada de aulas. Este componente interactúa con varios microservicios a través del API Gateway para ofrecer una experiencia de usuario fluida.
 
-## Tecnologías
+## Descripción General
 
-- **React 19**: Biblioteca para construir interfaces de usuario.
-- **TypeScript**: Superset tipado de JavaScript para mejorar la calidad del código.
-- **Vite**: Herramienta de construcción rápida para desarrollo moderno.
-- **ESLint**: Para mantener la calidad y consistencia del código.
+El frontend de CourseClash sirve como capa de presentación para toda la aplicación, ofreciendo una interfaz intuitiva para que estudiantes y profesores interactúen con las características de la plataforma, incluyendo:
+
+- Autenticación de usuarios y gestión de perfiles
+- Inscripción y gestión de cursos
+- Duelos en tiempo real y competiciones
+- Seguimiento de logros y tablas de clasificación
+- Anuncios y gestión de actividades
+
+## Stack Tecnológico
+
+- **Framework**: Next.js 15.3+ (React 19)
+- **Lenguaje**: TypeScript
+- **Estilos**: TailwindCSS 4
+- **Gestión de Estado**: React Context API
+- **Comunicación API**: Fetch API / Axios
 
 ## Estructura del Proyecto
 
 ```
-/frontend
-├── public/                # Archivos estáticos accesibles públicamente
-├── src/                   # Código fuente de la aplicación
-│   ├── assets/            # Imágenes, fuentes y otros recursos
-│   ├── components/        # Componentes reutilizables
-│   │   ├── common/        # Componentes comunes (botones, inputs, etc.)
-│   │   ├── layout/        # Componentes de estructura (header, footer, etc.)
-│   │   └── specific/      # Componentes específicos de funcionalidad
-│   ├── contexts/          # Contextos de React para estado global
-│   ├── hooks/             # Hooks personalizados
-│   ├── pages/             # Componentes de página
-│   │   ├── auth/          # Páginas de autenticación
-│   │   ├── courses/       # Páginas relacionadas con cursos
-│   │   ├── duels/         # Páginas de duelos
-│   │   └── profile/       # Páginas de perfil de usuario
-│   ├── services/          # Servicios para comunicación con la API
-│   ├── styles/            # Estilos globales y variables
-│   ├── types/             # Definiciones de tipos TypeScript
-│   ├── utils/             # Funciones de utilidad
-│   ├── App.tsx            # Componente principal de la aplicación
-│   ├── App.css            # Estilos para el componente App
-│   ├── main.tsx           # Punto de entrada de la aplicación
-│   └── index.css          # Estilos globales
-├── .gitignore             # Archivos a ignorar por git
-├── index.html             # Archivo HTML principal
-├── package.json           # Dependencias y scripts
-├── tsconfig.json          # Configuración de TypeScript
-├── vite.config.ts         # Configuración de Vite
-└── README.md              # Este archivo
+frontend/
+├── app/                  # Estructura de App Router de Next.js
+│   ├── components/       # Componentes UI reutilizables
+│   ├── context/          # Proveedores de Context de React
+│   ├── hooks/            # Hooks personalizados de React
+│   ├── lib/              # Funciones de utilidad y clientes API
+│   ├── (routes)/         # Grupos de rutas y páginas
+│   ├── globals.css       # Estilos globales
+│   ├── layout.tsx        # Componente de layout raíz
+│   └── page.tsx          # Componente de página principal
+├── public/               # Activos estáticos
+├── next.config.ts        # Configuración de Next.js
+├── package.json          # Dependencias y scripts
+└── tsconfig.json         # Configuración de TypeScript
 ```
 
-## Características Principales
+## Primeros Pasos
 
-### Interfaz de Usuario
+### Prerrequisitos
 
-- Diseño moderno y responsivo
-- Tema claro/oscuro
-- Animaciones y transiciones fluidas
-- Componentes interactivos gamificados
+- Node.js 18.x o superior
+- npm o yarn
 
-### Funcionalidades
+### Instalación
 
-- Autenticación y gestión de perfil
-- Visualización y gestión de cursos
-- Tablero de anuncios y actividades
-- Sistema de duelos en tiempo real
-- Rankings y tablas de posiciones
-- Visualización de logros y rangos
-
-## Paleta de Colores
-
-La aplicación utiliza una paleta de colores energética y motivadora:
-
-- **Color Primario**: Naranja vibrante (#FF7A00) - Evoca energía y entusiasmo
-- **Color Secundario**: Azul Medio (#2A7DE1) - Aporta confianza e inteligencia
-- **Colores de Acento**: Verde Lima (#84CC16) - Para elementos de éxito
-- **Neutros**: Gris Claro (#F3F4F6) y Gris Oscuro (#1F2937) para texto
-
-## Cómo Ejecutar
-
-1. Instalar dependencias:
+1. Clonar el repositorio
+2. Navegar al directorio frontend:
+   ```bash
+   cd CourseClash/frontend
+   ```
+3. Instalar dependencias:
    ```bash
    npm install
+   # o
+   yarn install
    ```
 
-2. Iniciar servidor de desarrollo:
-   ```bash
-   npm run dev
-   ```
+### Desarrollo
 
-3. Construir para producción:
-   ```bash
-   npm run build
-   ```
+Iniciar el servidor de desarrollo:
 
-4. Previsualizar la versión de producción:
-   ```bash
-   npm run preview
-   ```
+```bash
+npm run dev
+# o
+yarn dev
+```
 
-## Comunicación con el Backend
+La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
 
-El frontend se comunica con el backend a través del API Gateway, que actúa como punto de entrada único para todos los servicios. Las peticiones se realizan mediante:
+### Compilación para Producción
 
-- **Fetch API / Axios**: Para peticiones HTTP estándar
-- **WebSockets**: Para comunicación en tiempo real en los duelos
+```bash
+npm run build
+npm run start
+# o
+yarn build
+yarn start
+```
 
-## Consideraciones de Desarrollo
+## Integración con Servicios de CourseClash
 
-- Utilizar componentes funcionales y hooks
-- Mantener la consistencia en la estructura de archivos
-- Seguir las convenciones de nomenclatura (PascalCase para componentes, camelCase para funciones)
-- Documentar componentes y funciones complejas
-- Escribir código limpio y mantenible
+El frontend se comunica con los siguientes microservicios de CourseClash a través del API Gateway:
+
+- **Servicio de Autenticación y Usuarios**: Registro de usuarios, inicio de sesión y gestión de perfiles
+- **Servicio de Cursos**: Creación de cursos, inscripción y gestión de contenido
+- **Servicio de Duelos**: Duelos en tiempo real y características competitivas
+
+## Diseño UI/UX
+
+El frontend implementa un diseño moderno y energético que se alinea con la identidad corporativa de CourseClash:
+
+- **Paleta de Colores**: Combinación de naranja/amarillo con tonos azules
+- **Tipografía**: Familia de fuentes Geist para texto limpio y legible
+- **Diseño Responsive**: Diseño completamente adaptable que funciona en dispositivos de escritorio y móviles
+
+## Contribución
+
+Al contribuir al componente frontend, por favor sigue estas directrices:
+
+1. Usar TypeScript para seguridad de tipos
+2. Seguir la estructura de componentes establecida
+3. Escribir pruebas unitarias para nuevos componentes
+4. Asegurar diseño responsive en todos los tamaños de pantalla
+5. Mantener estándares de accesibilidad
