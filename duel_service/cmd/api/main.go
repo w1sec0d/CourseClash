@@ -47,7 +47,6 @@ func main() {
 // * Lo más importante es que se establece un bucle infinito manteniendo la conexión entre cliente-servidor activa
 // Siempre que no haya errores tanto cliente como servidor pueden enviar mensajes en tiempo real
 
-// TODO Probar que funcione con alguna prueba básica de conexión. 
 func wsHandler(w http.ResponseWriter, r *http.Request, duelID string) {
 	
 	conn, err := upgrader.Upgrade(w, r, nil)
