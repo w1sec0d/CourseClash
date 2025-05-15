@@ -1,6 +1,7 @@
 'use client';
 import * as React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export const LandingPage: React.FC = () => {
   return (
@@ -60,20 +61,20 @@ export const LandingPage: React.FC = () => {
             </div>
             <div className='md:block hidden'>
               <div className='ml-4 items-center md:ml-6 flex space-x-3'>
-                <a
-                  href='/zowx8RNNrpnW15CxET0F#'
+                <Link
+                  href='/register'
                   className='bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium
                 hover:bg-emerald-400 transition-colors duration-300'
                 >
                   Iniciar Sesión
-                </a>
-                <a
-                  href='/zowx8RNNrpnW15CxET0F#'
+                </Link>
+                <Link
+                  href='/register'
                   className='bg-white text-emerald-700 px-4 py-2 rounded-md text-sm font-medium
                 hover:bg-gray-100 border border-emerald-700 transition-colors duration-300'
                 >
                   Registrarse
-                </a>
+                </Link>
               </div>
             </div>
             <div className='md:hidden -mr-2 flex'>
@@ -141,22 +142,22 @@ export const LandingPage: React.FC = () => {
           </div>
           <div className='pt-4 pb-3 border-t border-emerald-600'>
             <div className='items-center px-5 flex space-x-3'>
-              <a
-                href='/zowx8RNNrpnW15CxET0F#'
+              <Link
+                href='/register'
                 className='bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium
               w-full text-center hover:bg-emerald-400'
               >
                 Iniciar Sesión
-              </a>
+              </Link>
             </div>
             <div className='mt-3 px-5'>
-              <a
-                href='/zowx8RNNrpnW15CxET0F#'
+              <Link
+                href='/register'
                 className='bg-white text-emerald-700 px-4 py-2 rounded-md text-sm font-medium
               w-full text-center hover:bg-gray-100 border border-emerald-700 block'
               >
                 Registrarse
-              </a>
+              </Link>
             </div>
           </div>
         </div>
