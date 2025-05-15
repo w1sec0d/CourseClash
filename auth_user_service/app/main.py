@@ -38,51 +38,48 @@
 #     return {"status": "ok", "service": "auth_user_service"}
 
 import uvicorn
-import os
-from fastapi import Depends, FastAPI, Response, status
+from fastapi import Depends, HTTPException, FastAPI,  status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jwt import PyJWKClient
 from dotenv import load_dotenv
 
+from typing import Dict, Any
+from .core.security import verify_token, get_user_info_from_auth0
 
 tokenHeader = HTTPBearer()
 
 
+load_dotenv()
 
 app = FastAPI(title="CourseClash Auth Service", 
               description="API for CourseClash authentication and user management")
 
 
-
-def verify_token(credentials: HTTPAuthorizationCredentials = Depends(tokenHeader)): 
-    try: 
-        AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
-        jwks_url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
-        jwks_client = PyJWKClient(jwks_url)
-
-        token = credentials.credentials
-
-        signing_key = jwks_client.get_signing_key_from_jwt(token).key
-
-        payload = jwt.decode(
-            token,
-            signing_key,
-            algorithms=[os.environ['AUTH0_ALGORITHMS']],
-            audience=os.environ['AUTH0_API_AUDIENCE'],
-            issuer=f"https://{os.environ['AUTH0_DOMAIN']}/"
-
-        )
-        return payload
-    except jwt.PyJWTError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token inválido: {str(e)}",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-
 @app.get("/Segurity")
 def seguridad(payload: dict = Depends(verify_token)):
+    print(payload)
     return {"message": "Bienvenido al servicio de autenticación y usuarios de CourseClash"}
+
+@app.get("/me", response_model= Dict[str, Any])
+def get_current_user_info(credentials: HTTPAuthorizationCredentials = Depends(tokenHeader)) -> Dict[str, Any]:
+    """Endpoint para obtener la información del usuario actual"""
+
+    try:
+        payload = verify_token(credentials)
+        print(payload)
+        token = credentials.credentials
+
+        user_info = get_user_info_from_auth0(token)
+        return user_info
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"No se pudo obtener información del usuario: {str(e)}",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+        
+
+
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host = "0.0.0.0", port = 8000)
