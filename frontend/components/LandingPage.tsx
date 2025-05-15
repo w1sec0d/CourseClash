@@ -197,11 +197,13 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
               <div className='justify-center md:justify-end relative flex'>
-                {/* <Image
+                <Image
                   alt='Estudiantes participando en duelos académicos y ganando medallas'
-                  src='https://placehold.co/600x400/emerald/white?text=Estudiantes+Jugando'
+                  src='https://res.cloudinary.com/drfmpnhaz/image/upload/f_auto,q_auto/ofov2mowntoenydgvuzn'
                   className='rounded-lg shadow-xl'
-                /> */}
+                  width={600}
+                  height={400}
+                />
                 <div
                   className='bg-white rounded-lg shadow-lg items-center absolute -bottom-6 -left-6 p-4 flex space-x-3
                 border-l-4 border-emerald-500'
