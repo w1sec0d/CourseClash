@@ -2,6 +2,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import Button from './Button';
 
 export const LandingPage: React.FC = () => {
   return (
@@ -23,22 +24,12 @@ export const LandingPage: React.FC = () => {
                   className='mt-8 sm:flex-row md:justify-start sm:space-y-0 sm:space-x-4 justify-center flex flex-col
                 space-y-4'
                 >
-                  <a
-                    href='/zowx8RNNrpnW15CxET0F#'
-                    className='items-center justify-center px-8 py-3 text-base font-medium
-                  rounded-md text-white bg-emerald-600 inline-flex border border-transparent hover:bg-emerald-700
-                  transition-colors duration-300'
-                  >
+                  <Button href='/#' variant='primary'>
                     Empezar ahora
-                  </a>
-                  <a
-                    href='/zowx8RNNrpnW15CxET0F#'
-                    className='items-center justify-center px-8 py-3 text-base font-medium
-                  rounded-md text-emerald-600 bg-white inline-flex border border-emerald-600 hover:bg-emerald-50
-                  transition-colors duration-300'
-                  >
+                  </Button>
+                  <Button href='/#' variant='secondary'>
                     Ver demo
-                  </a>
+                  </Button>
                 </div>
               </div>
               <div className='justify-center md:justify-end relative flex'>
@@ -1150,14 +1141,13 @@ export const LandingPage: React.FC = () => {
                     >
                       Solicitar demo
                     </a>
-                    <a
-                      href='/zowx8RNNrpnW15CxET0F#'
-                      className='items-center justify-center px-5 py-3 text-base font-medium
-                    rounded-md text-white inline-flex border border-white hover:bg-emerald-600 transition-colors
-                    duration-300'
+                    <Button 
+                      href='/#' 
+                      variant='secondary' 
+                      className='text-white border-white hover:bg-emerald-600 hover:text-white'
                     >
                       Conocer más
-                    </a>
+                    </Button>
                   </div>
                 </div>
                 <div className='mt-10 lg:mt-0 lg:w-1/2 lg:flex-grow lg:flex lg:items-center lg:justify-end'>

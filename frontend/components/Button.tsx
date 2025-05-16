@@ -23,11 +23,14 @@ export const Button: React.FC<ButtonProps> = ({
   type = 'button',
   disabled = false,
 }) => {
-  const baseClasses = 'items-center justify-center px-8 py-3 text-base font-medium rounded-md inline-flex transition-colors duration-300';
+  const baseClasses =
+    'items-center justify-center px-8 py-3 text-base font-medium rounded-md inline-flex transition-colors duration-300';
 
   const variantClasses = {
-    primary: 'text-white bg-emerald-600 border border-transparent hover:bg-emerald-700',
-    secondary: 'text-emerald-600 bg-white border border-emerald-600 hover:bg-emerald-50',
+    primary:
+      'text-white bg-emerald-600 border border-transparent hover:bg-emerald-700',
+    secondary:
+      'text-emerald-600 bg-white border border-emerald-600 hover:bg-emerald-50',
   };
 
   const classes = `${baseClasses} ${variantClasses[variant]} ${className}`;
