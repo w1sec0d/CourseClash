@@ -3,7 +3,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useState } from 'react';
 
-export const NavigationBar: React.FC = () => {
+export const NavigationBar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {

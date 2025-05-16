@@ -7,14 +7,9 @@ interface PricingButtonProps {
   href: string;
 }
 
-export const PricingButton: React.FC<PricingButtonProps> = ({ text, href }) => {
+export const PricingButton = ({ text, href }: PricingButtonProps) => {
   return (
-    <Button
-      href={href}
-      variant="primary"
-      width="full"
-      className="text-center"
-    >
+    <Button href={href} variant='primary' className='text-center'>
       {text}
     </Button>
   );

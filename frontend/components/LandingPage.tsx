@@ -1,77 +1,75 @@
-'use client';
 import * as React from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import Button from './Button';
 
-export const LandingPage: React.FC = () => {
+export const LandingPage = () => {
   return (
     <div>
       <section className='bg-emerald-50 relative overflow-hidden' id='inicio'>
-        <div className='mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl'>
-          <div className='py-12 md:py-20 lg:py-24'>
-            <div className='md:grid-cols-2 items-center grid grid-cols-1 gap-8'>
-              <div className='text-center md:text-left'>
-                <p className='text-4xl md:text-5xl lg:text-6xl font-bold text-emerald-800 leading-tight'>
-                  ¡Transforma el aprendizaje en una aventura épica!
-                </p>
-                <p className='mt-4 text-xl text-gray-600 max-w-2xl'>
-                  Course Clash gamifica la experiencia académica con duelos,
-                  logros, rangos y personalización. ¡Aprende mientras compites y
-                  te diviertes!
-                </p>
-                <div
-                  className='mt-8 sm:flex-row md:justify-start sm:space-y-0 sm:space-x-4 justify-center flex flex-col
+        {/* Contenido principal de la sección */}
+        <div className='py-12 md:py-20 lg:py-24 mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl md:grid-cols-2 items-center grid grid-cols-1 gap-8'>
+          {/* Texto principal */}
+          <div className='text-center md:text-left'>
+            <p className='text-4xl md:text-5xl lg:text-6xl font-bold text-emerald-800 leading-tight'>
+              ¡Transforma el aprendizaje en una aventura épica!
+            </p>
+            <p className='mt-4 text-xl text-gray-600 max-w-2xl'>
+              Course Clash gamifica la experiencia académica con duelos, logros,
+              rangos y personalización. ¡Aprende mientras compites y te
+              diviertes!
+            </p>
+            <div
+              className='mt-8 sm:flex-row md:justify-start sm:space-y-0 sm:space-x-4 justify-center flex flex-col
                 space-y-4'
-                >
-                  <Button href='/#' variant='primary'>
-                    Empezar ahora
-                  </Button>
-                  <Button href='/#' variant='secondary'>
-                    Ver demo
-                  </Button>
-                </div>
-              </div>
-              <div className='justify-center md:justify-end relative flex'>
-                <Image
-                  alt='Estudiantes participando en duelos académicos y ganando medallas'
-                  src='/images/landing.webp'
-                  className='rounded-lg shadow-xl'
-                  width={600}
-                  height={400}
-                />
-                <div
-                  className='bg-white rounded-lg shadow-lg items-center absolute -bottom-6 -left-6 p-4 flex space-x-3
+            >
+              <Button href='/#' variant='primary'>
+                Empezar ahora
+              </Button>
+              <Button href='/#' variant='secondary'>
+                Ver demo
+              </Button>
+            </div>
+          </div>
+          {/* Imagen principal */}
+          <div className='justify-center md:justify-end relative flex'>
+            <Image
+              alt='Estudiantes participando en duelos académicos y ganando medallas'
+              src='/images/landing.webp'
+              className='rounded-lg shadow-xl'
+              width={600}
+              height={400}
+            />
+            <div
+              className='bg-white rounded-lg shadow-lg items-center absolute -bottom-6 -left-6 p-4 flex space-x-3
                 border-l-4 border-emerald-500'
+            >
+              <div className='bg-emerald-100 rounded-full p-2'>
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  className='h-6 w-6 text-emerald-600'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                  stroke='currentColor'
+                  id='Windframe_CTWzbYJJK'
                 >
-                  <div className='bg-emerald-100 rounded-full p-2'>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      className='h-6 w-6 text-emerald-600'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                      id='Windframe_CTWzbYJJK'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth='2'
-                        d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-                      ></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className='text-sm font-semibold text-gray-800'>
-                      +10,000 estudiantes
-                    </p>
-                    <p className='text-xs text-gray-500'>aprenden jugando</p>
-                  </div>
-                </div>
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+                  ></path>
+                </svg>
+              </div>
+              <div>
+                <p className='text-sm font-semibold text-gray-800'>
+                  +10,000 estudiantes
+                </p>
+                <p className='text-xs text-gray-500'>aprenden jugando</p>
               </div>
             </div>
           </div>
         </div>
+        {/* Patron visual de decoración en el fonto */}
         <div className='lg:block absolute top-0 right-0 -mt-20 -mr-20 hidden'>
           <svg
             width='404'
@@ -102,6 +100,7 @@ export const LandingPage: React.FC = () => {
             <rect width='404' height='404' fill='url(#pattern-1)'></rect>
           </svg>
         </div>
+        {/* Patron visual de decoración en el fonto */}
         <div className='lg:block absolute bottom-0 left-0 -mb-20 -ml-20 hidden'>
           <svg
             width='404'

@@ -14,7 +14,7 @@ interface ButtonProps {
   disabled?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({
+export const Button = ({
   children,
   variant = 'primary',
   href,
@@ -22,7 +22,7 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   type = 'button',
   disabled = false,
-}) => {
+}: ButtonProps) => {
   const baseClasses =
     'items-center justify-center px-8 py-3 text-base font-medium rounded-md inline-flex transition-colors duration-300';
 
