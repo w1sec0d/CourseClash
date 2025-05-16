@@ -13,7 +13,7 @@ router = APIRouter(prefix='/users', tags=['users'])
 def get_users(db: Session = Depends(get_db)):
     result = db.execute(text("SELECT * FROM users"))
     users = [User(id=row[0], username=row[1], email=row[2], full_name=row[4], 
-                is_active=row[5], is_superuser=row[6]) for row in result]
+                is_active=row[5], is_superuser=row[6], created_at=str(row[7])) for row in result]
     return users
 
 

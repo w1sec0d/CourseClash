@@ -2,8 +2,11 @@ from jose import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
-import os 
 from dotenv import load_dotenv
+
+import os 
+import bcrypt
+
 
 load_dotenv()
 
@@ -25,3 +28,8 @@ def decode_token(token: Annotated[str, Depends(oauth2_scheme)]) -> dict:
             success = False,
             message = "Invalid Token"
         )
+    
+def hash_password(password: str) -> str: 
+    salt = bcrypt.gensalt()
+    hash_password = bcrypt.hashpw(password.encode(), salt)
+    return hash_password.decode()
