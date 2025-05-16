@@ -15,6 +15,9 @@ from ..db import get_db
 
 from ..core import security
 
+#servicio de verificación de correo
+from ..services.auth_service import verify_email
+
 router = APIRouter(prefix='/auth', tags=['auth'])
 
 
@@ -23,7 +26,9 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     try:
         db: Session = next(get_db())
         query = text(""" SELECT * FROM users WHERE email = :email""")
-        result = db.execute(query, {'email': form_data.username}).fetchone()
+        user = db.execute(query, {'email': form_data.username})
+        result = user.fetchone()
+
         if not result: 
             raise HTTPException(
                 status_code= status.HTTP_401_UNAUTHORIZED,
@@ -57,6 +62,14 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
     try:
+
+        # Verificar si el correo ya está registrado
+        if verify_email(user.email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+        
         password_hash = security.hash_password(user.password)
 
         query = text("""
