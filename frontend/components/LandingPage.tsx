@@ -22,12 +22,12 @@ export const LandingPage = () => {
               className='mt-8 sm:flex-row md:justify-start sm:space-y-0 sm:space-x-4 justify-center flex flex-col
                 space-y-4'
             >
-              <Button href='/#' variant='primary'>
+              <Button href='/login' variant='primary'>
                 Empezar ahora
               </Button>
-              <Button href='/#' variant='secondary'>
+              {/* <Button href='/#' variant='secondary'>
                 Ver demo
-              </Button>
+              </Button> */}
             </div>
           </div>
           {/* Imagen principal */}
@@ -69,7 +69,7 @@ export const LandingPage = () => {
             </div>
           </div>
         </div>
-        {/* Patron visual de decoración en el fonto */}
+        {/* Patron visual de decoración en el fondo 1 */}
         <div className='lg:block absolute top-0 right-0 -mt-20 -mr-20 hidden'>
           <svg
             width='404'
@@ -100,7 +100,7 @@ export const LandingPage = () => {
             <rect width='404' height='404' fill='url(#pattern-1)'></rect>
           </svg>
         </div>
-        {/* Patron visual de decoración en el fonto */}
+        {/* Patron visual de decoración en el fondo 2 */}
         <div className='lg:block absolute bottom-0 left-0 -mb-20 -ml-20 hidden'>
           <svg
             width='404'
