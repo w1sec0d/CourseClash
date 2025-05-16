@@ -35,7 +35,7 @@ export const LandingPage: React.FC = () => {
               <div className='justify-center md:justify-end relative flex'>
                 <Image
                   alt='Estudiantes participando en duelos académicos y ganando medallas'
-                  src='https://res.cloudinary.com/drfmpnhaz/image/upload/f_auto,q_auto/ofov2mowntoenydgvuzn'
+                  src='/images/landing.webp'
                   className='rounded-lg shadow-xl'
                   width={600}
                   height={400}
@@ -1141,9 +1141,9 @@ export const LandingPage: React.FC = () => {
                     >
                       Solicitar demo
                     </a>
-                    <Button 
-                      href='/#' 
-                      variant='secondary' 
+                    <Button
+                      href='/#'
+                      variant='secondary'
                       className='text-white border-white hover:bg-emerald-600 hover:text-white'
                     >
                       Conocer más
