@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Servicio de Autenticación y Usuarios
   auth_user_service:
@@ -44,10 +42,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8002:8002"
-    environment:
-      - MONGODB_URI=mongodb://mongo:27017/duel_db
-    depends_on:
-      - mongo
+    env_file:
+      - duel_service.env
     networks:
       - courseclash-network
 
@@ -108,13 +104,12 @@ services:
       - courseclash-network
     command: --default-authentication-plugin=mysql_native_password
 
-  # Base de datos MongoDB (para duel_service)
   mongo:
-    image: mongo:6.0
+    image: mongo:latest
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - ./mongo:/data/db
     networks:
       - courseclash-network
 
