@@ -17,39 +17,43 @@ from ..core import security
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
-#Base de datos prueba
-fake_users_db = {
-    "user1@example.com": {
-        "id": 1,
-        "name": "John Doe",
-        "email": "user1@example.com",
-        "password": "password123",
-        "roles": ["user"],
-    },
-    "admin@example.com": {
-        "id": 2,
-        "name": "Admin User",
-        "email": "admin@example.com",
-        "password": "adminpass",
-        "roles": ["admin"],
-    },
-}
 
 @router.post('/token')
 def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user = fake_users_db.get(form_data.username)
+    try:
+        db: Session = next(get_db())
+        query = text(""" SELECT * FROM users WHERE email = :email""")
+        result = db.execute(query, {'email': form_data.username}).fetchone()
+        if not result: 
+            raise HTTPException(
+                status_code= status.HTTP_401_UNAUTHORIZED,
+                detail='Invalid credentials'
+            )
+        
+        # Verificar contraseña
+        if security.verify_password(form_data.password, result[3]) == False:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Invalid credentials'
+            )
+        
+        # Generar token
+        
+        payload = {
+            'id': result[0],
+            'email': result[1]
+        }
 
+        token = encode_token(payload)
 
-    if not user or user.get("password") != form_data.password:
+        return  {'access_token': token}
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            detail=f'Error logging in {e}'
         )
-    
-    token = encode_token({'email': user['email'], 'id': user['id']})
-    return  {'access_token': token}
 
+# Ruta para registrar un nuevo usuario
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
     try:
