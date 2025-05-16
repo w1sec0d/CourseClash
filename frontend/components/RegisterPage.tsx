@@ -5,29 +5,6 @@ import Link from 'next/link';
 export const RegisterPage: React.FC = () => {
   return (
     <div className='bg-emerald-50 min-h-screen flex flex-col'>
-      <nav className='bg-emerald-700 shadow-lg'>
-        <div className='mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl'>
-          <div className='justify-between h-16 items-center flex'>
-            <div className='items-center flex'>
-              <div className='flex-shrink-0'>
-                {/*             <img alt="Logo de Course Clash - Espada insertada en un birrete de graduación" src="https://placehold.co/200x80/emerald/white?text=Course+Clash" className="h-12 w-auto"/>
-                 */}{' '}
-              </div>
-            </div>
-            <div className='md:block hidden'>
-              <div className='ml-4 items-center flex space-x-3'>
-                <Link
-                  href='/'
-                  className='text-white px-3 py-2 rounded-md text-sm font-medium
-                hover:bg-emerald-600'
-                >
-                  Volver al inicio
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
       <div className='items-center justify-center py-12 px-4 sm:px-6 lg:px-8 flex-grow flex'>
         <div className='w-full md:grid-cols-2 max-w-6xl grid grid-cols-1 gap-8'>
           <div className='bg-white rounded-lg shadow-md h-fit p-6'>
