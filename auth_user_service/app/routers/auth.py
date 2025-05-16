@@ -1,16 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Form
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
-from jose import jwt
-import os
-from dotenv import load_dotenv
-load_dotenv()
 
 
+#Impotación de funciones para codificación y decodificación del token
+from ..core.security import encode_token, decode_token
 
 router = APIRouter(prefix='/auth', tags=['auth'])
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl = '/auth/token')
 
 #Base de datos prueba
 fake_users_db = {
@@ -29,21 +25,6 @@ fake_users_db = {
         "roles": ["admin"],
     },
 }
-
-def encode_token(payload: dict) -> str:
-    token = jwt.encode(payload, os.environ.get('SECRET'), algorithm="HS256") 
-    return token
-
-def decode_token(token: Annotated[str, Depends(oauth2_scheme)]) -> dict:
-    try: 
-        data = jwt.decode(token=token, key=os.environ["SECRET"], algorithms=["HS256"])
-        return data
-    except jwt.JWTError: 
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            success = False,
-            message = "Invalid Token"
-        )
 
 @router.post('/token')
 def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
