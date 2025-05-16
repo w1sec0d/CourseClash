@@ -1,5 +1,7 @@
 package main
 
+// !! PARA QUE TODO ESTO FUNCIONE EL RETADOR DEBE CONECTARSE AL WEB SOCKKET PARA escuchar el canal
+
 import (
 	//HTTP
 	"net/http"
@@ -7,10 +9,10 @@ import (
 	//Para peticiones HTTP sencillas
 	"github.com/gin-gonic/gin"
 
-	//Para gestionar los WebSockets
 	"courseclash/duel-service/internal/handlers"
 	"time"
 
+	//Para gestionar los WebSockets
 	"github.com/gorilla/websocket"
 )
 
@@ -28,6 +30,7 @@ var upgrader = websocket.Upgrader{
 
 // Aqui se guarda la información acerca de cada una de las solicitudes de los duelos
 // *Se crea un canal, que permite que un jugador espere hasta que llegue la confirmación del duelo del otro jugador (true|false)
+// ? Se podría intentar enviar esto a una base de datos. Sin embargo de momento debería funcionar perfectamente. 
 var duelRequests = make(map[string]chan bool) 
 
 
@@ -42,6 +45,7 @@ func main() {
 	// Ruta que permite solicitar un duelo, recibe un json con la ID del que lo solicita y la del que la recibe
 	r.POST("/api/duels/request", func(c *gin.Context) {
 
+		// TODO cambiar  estoa  una id numérica
 		var request struct {
 			RequesterID string `json:"requester_id"`
 			OpponentID  string `json:"opponent_id"`
@@ -81,6 +85,7 @@ func main() {
 		// Si efectivamente existe el duelo se devuelve al canal un true, de manera que el que habia solicitado el 
 		// Esto permitirá que el retador y el retado sigan con el duelo. 
 		if ch, exists := duelRequests[accept.DuelID]; exists {
+			/**/
 			ch <- true
 			c.JSON(http.StatusOK, gin.H{"message": "Duel accepted"})
 		} else {
@@ -139,6 +144,8 @@ func wsHandler(w http.ResponseWriter, r *http.Request, duelID string) {
 // que deberían ser las traídas desde la base de datos, con esto comienza el duelo
 // ! De momento esta simulado solo con el player1, debe ser dinámico para que sea entre el retador y el retado. 
 // ! duelID aun no se usa, pienso que en la base de datos se pueden poner ID's de duelos y asociarlos a un set de preguntas. 
+
+// TODO hacer que los jugadores sean dinámicos
 func startDuel(conn *websocket.Conn, duelID string) {
 
 	player := &handlers.Player{
@@ -147,6 +154,7 @@ func startDuel(conn *websocket.Conn, duelID string) {
 		Conn:  conn,
 	}
 
+	// TODO hacer que las preguntas sean dinámicas con alguna base de datos
 	questions := []handlers.Question{
 		{ID: "1", Text: "¿Cuál es la capital de Francia?", Answer: "París", Duration: 10},
 		{ID: "2", Text: "¿Cuánto es 2+2?", Answer: "4", Duration: 5},
