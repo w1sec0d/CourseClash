@@ -9,13 +9,19 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '@/lib/form-schemas';
 
+interface LoginFormValues {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
+
 export default function Login() {
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
-  } = useForm({
+  } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
@@ -27,7 +33,7 @@ export default function Login() {
   const { login } = useAuth();
   const router = useRouter();
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
       const result = await login(data.email, data.password);

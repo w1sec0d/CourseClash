@@ -8,13 +8,23 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema } from '@/lib/form-schemas';
 import { useState } from 'react';
 
+interface RegisterFormValues {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  terms: boolean;
+  user_type: string;
+}
+
 export default function Register() {
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm({
+  } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       firstName: '',
@@ -22,24 +32,22 @@ export default function Register() {
       email: '',
       password: '',
       confirmPassword: '',
-      user_type: '',
       terms: false,
+      user_type: '',
     },
   });
   const [submitError, setSubmitError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: RegisterFormValues) => {
     setSubmitError('');
-    setIsLoading(true);
     try {
       // Aquí deberías llamar a tu API de registro
       // await registerUser(data);
+      console.log('Form data:', data);
       reset();
     } catch (error) {
+      console.error('Registration error:', error);
       setSubmitError('Error al crear la cuenta. Intenta de nuevo.');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -290,6 +298,11 @@ export default function Register() {
                 <option value='teacher'>Profesor</option>
                 <option value='student'>Estudiante</option>
               </select>
+              {errors.user_type && (
+                <p className='text-red-500 text-sm mt-1'>
+                  {errors.user_type.message as string}
+                </p>
+              )}
             </div>
             <div className='items-start flex'>
               <input
