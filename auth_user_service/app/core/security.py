@@ -3,6 +3,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 import os 
 import bcrypt
@@ -13,8 +14,9 @@ load_dotenv()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl = '/auth/token')
 
 #Función encargada de generar el token
-def encode_token(payload: dict) -> str:
-    token = jwt.encode(payload, os.environ.get('SECRET'), algorithm="HS256") 
+def encode_token(payload: dict, expiration_minutes: int = 60) -> str:
+    payload['exp'] = datetime.utcnow() + timedelta(minutes=expiration_minutes)
+    token = jwt.encode(payload, os.environ.get('SECRET'), algorithm= os.environ.get('ALGORITM')) 
     return token
 
 #Función encargada de validar el token y extraer la información

@@ -20,7 +20,7 @@ from ..services.auth_service import verify_email
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
-
+# Ruta que permite autenticar un usuario y genera un token si el usuario es valido
 @router.post('/token')
 def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     try:
@@ -70,6 +70,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
                 detail="Email already registered"
             )
         
+        # Cifrado contraseña
         password_hash = security.hash_password(user.password)
 
         query = text("""
