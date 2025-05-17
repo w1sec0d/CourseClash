@@ -8,7 +8,7 @@ from sqlalchemy import text
 from ..core.security import encode_token, decode_token
 
 #Imporatación de esquema de usuario
-from ..models.user import UserCreate
+from ..models.user import UserCreate, User
 
 #Conexion de la base de datos
 from ..db import get_db
@@ -46,7 +46,7 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
         
         payload = {
             'id': result[0],
-            'email': result[1]
+            'email': result[2]
         }
 
         token = encode_token(payload)
@@ -99,5 +99,29 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f'Error creating user {e}'
         )
+    
+@router.get('/me')
+def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
+    db: Session = next(get_db())
+    query = text(""" SELECT * FROM users where id = :id""")
+    result = db.execute(query, {'id': user['id']}).fetchone()
+    if not result: 
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='User not found'
+        )
+    user = User(
+        id=result[0],
+        username=result[1],
+        email=result[2],
+        full_name=result[4],
+        is_active=result[5],
+        is_superuser=result[6],
+        created_at=str(result[7])
+    )
+
+    return user
+    
+
 
 

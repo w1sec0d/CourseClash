@@ -16,6 +16,29 @@ def get_users(db: Session = Depends(get_db)):
                 is_active=row[5], is_superuser=row[6], created_at=str(row[7])) for row in result]
     return users
 
+@router.get('/user/{id}')
+def get_user(id: int, db: Session = Depends(get_db)) -> User:
+    query = text("SELECT * FROM users WHERE id = :id")
+    result = db.execute(query, {'id': id}).fetchone()
+
+    if not result:
+        raise HTTPException(
+            status_code= status.HTTP_404_NOT_FOUND,
+            detail='User not found'
+        )
+    
+    user = User(
+        id=result[0],
+        username=result[1],
+        email=result[2],
+        full_name=result[4],
+        is_active=result[5],
+        is_superuser=result[6],
+        created_at=str(result[7])
+    )
+
+    return user
+
 
 
 
