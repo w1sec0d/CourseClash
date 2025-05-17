@@ -4,6 +4,7 @@ import './globals.css';
 import NavigationBar from '../components/NavigationBar';
 import Footer from '../components/Footer';
 import clsx from 'clsx';
+import { AuthProvider } from '@/lib/auth-context';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,9 +22,11 @@ export default function RootLayout({
   return (
     <html lang='es'>
       <body className={clsx(inter.className, 'bg-white')}>
-        <NavigationBar />
-        <main>{children}</main>
-        <Footer />
+        <AuthProvider>
+          <NavigationBar />
+          <main>{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

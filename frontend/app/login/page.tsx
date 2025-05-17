@@ -1,7 +1,51 @@
+'use client';
+
 import SocialIcon from '@/components/SocialIcon';
 import Link from 'next/link';
+import { useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema } from '@/lib/form-schemas';
 
 export default function Login() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+    reset,
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      rememberMe: false,
+    },
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const router = useRouter();
+
+  const onSubmit = async (data: any) => {
+    setIsLoading(true);
+    try {
+      const result = await login(data.email, data.password);
+      console.log('Login successful:', result);
+      router.push('/inicio');
+    } catch (error) {
+      setError('root', {
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error al iniciar sesión. Por favor, intenta de nuevo.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className='mx-auto my-12 container bg-white rounded-xl shadow-2xl md:flex-row max-w-7xl overflow-hidden flex flex-col'>
       {/* Sección de ilustración */}
@@ -94,7 +138,16 @@ export default function Login() {
             Inicia sesión para continuar tu aventura académica
           </p>
         </div>
-        <form className='space-y-6'>
+        {errors.root && (
+          <div className='p-4 text-white bg-red-500 rounded-lg mb-6'>
+            {errors.root.message}
+          </div>
+        )}
+        <form
+          className='space-y-6'
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+        >
           <div>
             <label
               htmlFor='email'
@@ -103,15 +156,18 @@ export default function Login() {
               Correo electrónico
             </label>
             <input
-              name='email'
-              required
+              {...register('email')}
               type='email'
               placeholder='tu@email.com'
-              className='border border-gray-300
-              focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition w-full px-4
-              py-3 rounded-lg'
+              className='border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition w-full px-4 py-3 rounded-lg'
               id='email'
+              autoComplete='email'
             />
+            {errors.email && (
+              <p className='text-red-500 text-sm mt-1'>
+                {errors.email.message as string}
+              </p>
+            )}
           </div>
           <div>
             <label
@@ -121,23 +177,25 @@ export default function Login() {
               Contraseña
             </label>
             <input
-              name='password'
-              required
+              {...register('password')}
               type='password'
               placeholder='••••••••'
-              className='border border-gray-300
-              focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition w-full px-4
-              py-3 rounded-lg'
+              className='border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition w-full px-4 py-3 rounded-lg'
               id='password'
+              autoComplete='current-password'
             />
+            {errors.password && (
+              <p className='text-red-500 text-sm mt-1'>
+                {errors.password.message as string}
+              </p>
+            )}
           </div>
           <div className='items-center justify-between flex'>
             <div className='items-center flex'>
               <input
-                name='remember-me'
+                {...register('rememberMe')}
                 type='checkbox'
-                className='focus:ring-emerald-500 border-gray-300 rounded h-4 w-4
-                text-emerald-600'
+                className='focus:ring-emerald-500 border-gray-300 rounded h-4 w-4 text-emerald-600'
                 id='remember-me'
               />
               <label
@@ -162,8 +220,9 @@ export default function Login() {
               className='flex border border-transparent hover:bg-emerald-700 focus:outline-none
               focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition transform hover:scale-105 w-full
               justify-center py-3 px-4 rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600'
+              disabled={isLoading}
             >
-              Iniciar sesión
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </button>
           </div>
         </form>

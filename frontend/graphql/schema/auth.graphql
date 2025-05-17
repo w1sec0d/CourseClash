@@ -1,0 +1,54 @@
+# Esquema GraphQL para el módulo de autenticación de CourseClash
+# Define los tipos, consultas y mutaciones necesarios para la autenticación
+
+# Tipo de usuario con sus propiedades
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  name: String
+  avatar: String
+  role: UserRole!
+  createdAt: String!
+  updatedAt: String
+}
+
+# Roles disponibles para los usuarios
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+# Respuesta de autenticación que incluye el usuario y tokens
+type AuthResponse {
+  user: User
+  token: String!
+  refreshToken: String
+  expiresAt: String
+}
+
+# Consultas disponibles para autenticación
+type Query {
+  me: User
+  getUserById(id: ID!): User
+}
+
+# Mutaciones disponibles para operaciones de autenticación
+type Mutation {
+  login(email: String!, password: String!): AuthResponse!
+  register(input: RegisterInput!): AuthResponse!
+  refreshToken(refreshToken: String!): AuthResponse!
+  logout: Boolean!
+  resetPassword(email: String!): Boolean!
+  confirmResetPassword(token: String!, newPassword: String!): Boolean!
+}
+
+# Datos de entrada para el registro de usuarios
+input RegisterInput {
+  username: String!
+  email: String!
+  password: String!
+  name: String
+  role: UserRole
+}

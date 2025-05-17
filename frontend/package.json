@@ -9,10 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@graphql-tools/mock": "^9.0.22",
+    "@graphql-tools/schema": "^10.0.23",
+    "@hookform/resolvers": "^5.0.1",
     "clsx": "^2.1.1",
+    "graphql": "^16.11.0",
+    "graphql-yoga": "^5.13.4",
     "next": "15.3.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.56.4",
+    "zod": "^3.24.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

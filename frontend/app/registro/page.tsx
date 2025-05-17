@@ -1,9 +1,49 @@
+'use client';
 import Button from '@/components/Button';
 import SocialIcon from '@/components/SocialIcon';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { registerSchema } from '@/lib/form-schemas';
+import { useState } from 'react';
 
 export default function Register() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+    reset,
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      user_type: '',
+      terms: false,
+    },
+  });
+  const [submitError, setSubmitError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const onSubmit = async (data: any) => {
+    setSubmitError('');
+    setIsLoading(true);
+    try {
+      // Aquí deberías llamar a tu API de registro
+      // await registerUser(data);
+      reset();
+    } catch (error) {
+      setSubmitError('Error al crear la cuenta. Intenta de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <section className='my-12 text-black mx-auto container bg-white rounded-2xl overflow-hidden shadow-xl max-w-7xl md:grid-cols-2 grid grid-cols-1'>
       {/* Sección de ilustración */}
@@ -123,7 +163,16 @@ export default function Register() {
               </span>
             </div>
           </div>
-          <form className='space-y-6'>
+          {submitError && (
+            <div className='p-4 text-white bg-red-500 rounded-lg mb-6'>
+              {submitError}
+            </div>
+          )}
+          <form
+            className='space-y-6'
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+          >
             <div className='md:grid-cols-2 grid grid-cols-1 gap-6'>
               <div>
                 <label
@@ -133,12 +182,17 @@ export default function Register() {
                   Nombre
                 </label>
                 <input
-                  name='first_name'
+                  {...register('firstName')}
                   type='text'
-                  className='border border-gray-300 focus:ring-emerald-500
-                      focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
+                  className='border border-gray-300 focus:ring-emerald-500 focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
                   id='first_name'
+                  autoComplete='given-name'
                 />
+                {errors.firstName && (
+                  <p className='text-red-500 text-sm mt-1'>
+                    {errors.firstName.message as string}
+                  </p>
+                )}
               </div>
               <div>
                 <label
@@ -148,12 +202,17 @@ export default function Register() {
                   Apellido
                 </label>
                 <input
-                  name='last_name'
+                  {...register('lastName')}
                   type='text'
-                  className='border border-gray-300 focus:ring-emerald-500
-                      focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
+                  className='border border-gray-300 focus:ring-emerald-500 focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
                   id='last_name'
+                  autoComplete='family-name'
                 />
+                {errors.lastName && (
+                  <p className='text-red-500 text-sm mt-1'>
+                    {errors.lastName.message as string}
+                  </p>
+                )}
               </div>
             </div>
             <div>
@@ -164,12 +223,17 @@ export default function Register() {
                 Email
               </label>
               <input
-                name='email'
+                {...register('email')}
                 type='email'
-                className='border border-gray-300 focus:ring-emerald-500
-                    focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
+                className='border border-gray-300 focus:ring-emerald-500 focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
                 id='email'
+                autoComplete='email'
               />
+              {errors.email && (
+                <p className='text-red-500 text-sm mt-1'>
+                  {errors.email.message as string}
+                </p>
+              )}
             </div>
             <div>
               <label
@@ -179,12 +243,17 @@ export default function Register() {
                 Contraseña
               </label>
               <input
-                name='password'
+                {...register('password')}
                 type='password'
-                className='border border-gray-300 focus:ring-emerald-500
-                    focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
+                className='border border-gray-300 focus:ring-emerald-500 focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
                 id='password'
+                autoComplete='new-password'
               />
+              {errors.password && (
+                <p className='text-red-500 text-sm mt-1'>
+                  {errors.password.message as string}
+                </p>
+              )}
             </div>
             <div>
               <label
@@ -194,12 +263,17 @@ export default function Register() {
                 Confirmar Contraseña
               </label>
               <input
-                name='confirm_password'
+                {...register('confirmPassword')}
                 type='password'
-                className='border border-gray-300 focus:ring-emerald-500
-                    focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
+                className='border border-gray-300 focus:ring-emerald-500 focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
                 id='confirm_password'
+                autoComplete='new-password'
               />
+              {errors.confirmPassword && (
+                <p className='text-red-500 text-sm mt-1'>
+                  {errors.confirmPassword.message as string}
+                </p>
+              )}
             </div>
             <div>
               <label
@@ -209,9 +283,8 @@ export default function Register() {
                 Tipo de usuario
               </label>
               <select
-                name='user_type'
-                className='border border-gray-300 focus:ring-emerald-500
-                    focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
+                {...register('user_type')}
+                className='border border-gray-300 focus:ring-emerald-500 focus:border-emerald-500 w-full px-4 py-2 rounded-lg'
                 id='user_type'
               >
                 <option value=''>Selecciona una opción</option>
@@ -221,12 +294,16 @@ export default function Register() {
             </div>
             <div className='items-start flex'>
               <input
-                name='terms'
+                {...register('terms')}
                 type='checkbox'
-                className='focus:ring-emerald-500 border-gray-300 rounded h-4 w-4
-                    text-emerald-600'
+                className='focus:ring-emerald-500 border-gray-300 rounded h-4 w-4 text-emerald-600'
                 id='terms'
               />
+              {errors.terms && (
+                <p className='text-red-500 text-sm mt-1'>
+                  {errors.terms.message as string}
+                </p>
+              )}
               <label
                 htmlFor='terms'
                 className='ml-2 text-sm text-gray-600 block'
