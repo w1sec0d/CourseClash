@@ -79,5 +79,10 @@ const yoga = createYoga({
 });
 
 // Exporta los manejadores GET y POST para la ruta de API
-export const GET = yoga;
-export const POST = yoga;
+export async function GET(request: Request) {
+  return yoga.fetch(request);
+}
+
+export async function POST(request: Request) {
+  return yoga.fetch(request);
+}
