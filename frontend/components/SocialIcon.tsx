@@ -26,7 +26,7 @@ export default function SocialIcon({ icon, onClick }: SocialIconProps) {
         'transition-all duration-200',
         'py-3 px-4 rounded-md shadow-sm',
         'mr-2 transition-transform duration-100',
-        'hover:scale-105',
+        'hover:scale-105 hover:cursor-pointer',
         'active:scale-100'
       )}
     >

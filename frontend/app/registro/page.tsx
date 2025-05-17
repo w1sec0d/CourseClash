@@ -1,4 +1,7 @@
+import Button from '@/components/Button';
 import SocialIcon from '@/components/SocialIcon';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Register() {
   return (
@@ -10,8 +13,13 @@ export default function Register() {
         <div className='w-32 h-32 bg-emerald-200 rounded-full absolute bottom-20 -left-10 opacity-60'></div>
         {/* Texto */}
         <div className='text-center relative z-10'>
-          {/* <img alt="Ilustración de estudiantes compitiendo en duelos académicos con insignias y trofeos" src="https://placehold.co/400x300/emerald/white?text=CourseClash" className="mx-auto mb-6 rounded-lg
-                shadow-md"> */}
+          <Image
+            alt='Ilustración de estudiantes compitiendo en duelos académicos con insignias y trofeos'
+            src='/images/register.webp'
+            className='mx-auto mb-6 rounded-lg shadow-md'
+            width={400}
+            height={300}
+          />
           <p className='text-2xl font-bold text-emerald-800 mb-4'>
             Transforma tu experiencia académica
           </p>
@@ -223,34 +231,36 @@ export default function Register() {
                 htmlFor='terms'
                 className='ml-2 text-sm text-gray-600 block'
               >
+                <span className='mr-1'>Acepto los</span>
                 <a
                   href='/9twIWsbSYpNA4lj2s5SG#'
                   className='text-emerald-600 hover:text-emerald-500'
                 >
                   Términos de Servicio
                 </a>
+                <span className='mx-1'>y la</span>
                 <a
                   href='/9twIWsbSYpNA4lj2s5SG#'
                   className='text-emerald-600 hover:text-emerald-500'
                 >
                   Política de Privacidad
                 </a>
-                <span>y la</span>
               </label>
             </div>
             <div>
-              <button
-                type='submit'
-                className='hover:bg-emerald-700 shadow transition-colors focus:outline-none
-                    focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 w-full py-3 px-4 bg-emerald-600 text-white
-                    font-medium rounded-lg'
-              >
+              <Button type='submit' variant='primary' className='w-full'>
                 Crear Cuenta
-              </button>
+              </Button>
             </div>
           </form>
           <p className='mt-6 text-center text-sm text-gray-600'>
-            ¿Ya tienes una cuenta?
+            ¿Ya tienes una cuenta?{' '}
+            <Link
+              href='/login'
+              className='text-emerald-600 hover:text-emerald-500'
+            >
+              Inicia sesión
+            </Link>
           </p>
         </div>
       </div>
