@@ -14,11 +14,20 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl = '/auth/token')
 
 #Función encargada de generar el token
 def encode_token(payload: dict, expiration_minutes: int = 60) -> str:
-    payload['exp'] = datetime.now(timezone.utc) + timedelta(minutes=expiration_minutes)
 
-    print(payload)
+    #Generación de token normal
+    expiration = datetime.now(timezone.utc) + timedelta(minutes=expiration_minutes)
+    payload['exp'] = expiration
+
     token = jwt.encode(payload, os.environ.get('SECRET'), algorithm= os.environ.get('ALGORITM')) 
-    return token
+
+    #Generación de token de refresco
+    expiration = datetime.now(timezone.utc) + timedelta(days=1)
+    payload['exp'] = expiration
+    refresh_token = jwt.encode(payload, os.environ.get('SECRET'), algorithm= os.environ.get('ALGORITM'))
+    
+   
+    return token, refresh_token, expiration.isoformat()
 
 #Función encargada de validar el token y extraer la información
 def decode_token(token: Annotated[str, Depends(oauth2_scheme)]) -> dict:

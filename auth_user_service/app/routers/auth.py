@@ -10,11 +10,13 @@ from ..core.security import encode_token, decode_token
 #Imporatación de esquema de usuario
 from ..models.user import UserCreate, User
 from ..models.login import Login
+from ..models.login import loginResponse
 
 #Conexion de la base de datos
 from ..db import get_db
 
 from ..core import security
+from ..services import auth_service
 
 #servicio de verificación de correo
 from ..services.auth_service import verify_email
@@ -25,18 +27,12 @@ router = APIRouter(prefix='/auth', tags=['auth'])
 @router.post('/token')
 def login(form_data: Login, db: Session = Depends(get_db)):
     try:
-        query = text(""" SELECT * FROM users WHERE email = :email""")
-        user = db.execute(query, {'email': form_data.username})
-        result = user.fetchone()
 
-        if not result: 
-            raise HTTPException(
-                status_code= status.HTTP_401_UNAUTHORIZED,
-                detail='Invalid credentials'
-            )
-        
+        # Obtiene toda la información del usuario
+        user = auth_service.get_user_by_email(form_data.username)
+
         # Verificar contraseña
-        if security.verify_password(form_data.password, result[3]) == False:
+        if security.verify_password(form_data.password, user.password) == False:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail='Invalid credentials'
@@ -45,13 +41,15 @@ def login(form_data: Login, db: Session = Depends(get_db)):
         # Generar token
         
         payload = {
-            'id': result[0],
-            'email': result[2]
+            'id': user.id,
+            'email': user.email
         }
 
-        token = encode_token(payload)
+        # Generar token y su expiración
+        token, token_refresh, exp = encode_token(payload)
 
-        return  {'access_token': token}
+        return  {'user': user, 'token': token, 'token_refresh': token_refresh, 'exp': exp}
+    
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -123,6 +121,28 @@ def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
     )
 
     return user
+
+@router.post('/refresh')
+def refresh_token(user: Annotated[dict, Depends(decode_token)]):
+    try:
+        payload = {
+            'id': user['id'],
+            'email': user['email']
+        }
+
+        # Obtiene toda la información del usuario
+        user = auth_service.get_user_by_email(user['email'])
+
+        # Generar token y su expiración
+        token, token_refresh, exp = encode_token(payload)
+
+        return  {'user': user, 'token': token, 'token_refresh': token_refresh, 'exp': exp}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f'Error refreshing token {e}'
+        )
     
 
 
