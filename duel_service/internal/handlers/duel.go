@@ -42,7 +42,7 @@ func HandleDuel(player1 *Player, player2 *Player, questions []Question) {
        broadcastQuestion(player1, player2, question)
        startTime := time.Now()
 
-
+       //Envio sincronizado de respuestas. 
        answer1 := receiveAnswer(player1)
        answer2 := receiveAnswer(player2)
 
@@ -64,6 +64,7 @@ func broadcastQuestion(player1, player2 *Player, question Question) {
        "type": "question",
        "data": question,
    }
+   //Envio sincronizado de preguntas
    player1.Conn.WriteJSON(message)
    player2.Conn.WriteJSON(message)
 }

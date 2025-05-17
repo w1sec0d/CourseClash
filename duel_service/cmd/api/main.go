@@ -34,6 +34,14 @@ var upgrader = websocket.Upgrader{
 var duelRequests = make(map[string]chan bool) 
 
 
+// Mapa que almacena las conexiones webSocket para cada uno de los jugadores
+type DuelConnection struct {
+	Player1 *handlers.Player
+	Player2 *handlers.Player
+}
+
+var duelConnections = make(map[string] *DuelConnection)
+
 // * Este es el punto de entrada del servicio, aquí se inicializa. 
 // De manera general, define un router con r para manejar las peticiones al servicio
 // * PUERTO DE CONEXIÓN 8080
@@ -97,9 +105,10 @@ func main() {
 	// * Aquí se define la URL de un cliente WEB SOCKET, al entrar al  endpoint especificado
 	// De igual manera se establace wsHandler que establace la conexión websocket
 	
-	r.GET("/ws/duels/:duel_id", func(c *gin.Context) {
+	r.GET("/ws/duels/:duel_id/:player_id", func(c *gin.Context) {
 		duelID := c.Param("duel_id")
-		wsHandler(c.Writer, c.Request, duelID)
+		PlayerID := c.Param("player_id")
+		wsHandler(c.Writer, c.Request, duelID, PlayerID)
 	})
 
 	r.Run(":8080")
@@ -108,57 +117,70 @@ func main() {
 // Aquí se utiliza el upgrader para convertir una conexión HTTP a una conexión web socket si no hay errores
 // * En caso de que exista un duelo y haya sido aceptado se iniciará el duelo. 
 
-func wsHandler(w http.ResponseWriter, r *http.Request, duelID string) {
-	// * AQUI se establece la conexión(conn) web socket entre cliente y servidor 
+func wsHandler(w http.ResponseWriter, r *http.Request, duelID, playerID string) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
 	}
 	defer conn.Close()
 
-	if ch, exists := duelRequests[duelID]; exists {
-		select {
-		
-		//Si el duelo fue aceptado inicia el duelo
-		case accepted := <-ch:
-			if accepted {
-				// Aquí se inicia el duelo
-				startDuel(conn, duelID)
-			} else {
-				conn.WriteMessage(websocket.TextMessage, []byte("Duel not accepted"))
-			}
-		
-		//Si nadie acepta en 30 segundos se elimina el duelo. TimeOut
-		case <-time.After(30 * time.Second):
-			conn.WriteMessage(websocket.TextMessage, []byte("Duel request timed out"))
-			delete(duelRequests, duelID)
+	// Esperar a que el duelo haya sido aceptado
+	ch, exists := duelRequests[duelID]
+	if !exists {
+		conn.WriteMessage(websocket.TextMessage, []byte("Invalid duel ID"))
+		return
+	}
+
+	select {
+	case accepted := <-ch:
+		if !accepted {
+			conn.WriteMessage(websocket.TextMessage, []byte("Duel not accepted"))
 			return
 		}
-	// En caso de que el duelo seleccionado con duelID sea invalido
-	} else {
-		conn.WriteMessage(websocket.TextMessage, []byte("Invalid duel ID"))
+	case <-time.After(30 * time.Second):
+		conn.WriteMessage(websocket.TextMessage, []byte("Duel request timed out"))
+		delete(duelRequests, duelID)
+		return
 	}
-}
 
-// De momento se establece un duelo para pruebas, solo con 1 player definido en automático. Y algunas preguntas 
-// que deberían ser las traídas desde la base de datos, con esto comienza el duelo
-// ! De momento esta simulado solo con el player1, debe ser dinámico para que sea entre el retador y el retado. 
-// ! duelID aun no se usa, pienso que en la base de datos se pueden poner ID's de duelos y asociarlos a un set de preguntas. 
-
-// TODO hacer que los jugadores sean dinámicos
-func startDuel(conn *websocket.Conn, duelID string) {
-
+	// Crear el jugador
 	player := &handlers.Player{
-		ID:    "player1", // Esto debería ser dinámico
+		ID:    playerID,
 		Score: 0,
 		Conn:  conn,
 	}
 
-	// TODO hacer que las preguntas sean dinámicas con alguna base de datos
+	// Guardar el jugador en el mapa
+	if duelConnections[duelID] == nil {
+		duelConnections[duelID] = &DuelConnection{}
+	}
+
+	dc := duelConnections[duelID]
+	if dc.Player1 == nil {
+		dc.Player1 = player
+		conn.WriteMessage(websocket.TextMessage, []byte("Esperando al oponente..."))
+		// Esperar indefinidamente hasta que llegue el segundo jugador
+		for {
+			time.Sleep(1 * time.Second)
+			if dc.Player2 != nil {
+				break
+			}
+		}
+		startDuel(dc.Player1, dc.Player2, duelID)
+	} else if dc.Player2 == nil {
+		dc.Player2 = player
+		conn.WriteMessage(websocket.TextMessage, []byte("¡Duelo listo!"))
+		startDuel(dc.Player1, dc.Player2, duelID)
+	} else {
+		conn.WriteMessage(websocket.TextMessage, []byte("Ya hay dos jugadores conectados."))
+	}
+}
+
+func startDuel(player1, player2 *handlers.Player, duelID string) {
 	questions := []handlers.Question{
-		{ID: "1", Text: "¿Cuál es la capital de Francia?", Answer: "París", Duration: 10},
+		{ID: "1", Text: "¿Cuál es la capital de Francia?", Answer: "Paris", Duration: 10},
 		{ID: "2", Text: "¿Cuánto es 2+2?", Answer: "4", Duration: 5},
 	}
 
-	handlers.HandleDuel(player, player, questions)
+	go handlers.HandleDuel(player1, player2, questions)
 }
