@@ -3,10 +3,15 @@ import clsx from 'clsx';
 
 interface SocialIconProps {
   icon: 'google' | 'facebook';
+  showText?: boolean;
   onClick?: () => void;
 }
 
-export default function SocialIcon({ icon, onClick }: SocialIconProps) {
+export default function SocialIcon({
+  icon,
+  showText = true,
+  onClick,
+}: SocialIconProps) {
   const icons = {
     google: '/icons/google.svg',
     facebook: '/icons/facebook.svg',
@@ -37,7 +42,8 @@ export default function SocialIcon({ icon, onClick }: SocialIconProps) {
         height={24}
         className='mr-2'
       />
-      {icon === 'google' ? 'Continuar con Google' : 'Continuar con Facebook'}
+      {showText &&
+        (icon === 'google' ? 'Continuar con Google' : 'Continuar con Facebook')}
     </button>
   );
 }
