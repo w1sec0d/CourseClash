@@ -1,7 +1,7 @@
 import { createSchema, createYoga } from 'graphql-yoga';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { authResolvers } from '@/graphql/resolvers/auth';
+import { authResolvers } from '@/app/api/graphql/resolvers/auth';
 
 // Ruta de API GraphQL para CourseClash
 // Este archivo configura el servidor GraphQL usando graphql-yoga
@@ -9,7 +9,7 @@ import { authResolvers } from '@/graphql/resolvers/auth';
 
 // Lee el esquema GraphQL desde el archivo
 const authTypeDefs = readFileSync(
-  join(process.cwd(), 'graphql', 'schema', 'auth.graphql'),
+  join(process.cwd(), 'app', 'api', 'graphql', 'schema', 'auth.graphql'),
   'utf8'
 );
 
