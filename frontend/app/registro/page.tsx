@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function Register() {
   return (
-    <section className='my-12 sm:px-6 lg:px-8 text-black mx-auto container bg-white rounded-2xl overflow-hidden shadow-xl max-w-7xl md:grid-cols-2 grid grid-cols-1'>
+    <section className='my-12 text-black mx-auto container bg-white rounded-2xl overflow-hidden shadow-xl max-w-7xl md:grid-cols-2 grid grid-cols-1'>
       {/* Sección de ilustración */}
       <div className='bg-emerald-50 justify-center items-center w-full p-10 flex flex-col relative overflow-hidden'>
         {/* Decoraciones */}
