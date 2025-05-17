@@ -102,6 +102,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     
 @router.get('/me')
 def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
+
     db: Session = next(get_db())
     query = text(""" SELECT * FROM users where id = :id""")
     result = db.execute(query, {'id': user['id']}).fetchone()

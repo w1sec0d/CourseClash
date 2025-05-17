@@ -17,3 +17,10 @@ class UserCreate(BaseModel):
     full_name: Optional[str] = None
     is_active: bool = True
     is_superuser: bool = False
+
+class UserUpdate(BaseModel):
+    username: str
+    email: str
+    full_name: Optional[str] = None
+    is_active: bool = True
+    is_superuser: bool = False
