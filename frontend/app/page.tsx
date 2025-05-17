@@ -24,8 +24,8 @@ export const LandingPage = () => {
               className='mt-8 sm:flex-row md:justify-start sm:space-y-0 sm:space-x-4 justify-center flex flex-col
                 space-y-4'
             >
-              <Button href='/login' variant='primary'>
-                Empezar ahora
+              <Button href='/registro' variant='primary'>
+                Empezar Ahora
               </Button>
               {/* <Button href='/#' variant='secondary'>
                 Ver demo
