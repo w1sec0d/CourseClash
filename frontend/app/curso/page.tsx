@@ -7,7 +7,8 @@ import CourseStats from '../../components/course/CourseStats';
 import ModuleCard from '../../components/course/ModuleCard';
 import AnnouncementCard from '../../components/course/AnnouncementCard';
 import ResourceCard from '../../components/course/ResourceCard';
-import { mockModules, mockAnnouncements, mockResources } from './data';
+import Ranking from '../../components/course/Ranking';
+import { mockModules, mockAnnouncements, mockResources, mockRanking } from './data';
 
 // Types
 interface CourseContentProps {
@@ -45,13 +46,23 @@ interface ResourceProps {
   count?: number;
 }
 
+interface RankingProps {
+  id: string;
+  name: string;
+  avatar: string;
+  level: number;
+  xp: number;
+  completedTasks: number;
+  totalTasks: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
 const CourseDetailView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'content' | 'announcements' | 'resources' | 'progress'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'announcements' | 'resources' | 'progress' | 'ranking'>('content');
   const [modules, setModules] = useState<ModuleProps[]>(mockModules);
-
   const announcements = mockAnnouncements;
-
   const resources = mockResources;
+  const ranking = mockRanking;
 
   const toggleModule = (moduleId: string) => {
     setModules(modules.map(module => 
@@ -129,6 +140,12 @@ const CourseDetailView: React.FC = () => {
               >
                 Mi progreso
               </button>
+              <button 
+                className={`px-6 py-4 text-sm font-medium ${activeTab === 'ranking' ? 'text-green-600 border-b-2 border-green-500' : 'text-gray-500 hover:text-gray-700'}`}
+                onClick={() => setActiveTab('ranking')}
+              >
+                Ranking
+              </button>
             </nav>
           </div>
 
@@ -189,6 +206,12 @@ const CourseDetailView: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'ranking' && (
+            <div className="p-6">
+              <Ranking ranking={ranking} />
             </div>
           )}
         </div>

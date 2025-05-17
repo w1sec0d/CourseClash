@@ -34,3 +34,18 @@ export interface ResourceProps {
   size?: string;
   count?: number;
 }
+
+export interface RankingProps {
+  id: string;
+  name: string;
+  avatar: string;
+  position: number;
+  level: number;
+  xp: number;
+  completedTasks: number;
+  totalTasks: number;
+  achievements: number;
+  isCurrentUser: boolean;
+  trend: 'up' | 'down' | 'stable';
+}
+

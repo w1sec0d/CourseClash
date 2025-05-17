@@ -10,6 +10,7 @@ interface CourseHeaderProps {
   level: string;
   rating: number;
   attendance: string;
+  header?: string;
 }
 
 const CourseHeader: React.FC<CourseHeaderProps> = ({
@@ -18,13 +19,20 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
   semester,
   level,
   rating,
-  attendance
+  attendance,
+  header,
 }) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm mb-6 p-6">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">{title}</h1>
+    <div className="relative rounded-lg overflow-hidden mb-6 min-h-[150px]">
+      <div className="relative p-6 bg-white/95">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+          <div className="space-y-2">
+            {header && (
+              <h2 className="text-sm font-medium text-gray-600">{header}</h2>
+            )}
+            <h1 className="text-2xl font-bold">{title}</h1>
+          </div>
           <div className="flex items-center space-x-4 text-gray-600">
             <span className="flex items-center">
               <Users size={16} className="mr-1" />
@@ -51,6 +59,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
             ))}
           </div>
           <span className="text-sm text-emerald-800">Asistencia: {attendance}</span>
+          </div>
         </div>
       </div>
     </div>

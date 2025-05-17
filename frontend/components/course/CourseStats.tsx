@@ -20,7 +20,7 @@ const CourseStats: React.FC<CourseStatsProps> = ({ stats, progress, completed })
     <div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         {stats.map((stat, index) => (
-          <div key={index} className="bg-emerald-50 p-4 rounded-lg flex items-center">
+          <div key={index} className="bg-emerald-100 p-4 rounded-lg flex items-center">
             <div className="bg-emerald-100 rounded-full p-2 mr-3">
               {stat.icon}
             </div>
