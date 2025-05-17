@@ -99,7 +99,8 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f'Error creating user {e}'
         )
-    
+
+# Ruta que permite obtener la información del usuario autenticado
 @router.get('/me')
 def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
 

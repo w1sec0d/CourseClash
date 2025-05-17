@@ -42,6 +42,7 @@ def get_user(id: int, db: Session = Depends(get_db)) -> User:
 
     return user
 
+# Ruta que permite actualizar un usuario en especifico por su id
 @router.put('/user/{id}')
 def update_user(id: int, user: UserUpdate, current_user: Annotated[dict, Depends(decode_token)]):
     
