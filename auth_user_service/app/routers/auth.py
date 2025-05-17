@@ -9,6 +9,7 @@ from ..core.security import encode_token, decode_token
 
 #Imporatación de esquema de usuario
 from ..models.user import UserCreate, User
+from ..models.login import Login
 
 #Conexion de la base de datos
 from ..db import get_db
@@ -22,9 +23,8 @@ router = APIRouter(prefix='/auth', tags=['auth'])
 
 # Ruta que permite autenticar un usuario y genera un token si el usuario es valido
 @router.post('/token')
-def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+def login(form_data: Login, db: Session = Depends(get_db)):
     try:
-        db: Session = next(get_db())
         query = text(""" SELECT * FROM users WHERE email = :email""")
         user = db.execute(query, {'email': form_data.username})
         result = user.fetchone()

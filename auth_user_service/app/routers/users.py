@@ -48,11 +48,10 @@ def update_user(id: int, user: UserUpdate, current_user: Annotated[dict, Depends
     
     try:
         db : Session = next(get_db())
-        query = text('UPDATE users SET username = :username, email = :email, full_name = :full_name, is_active = :is_active, is_superuser = :is_superuser WHERE id = :id')
+        query = text('UPDATE users SET username = :username, full_name = :full_name, is_active = :is_active, is_superuser = :is_superuser WHERE id = :id')
         
         db.execute(query, {
             'username': user.username,
-            'email': user.email,
             'full_name': user.full_name,
             'is_active': user.is_active,
             'is_superuser': user.is_superuser,
