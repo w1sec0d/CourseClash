@@ -64,10 +64,10 @@ services:
       - JWT_SECRET=your_jwt_secret_key
     volumes:
       - ./api_gateway:/app
-    depends_on:
-      - auth_user_service
-      - course_service
-      - duel_service
+    # depends_on:
+    #   - auth_user_service
+    #   - course_service
+    #   - duel_service
     networks:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
