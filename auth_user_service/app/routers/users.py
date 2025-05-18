@@ -10,39 +10,49 @@ from ..models.user import User, UserUpdate
 
 router = APIRouter(prefix='/users', tags=['users'])
 
-# Ruta que permite obtener todos los usuarios
+#Ruta que obtiene los usuarios de la aplicación 
+#Input: 
+#Output: Lista de jsons con la información de cada usuario
 @router.get('/users')
 def get_users(db: Session = Depends(get_db)):
-    result = db.execute(text("SELECT * FROM users"))
-    users = [User(id=row[0], username=row[1], email=row[2], full_name=row[4], 
-                is_active=row[5], is_superuser=row[6], created_at=str(row[7])) for row in result]
-    return users
+    try: 
+        result = db.execute(text("SELECT * FROM users")).mappings().all()
+        users = [row for row in result]
+        return users
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f'Error en el servidor {e}'
+        )
 
 # Ruta que permite obtener un usuario en especifico por su id
+#Input: id del usuario como parametro en la ruta
+#Output: json con la información del usuario a buscar
 @router.get('/user/{id}')
-def get_user(id: int, db: Session = Depends(get_db)) -> User:
-    query = text("SELECT * FROM users WHERE id = :id")
-    result = db.execute(query, {'id': id}).fetchone()
+def get_user(id: int, db: Session = Depends(get_db)):
+    try:
+        query = text("SELECT * FROM users WHERE id = :id")
+        user = db.execute(query, {'id': id}).mappings().first()
 
-    if not result:
-        raise HTTPException(
-            status_code= status.HTTP_404_NOT_FOUND,
-            detail='User not found'
-        )
+        if not user:
+            raise HTTPException(
+                status_code= status.HTTP_404_NOT_FOUND,
+                detail='User not found'
+            )
+        
+        return user
+    except HTTPException as e:
+        raise e
     
-    user = User(
-        id=result[0],
-        username=result[1],
-        email=result[2],
-        full_name=result[4],
-        is_active=result[5],
-        is_superuser=result[6],
-        created_at=str(result[7])
-    )
-
-    return user
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f'Error en el servidor {e}'
+        )
 
 # Ruta que permite actualizar un usuario en especifico por su id
+#Input: id del usuario a actualizar en la ruta
+#Output: json con mensaje de información exitosa o algun error en el servidor
 @router.put('/user/{id}')
 def update_user(id: int, user: UserUpdate, current_user: Annotated[dict, Depends(decode_token)]):
     

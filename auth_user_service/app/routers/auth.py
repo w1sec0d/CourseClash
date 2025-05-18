@@ -31,13 +31,12 @@ def login(form_data: Login, db: Session = Depends(get_db)):
     try:
         # Obtiene toda la información del usuario
         user = auth_service.get_user_by_email(form_data.username)
-
         if user['success'] == False: 
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials"
             )
-
+        
         # Verificar contraseña
         if not security.verify_password(form_data.password, user['user'].password):
             raise HTTPException(
@@ -56,11 +55,9 @@ def login(form_data: Login, db: Session = Depends(get_db)):
         return {'user':user['user'], 'token': token, 'token_refresh': token_refresh, 'exp': exp}
     
     except HTTPException as e:
-        # Si la excepción ya es HTTPException, no cambiar el código
         raise e  
     
     except Exception as e:
-        # Captura solo errores inesperados y devuelve un 500
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f'Unexpected error occurred, please try again later {e}.'
@@ -112,7 +109,7 @@ def refresh_token(user: Annotated[dict, Depends(decode_token)]):
         # Generar token y su expiración
         token, token_refresh, exp = encode_token(payload)
 
-        return  {'user': user, 'token': token, 'token_refresh': token_refresh, 'exp': exp}
+        return  {'user': user['user'], 'token': token, 'token_refresh': token_refresh, 'exp': exp}
         
     except Exception as e:
         raise HTTPException(
@@ -147,6 +144,7 @@ async def recovery_password(email: Email, db: Session = Depends(get_db)):
 
         #Falta establecer la ruta de la pagina del front
 
+
         # generar body del correo 
         body = f"""
             <h1>¿Olvidaste tu contraseña? Solucionémoslo juntos</h1>
@@ -163,11 +161,10 @@ async def recovery_password(email: Email, db: Session = Depends(get_db)):
             email_to = email.email,
             body = body
         )
-        print(send)
+
         return {
             'success': True,
             'message': 'Email sent successfully',
-            'token': token,
             'exp': exp
         }
     

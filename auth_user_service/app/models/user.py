@@ -6,7 +6,7 @@ class User(BaseModel):
     id: int
     username: str
     email: str
-    full_name: str
+    full_name: Optional[str] = None
     is_active: bool
     is_superuser: bool
     created_at: str
