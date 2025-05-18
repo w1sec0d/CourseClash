@@ -1,32 +1,66 @@
+"""
+Módulo de autenticación para CourseClash API Gateway
+
+Este módulo proporciona endpoints para:
+- Inicio de sesión de usuarios
+- Registro de nuevos usuarios
+- Renovación de tokens de acceso
+- Cierre de sesión
+- Validación de tokens
+
+Utiliza una base de datos simulada para desarrollo, pero está diseñado para integrarse
+con un servicio de autenticación externo en producción.
+"""
+
 from fastapi import APIRouter, HTTPException, Depends, Header, Request, status
 from typing import Optional, Dict
 import os
 
-# Import mock database functions
-from app.utils.mock_db import get_user_by_email, get_user_by_id, generate_mock_token, add_user, verify_mock_token
+# Importar funciones de base de datos simulada
+from app.utils.mock_db import (
+    get_user_by_email, 
+    get_user_by_id, 
+    generate_mock_token, 
+    add_user, 
+    verify_mock_token,
+    get_user_by_username
+)
 
 router = APIRouter()
 
-# Mock authentication endpoints
+# Endpoints de autenticación simulada
 @router.post("/login")
 async def login(request: Request):
+    """
+    Autentica a un usuario y devuelve tokens de acceso y actualización.
+    
+    Args:
+        request: Objeto de solicitud que debe contener email y contraseña
+        
+    Returns:
+        dict: Tokens de acceso y actualización junto con información del usuario
+        
+    Raises:
+        HTTPException: Si faltan credenciales o son inválidas
+    """
     body = await request.json()
     email = body.get("email")
     password = body.get("password")
     
+    # Validar que se proporcionaron ambos campos
     if not email or not password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email and password are required"
+            detail="Se requieren email y contraseña"
         )
     
-    # In a real app, you would hash the password and compare with stored hash
-    # For mock purposes, we'll just check if user exists and password is 'password123'
+    # NOTA: En producción, la contraseña debería estar hasheada usando bcrypt o similar
+    # y comparada con un hash almacenado en la base de datos
     user = get_user_by_email(email)
-    if not user or password != "password123":
+    if not user or password != "password123":  # Contraseña hardcodeada solo para desarrollo
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
+            detail="Email o contraseña incorrectos"
         )
     
     # Generate token
