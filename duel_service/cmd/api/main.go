@@ -11,6 +11,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// VARIABLES Y ESTRUCTURAS ---------------------------------------------
+
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
@@ -28,14 +30,18 @@ type DuelConnection struct {
 
 var (
 	duelConnections = make(map[string]*DuelConnection)
-	duelSyncChans   = make(map[string]chan struct{}) // Canal para sincronizar la conexión de P1 y P2
-	mu              sync.Mutex                      // Mutex para proteger el acceso a duelConnections y duelSyncChans
+	// Canal para sincronizar la conexión de P1 y P2, es decir un estudiante con otro
+	duelSyncChans   = make(map[string]chan struct{})
+	// Mutex para proteger el acceso a duelConnections y duelSyncChans 
+	mu              sync.Mutex                      
 )
+
+//----------------------------------------------------------------------------------
 
 func main() {
 	r := gin.Default()
 
-	// Ruta que permite solicitar un duelo (lógica existente)
+	// * Ruta que permite solicitar un duelo
 	r.POST("/api/duels/request", func(c *gin.Context) {
 		var request struct {
 			RequesterID string `json:"requester_id"`
@@ -46,7 +52,8 @@ func main() {
 			return
 		}
 		duelID := request.RequesterID + "_vs_" + request.OpponentID
-		mu.Lock() // Proteger acceso a duelRequests
+		// Proteger acceso a duelRequests para evitar comportamientos inesperados
+		mu.Lock() 
 		if _, exists := duelRequests[duelID]; exists {
 			mu.Unlock()
 			c.JSON(http.StatusConflict, gin.H{"error": "Duel already requested"})
@@ -57,7 +64,7 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"duel_id": duelID})
 	})
 
-	// Ruta que permite aceptar un duelo (lógica existente)
+	// *  Ruta que permite aceptar un duelo
 	r.POST("/api/duels/accept", func(c *gin.Context) {
 		var accept struct {
 			DuelID string `json:"duel_id"`
@@ -66,17 +73,19 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 			return
 		}
-		mu.Lock() // Proteger acceso a duelRequests
-		ch, exists := duelRequests[accept.DuelID]
-		mu.Unlock() // Desbloquear pronto para no retener el lock durante la operación de canal
+		// Proteger acceso a duelRequests para evitar lecturas inconsistentes
+		mu.Lock() 
+		channel, exists := duelRequests[accept.DuelID]
+		mu.Unlock() 
 		if exists {
-			ch <- true // Esto podría bloquear si nadie está escuchando en duelRequests[accept.DuelID]
+			channel <- true // Esto podría bloquear si nadie está escuchando en duelRequests[accept.DuelID]
 			c.JSON(http.StatusOK, gin.H{"message": "Duel accepted"})
 		} else {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Duel not found"})
 		}
 	})
 
+	// * Ruta para que un jugador pueda acceder a la conexión web socket. 
 	r.GET("/ws/duels/:duel_id/:player_id", func(c *gin.Context) {
 		duelID := c.Param("duel_id")
 		playerID := c.Param("player_id")
@@ -88,62 +97,92 @@ func main() {
 }
 
 func wsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID string) {
+	// Verificar si el duelo fue aceptado
+	mu.Lock()
+	channel, exists := duelRequests[duelID]
+	mu.Unlock()
+	if !exists {
+		log.Printf("El duelo %s no ha sido solicitado o aceptado. Jugador %s no puede unirse.", duelID, playerID)
+		http.Error(w, "El duelo no ha sido aceptado.", http.StatusForbidden)
+		return
+	}
+
+	select {
+	case <-channel: // Esperar a que el duelo sea aceptado
+		log.Printf("El duelo %s fue aceptado. Jugador %s puede unirse.", duelID, playerID)
+	default:
+		log.Printf("El duelo %s aún no ha sido aceptado. Jugador %s no puede unirse.", duelID, playerID)
+		http.Error(w, "El duelo no ha sido aceptado.", http.StatusForbidden)
+		return
+	}
+
+	//Eleva o actualiza el estado de la conexión HTTP del jugador a WebSocket
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("Error al actualizar a WebSocket para el jugador %s en el duelo %s: %v", playerID, duelID, err)
 		return
 	}
-	defer conn.Close() // Se ejecutará cuando wsHandler retorne
+	// Termina la conexión cuando todo se ha ejecutado
+	defer conn.Close() 
 
-	// Crear el canal Done para este jugador. HandleDuel lo cerrará.
+	// Crear el canal Done para este jugador. Este canal permite reconocder cuando un jugador termino
 	playerDoneChan := make(chan struct{})
+	
+	//Asigna la conexión webSocket al jugador
 	player := &handlers.Player{
 		ID:    playerID,
 		Score: 0,
 		Conn:  conn,
-		Done:  playerDoneChan, // Asignar el canal Done
+		Done:  playerDoneChan,
 	}
 
 	mu.Lock()
-	dc, dcExists := duelConnections[duelID]
-	if !dcExists {
-		dc = &DuelConnection{}
-		duelConnections[duelID] = dc
+
+	// Verifica si hay un mapa de las conexiones de los jugadores para un duelo determinado
+	// Si no hay lo crea y lo asigna a playersConnected
+	playersConnected, playersConnectedExists := duelConnections[duelID]
+	if !playersConnectedExists {
+		playersConnected = &DuelConnection{}
+		duelConnections[duelID] = playersConnected
 	}
 
-	syncChan, syncChanExists := duelSyncChans[duelID]
-	if !syncChanExists {
-		syncChan = make(chan struct{})
-		duelSyncChans[duelID] = syncChan
+	//Revisa si existe un canal para sincronizar el duelo, si no lo hay lo crea
+	syncChannel, syncChannelExists := duelSyncChans[duelID]
+	if !syncChannelExists {
+		syncChannel = make(chan struct{})
+		duelSyncChans[duelID] = syncChannel
 	}
 
 	isPlayer1 := false
-	if dc.Player1 == nil { // Este es el Jugador 1
-		dc.Player1 = player
+	//En caso de que el player 1 no este conectado la primera conexión webSocket será la de el.
+	if playersConnected.Player1 == nil { 
+		playersConnected.Player1 = player
 		isPlayer1 = true
-		mu.Unlock() // Desbloquear ANTES de la operación de bloqueo (espera en el canal)
+		mu.Unlock() 
 
+		//En caso de que salga bien escribe en la conexión webSocket Esperando al oponente
 		log.Printf("Jugador %s (P1) conectado al duelo %s. Esperando al oponente...", playerID, duelID)
 		if err := conn.WriteMessage(websocket.TextMessage, []byte("Esperando al oponente...")); err != nil {
 			log.Printf("Error al enviar mensaje 'Esperando oponente' a P1 %s: %v", playerID, err)
 			return // Salir si no se puede comunicar
 		}
-
-		<-syncChan // Esperar señal del Jugador 2
+		
+		// El jugador 1(estudiante) se queda esperando a que el segundo jugador envie un valor al canal (es decir cuándo se conecte)
+		<-syncChannel 
 
 		log.Printf("Jugador %s (P1) notificado por P2 para el duelo %s.", playerID, duelID)
 		if err := conn.WriteMessage(websocket.TextMessage, []byte("¡Oponente conectado! El duelo comenzará pronto.")); err != nil {
 			log.Printf("Error al enviar mensaje 'Oponente conectado' a P1 %s: %v", playerID, err)
 			// No retornar necesariamente, P1 aún debe esperar en player.Done
 		}
-		// P1 no llama a startDuel; P2 lo hará. P1 ahora espera a que el duelo termine.
 
-	} else if dc.Player2 == nil { // Este es el Jugador 2
-		dc.Player2 = player
-		// Capturar P1 y P2 para startDuel. Es seguro leer dc.Player1 aquí porque está protegido por el mutex.
-		p1ToUse := dc.Player1
-		p2ToUse := dc.Player2
-		mu.Unlock() // Desbloquear después de asignar Player2 y capturar P1/P2
+	//Lógica para cuando el jugador se conecta
+	} else if playersConnected.Player2 == nil { 
+		playersConnected.Player2 = player
+		// Capturar P1 y P2 para startDuel. Es seguro leer playersConnected.Player1 aquí porque está protegido por el mutex.
+		p1ToUse := playersConnected.Player1
+		p2ToUse := playersConnected.Player2
+		mu.Unlock() 
 
 		log.Printf("Jugador %s (P2) conectado al duelo %s. Notificando a P1 (%s) e iniciando duelo.", playerID, duelID, p1ToUse.ID)
 		if err := conn.WriteMessage(websocket.TextMessage, []byte("¡Duelo listo!")); err != nil {
@@ -155,10 +194,11 @@ func wsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		log.Printf("P2 (%s) iniciando duelo con P1 (%s) para el duelID %s.", p2ToUse.ID, p1ToUse.ID, duelID)
 		startDuel(p1ToUse, p2ToUse, duelID)
 
-		syncChan <- struct{}{} // Notificar al Jugador 1 que P2 está listo y el duelo ha comenzado/está comenzando
-		// P2 ahora espera a que el duelo termine.
+		// Notifica al Jugador 1 que P2 está listo y el duelo ha comenzado/está comenzando
+		syncChannel <- struct{}{} 
 
-	} else { // Duelo lleno
+		//En caso de que el duelo este lleno
+	} else { 
 		mu.Unlock()
 		log.Printf("Duelo %s ya tiene dos jugadores. Jugador %s (%s) no puede unirse.", duelID, player.ID, playerID)
 		conn.WriteMessage(websocket.TextMessage, []byte("Ya hay dos jugadores conectados."))
@@ -174,7 +214,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 	log.Printf("Jugador %s (ID: %s) esperando finalización del duelo %s.", player.ID, playerRole, duelID)
 	<-player.Done
 	log.Printf("Jugador %s (ID: %s) finalizó participación en duelo %s. Cerrando conexión.", player.ID, playerRole, duelID)
-	// defer conn.Close() se ejecutará al salir de wsHandler.
+	// defer conn.Close() se ejque es dc en este códigoecutará al salir de wsHandler.
 }
 
 func startDuel(player1, player2 *handlers.Player, duelID string) {
