@@ -13,6 +13,7 @@
     "@graphql-tools/schema": "^10.0.23",
     "@hookform/resolvers": "^5.0.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.12.1",
     "graphql": "^16.11.0",
     "graphql-yoga": "^5.13.4",
     "lucide-react": "^0.511.0",
