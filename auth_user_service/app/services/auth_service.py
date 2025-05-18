@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from ..db import get_db
 from ..models.user import UserInterno
+from fastapi_mail import FastMail, MessageSchema
 
+from ..config import conf
 
 
 # Dado los datos de un usuario en formato tupla, transforma los datos a un objeto de tipo User
@@ -59,3 +61,15 @@ def get_user_by_email(email: str) -> UserInterno:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f'Error verifying email {e}'
         )
+    
+# Servicio para enviar un correo de recuperación de contraseña
+async def send_email(subject: str, email_to: str, body: str):
+    message = MessageSchema(
+        subject = subject,
+        recipients = [email_to],
+        body = body, 
+        subtype = "html"
+    )
+    fm = FastMail(conf)
+    await fm.send_message(message)
+    return {'message': 'Email sent successfully'}

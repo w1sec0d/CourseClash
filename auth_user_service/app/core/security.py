@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 import os 
 import bcrypt
+import secrets
 
 load_dotenv()
 
@@ -45,12 +46,18 @@ def decode_token(token: Annotated[str, Depends(oauth2_scheme)]) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail = "Invalid Token"
         )
-    
+
+# Funcion encargada de encriptar la contraseña
 def hash_password(password: str) -> str: 
     salt = bcrypt.gensalt()
     hash_password = bcrypt.hashpw(password.encode(), salt)
     return hash_password.decode()
 
-
+# Función encargada de verificar la contraseña del usuario
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
+
+
+# Funcion de generar un codigo de verificación 
+def generate_verification_code() -> str: 
+    return secrets.token_urlsafe(6)[:6]

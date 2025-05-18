@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 #Impotación de funciones para codificación y decodificación del token
-from ..core.security import encode_token, decode_token
+from ..core.security import encode_token, decode_token, generate_verification_code
 
 #Imporatación de esquema de usuario
-from ..models.user import UserCreate, User
+from ..models.user import User
 from ..models.login import Login
-from ..models.login import loginResponse
+
+
 
 #Conexion de la base de datos
 from ..db import get_db
@@ -19,7 +19,7 @@ from ..core import security
 from ..services import auth_service
 
 #servicio de verificación de correo
-from ..services.auth_service import verify_email
+from ..services.auth_service import verify_email, send_email
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
@@ -56,49 +56,10 @@ def login(form_data: Login, db: Session = Depends(get_db)):
             detail=f'Error logging in {e}'
         )
 
-# Ruta para registrar un nuevo usuario
-@router.post("/register")
-def register(user: UserCreate, db: Session = Depends(get_db)):
-    try:
-
-        # Verificar si el correo ya está registrado
-        if verify_email(user.email):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-        
-        # Cifrado contraseña
-        password_hash = security.hash_password(user.password)
-
-        query = text("""
-                        INSERT INTO users (username, email, hashed_password, full_name, is_active, is_superuser) 
-                        VALUES (:username, :email, :password, :full_name, :is_active, :is_superuser)
-                    """)
-
-        db.execute(query, {
-            'username': user.username,
-            'email': user.email,
-            'password': password_hash,
-            'full_name': user.full_name,
-            'is_active': user.is_active,
-            'is_superuser': user.is_superuser
-        })
-
-        db.commit()
-        
-        return {
-            "success": True,
-            "message": "User created successfully"
-        }
-    
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f'Error creating user {e}'
-        )
 
 # Ruta que permite obtener la información del usuario autenticado
+# Input: token de acceso en el header
+
 @router.get('/me')
 def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
 
@@ -122,6 +83,9 @@ def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
 
     return user
 
+# Ruta para refrescar el token
+# Input: token de refresco 
+# Output : json con informacion del usuario, token, token de refresco y expiracion del token
 @router.post('/refresh')
 def refresh_token(user: Annotated[dict, Depends(decode_token)]):
     try:
@@ -143,7 +107,63 @@ def refresh_token(user: Annotated[dict, Depends(decode_token)]):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f'Error refreshing token {e}'
         )
+
+# Ruta para recuperar la contraseña
+# Input: email
+# Output : Json con token, expiración y mensaje de éxito
+@router.post('/recovery')
+async def recovery_password(email: str, db: Session = Depends(get_db)):
+    try:
+        # Verificar si el correo se encuentra registrado
+        if verify_email(email) == False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Email not registered'
+            )
+
+        # Generar un codigo de verificación
+        code = generate_verification_code()
+
+        payload = {
+            'email': email,
+            'code': code
+        }
+        # Generar token 
+
+        token, refresh_token, exp = encode_token(payload, expiration_minutes=5)
+
+        # generar body del correo 
+        body = f"""
+            <h1>¿Olvidaste tu contraseña? Solucionémoslo juntos</h1>
+            <p>Para recuperar tu contraseña, ingresa el siguiente código en la aplicación:</p>
+            <h2>{code}</h2>
+            <p>Si no solicitaste este cambio, ignora este correo.</p>
+        """
+
+        # Enviar correo
+        subject = "Recuperación de contraseña"
+
+        send =  await send_email(
+            subject= subject,
+            email_to = email,
+            body = body
+        )
+        print(send)
+        return {
+            'success': True,
+            'message': 'Email sent successfully',
+            'token': token,
+            'exp': exp
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f'Error sending email {e}'
+        )
     
+
+
+
 
 
 
