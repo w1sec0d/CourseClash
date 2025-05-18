@@ -52,25 +52,18 @@ def verify_email(email: str) -> bool:
 # Output: un objeto de tipo UserInterno
 # Ejemplo de objeto: UserInterno(id=1, username='username', email='email', password='hashed_password', full_name='full_name', is_active=True, is_superuser=False, created_at='2023-10-01 12:00:00')
 def get_user_by_email(email: str) -> UserInterno:
-    try: 
+    
         db: Session = next(get_db())
         query = text(""" SELECT * FROM users WHERE email = :email""")
         user = db.execute(query, {'email': email})
         result = user.fetchone()
 
         if not result: 
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail='user o password incorrect'
-            )
+            return {'success': False}
         
         user = transform_user(result)
-        return user
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f'Error verifying email {e}'
-        )
+        return {'success': True, 'user': user}
+
     
 # Servicio para enviar un correo de recuperación de contraseña
 # Input: subject: Asunto del mensaje, email_to: A quien va dirijido el correo, body

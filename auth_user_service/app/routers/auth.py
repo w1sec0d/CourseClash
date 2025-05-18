@@ -29,34 +29,43 @@ router = APIRouter(prefix='/auth', tags=['auth'])
 @router.post('/token')
 def login(form_data: Login, db: Session = Depends(get_db)):
     try:
-
         # Obtiene toda la información del usuario
         user = auth_service.get_user_by_email(form_data.username)
 
-        # Verificar contraseña
-        if security.verify_password(form_data.password, user.password) == False:
+        if user['success'] == False: 
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail='Invalid credentials'
+                detail="Invalid credentials"
             )
-        
+
+        # Verificar contraseña
+        if not security.verify_password(form_data.password, user['user'].password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials"
+            )
+
         # Generar token
-        
         payload = {
-            'id': user.id,
-            'email': user.email
+            'id': user['user'].id,
+            'email': user['user'].email
         }
 
-        # Generar token y su expiración
         token, token_refresh, exp = encode_token(payload)
 
-        return  {'user': user, 'token': token, 'token_refresh': token_refresh, 'exp': exp}
+        return {'user':user['user'], 'token': token, 'token_refresh': token_refresh, 'exp': exp}
+    
+    except HTTPException as e:
+        # Si la excepción ya es HTTPException, no cambiar el código
+        raise e  
     
     except Exception as e:
+        # Captura solo errores inesperados y devuelve un 500
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f'Error logging in {e}'
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f'Unexpected error occurred, please try again later {e}.'
         )
+
 
 
 # Ruta que permite obtener la información del usuario autenticado
@@ -173,6 +182,8 @@ async def recovery_password(email: Email, db: Session = Depends(get_db)):
 
     
 #Endpoint para cambiar contraseña
+#Input: Data contraseña nueva y el token 
+#Output: Mensaje de confirmacion
 @router.post('/update')
 def update_password(data: UpdatePassword, token : Annotated[dict, Depends(decode_token)], db: Session = Depends(get_db)):
     try: 
