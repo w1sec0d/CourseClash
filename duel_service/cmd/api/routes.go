@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"courseclash/duel-service/internal/duelcore"
+	duelhandlers "courseclash/duel-service/internal/handlers"
 
 	"github.com/gin-gonic/gin"
 )
@@ -56,6 +57,6 @@ func RegisterRoutes(r *gin.Engine) {
 	r.GET("/ws/duels/:duel_id/:player_id", func(c *gin.Context) {
 		duelID := c.Param("duel_id")
 		playerID := c.Param("player_id")
-		duelcore.WsHandler(c.Writer, c.Request, duelID, playerID)
+		duelhandlers.WsHandler(c.Writer, c.Request, duelID, playerID)
 	})
 }
