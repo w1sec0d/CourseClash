@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"courseclash/duel-service/internal/duelcore"
+	"courseclash/duel-service/internal/duelsync"
 	duelhandlers "courseclash/duel-service/internal/handlers"
 
 	"github.com/gin-gonic/gin"
@@ -22,14 +22,14 @@ func RegisterRoutes(r *gin.Engine) {
 			return
 		}
 		duelID := request.RequesterID + "_vs_" + request.OpponentID
-		duelcore.Mu.Lock()
-		if _, exists := duelcore.DuelRequests[duelID]; exists {
-			duelcore.Mu.Unlock()
+		duelsync.Mu.Lock()
+		if _, exists := duelsync.DuelRequests[duelID]; exists {
+			duelsync.Mu.Unlock()
 			c.JSON(http.StatusConflict, gin.H{"error": "Duel already requested"})
 			return
 		}
-		duelcore.DuelRequests[duelID] = make(chan bool)
-		duelcore.Mu.Unlock()
+		duelsync.DuelRequests[duelID] = make(chan bool)
+		duelsync.Mu.Unlock()
 		c.JSON(http.StatusOK, gin.H{"duel_id": duelID})
 	})
 
@@ -42,9 +42,9 @@ func RegisterRoutes(r *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 			return
 		}
-		duelcore.Mu.Lock()
-		channel, exists := duelcore.DuelRequests[accept.DuelID]
-		duelcore.Mu.Unlock()
+		duelsync.Mu.Lock()
+		channel, exists := duelsync.DuelRequests[accept.DuelID]
+		duelsync.Mu.Unlock()
 		if exists {
 			channel <- true
 			c.JSON(http.StatusOK, gin.H{"message": "Duel accepted"})

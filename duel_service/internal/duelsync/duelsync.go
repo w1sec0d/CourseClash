@@ -1,4 +1,4 @@
-package duelcore
+package duelsync
 
 import (
 	"log"
@@ -20,9 +20,6 @@ var Upgrader = websocket.Upgrader{
 
 // En este map se almacenan los desafios de los duelos
 var DuelRequests = make(map[string]chan bool)
-
-// DuelConnection almacena los jugadores de un duelo.
-// (Ahora en models)
 
 // DuelConnections es el mapa que almacena las conexiones de los duelos activos
 var (

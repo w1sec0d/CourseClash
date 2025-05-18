@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"courseclash/duel-service/internal/duelcore"
+	"courseclash/duel-service/internal/duelsync"
 	"courseclash/duel-service/internal/models"
 
 	"github.com/gorilla/websocket"
@@ -14,7 +14,7 @@ import (
 // Se encarga de la lógica de conexión y sincronización entre los dos jugadores de un duelo.
 func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID string) {
 	// Eleva o actualiza el estado de la conexión HTTP del jugador a WebSocket
-	conn, err := duelcore.Upgrader.Upgrade(w, r, nil)
+	conn, err := duelsync.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("Error al actualizar a WebSocket para el jugador %s en el duelo %s: %v", playerID, duelID, err)
 		return
@@ -31,21 +31,21 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		Done:  playerDoneChan,
 	}
 
-	duelcore.Mu.Lock()
+	duelsync.Mu.Lock()
 
 	// Verifica si hay un mapa de las conexiones de los jugadores para un duelo determinado
 	// Si no hay lo crea y lo asigna a playersConnected
-	playersConnected, playersConnectedExists := duelcore.DuelConnections[duelID]
+	playersConnected, playersConnectedExists := duelsync.DuelConnections[duelID]
 	if !playersConnectedExists {
 		playersConnected = &models.DuelConnection{}
-		duelcore.DuelConnections[duelID] = playersConnected
+		duelsync.DuelConnections[duelID] = playersConnected
 	}
 
 	// Revisa si existe un canal para sincronizar el duelo, si no lo hay lo crea
-	syncChannel, syncChannelExists := duelcore.DuelSyncChans[duelID]
+	syncChannel, syncChannelExists := duelsync.DuelSyncChans[duelID]
 	if !syncChannelExists {
 		syncChannel = make(chan struct{})
-		duelcore.DuelSyncChans[duelID] = syncChannel
+		duelsync.DuelSyncChans[duelID] = syncChannel
 	}
 
 	isPlayer1 := false
@@ -53,7 +53,7 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 	if playersConnected.Player1 == nil {
 		playersConnected.Player1 = player
 		isPlayer1 = true
-		duelcore.Mu.Unlock()
+		duelsync.Mu.Unlock()
 
 		// En caso de que salga bien escribe en la conexión webSocket Esperando al oponente
 		log.Printf("Jugador %s (P1) conectado al duelo %s. Esperando al oponente...", playerID, duelID)
@@ -77,7 +77,7 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		// Capturar P1 y P2 para startDuel. Es seguro leer playersConnected.Player1 aquí porque está protegido por el mutex.
 		p1ToUse := playersConnected.Player1
 		p2ToUse := playersConnected.Player2
-		duelcore.Mu.Unlock()
+		duelsync.Mu.Unlock()
 
 		log.Printf("Jugador %s (P2) conectado al duelo %s. Notificando a P1 (%s) e iniciando duelo.", playerID, duelID, p1ToUse.ID)
 		if err := conn.WriteMessage(websocket.TextMessage, []byte("¡Duelo listo!")); err != nil {
@@ -91,14 +91,14 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 			{ID: "1", Text: "¿Cuál es la capital de Francia?", Answer: "Paris", Duration: 10},
 			{ID: "2", Text: "¿Cuánto es 2+2?", Answer: "4", Duration: 5},
 		}
-		duelcore.StartDuel(p1ToUse, p2ToUse, duelID, questions, HandleDuel)
+		duelsync.StartDuel(p1ToUse, p2ToUse, duelID, questions, HandleDuel)
 
 		// Notifica al Jugador 1 que P2 está listo y el duelo ha comenzado/está comenzando
 		syncChannel <- struct{}{}
 
 	// En caso de que el duelo este lleno
 	} else {
-		duelcore.Mu.Unlock()
+		duelsync.Mu.Unlock()
 		log.Printf("Duelo %s ya tiene dos jugadores. Jugador %s (%s) no puede unirse.", duelID, player.ID, playerID)
 		conn.WriteMessage(websocket.TextMessage, []byte("Ya hay dos jugadores conectados."))
 		return // Salir temprano, no esperar en player.Done
