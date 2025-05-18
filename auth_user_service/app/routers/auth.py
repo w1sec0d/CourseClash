@@ -24,6 +24,8 @@ from ..services.auth_service import verify_email, send_email
 router = APIRouter(prefix='/auth', tags=['auth'])
 
 # Ruta que permite autenticar un usuario y genera un token si el usuario es valido
+# Input: username debe ser el correo y password
+# Salida: Un objeto con la informacion del usuario, token, token de refresco y expiracion del token
 @router.post('/token')
 def login(form_data: Login, db: Session = Depends(get_db)):
     try:
@@ -59,6 +61,7 @@ def login(form_data: Login, db: Session = Depends(get_db)):
 
 # Ruta que permite obtener la información del usuario autenticado
 # Input: token de acceso en el header
+# Outpur: Objeto de tipo User (ver modelo User)
 
 @router.get('/me')
 def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
@@ -155,6 +158,10 @@ async def recovery_password(email: str, db: Session = Depends(get_db)):
             'token': token,
             'exp': exp
         }
+    
+    except HTTPException as e:
+        raise e
+    
     except Exception as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,

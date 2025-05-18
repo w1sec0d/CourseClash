@@ -11,6 +11,9 @@ from .db import get_db
 app = FastAPI(title="CourseClash Auth Service", 
               description="API for CourseClash authentication and user management")
 
+
+
+
 # Rutas de autenticación y usuarios
 app.include_router(auth_router)
 app.include_router(users_router)

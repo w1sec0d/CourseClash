@@ -9,6 +9,11 @@ from ..config import conf
 
 
 # Dado los datos de un usuario en formato tupla, transforma los datos a un objeto de tipo User
+# Input: una tupla con los datos del usuario
+# Output: un objeto de tipo UserInterno
+# Ejemplo de tupla: (1, 'username', 'email', 'hashed_password', 'full_name', is_active True, is superiority False, datetime)
+# Ejemplo de objeto: UserInterno(id=1, username='username', email='email', password='hashed_password', full_name='full_name', is_active=True, is_superuser=False, created_at='2023-10-01 12:00:00')
+
 def transform_user(user: tuple) -> UserInterno:
     return UserInterno(
         id=user[0],
@@ -22,6 +27,8 @@ def transform_user(user: tuple) -> UserInterno:
     )
 
 # Servicio de verificación de correo 
+# Input: email
+# Output: True si el correo se encuentra registrado, False si no
 def verify_email(email: str) -> bool: 
     try: 
         db: Session = next(get_db())
@@ -40,7 +47,10 @@ def verify_email(email: str) -> bool:
         )
     
 
-# Servicio para obtener la información de un usuario por su id. Retorna un objeto de tipo User
+# Servicio para obtener la información de un usuario por su id. Solo se utilizando de este microservicio 
+# Input: email 
+# Output: un objeto de tipo UserInterno
+# Ejemplo de objeto: UserInterno(id=1, username='username', email='email', password='hashed_password', full_name='full_name', is_active=True, is_superuser=False, created_at='2023-10-01 12:00:00')
 def get_user_by_email(email: str) -> UserInterno:
     try: 
         db: Session = next(get_db())
@@ -63,6 +73,8 @@ def get_user_by_email(email: str) -> UserInterno:
         )
     
 # Servicio para enviar un correo de recuperación de contraseña
+# Input: subject: Asunto del mensaje, email_to: A quien va dirijido el correo, body
+# Output: un objeto con el mensaje de éxito
 async def send_email(subject: str, email_to: str, body: str):
     message = MessageSchema(
         subject = subject,
