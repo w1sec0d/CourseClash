@@ -10,3 +10,16 @@ class loginResponse(BaseModel):
     user: dict
     token: str
     expiresAt: str
+
+#Modelo para la recuperación de contraseña
+class Email(BaseModel):
+    email: str
+
+#Modelo para verificar el codigo
+class code(BaseModel):
+    code: str
+
+#Modelo para Actualizar la contraseña
+class UpdatePassword(BaseModel):
+    password: str
+

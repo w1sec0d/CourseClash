@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from typing import Annotated
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -8,7 +8,7 @@ from ..core.security import encode_token, decode_token, generate_verification_co
 
 #Imporatación de esquema de usuario
 from ..models.user import User
-from ..models.login import Login
+from ..models.login import Login, Email, code, UpdatePassword
 
 
 
@@ -115,10 +115,11 @@ def refresh_token(user: Annotated[dict, Depends(decode_token)]):
 # Input: email
 # Output : Json con token, expiración y mensaje de éxito
 @router.post('/recovery')
-async def recovery_password(email: str, db: Session = Depends(get_db)):
+async def recovery_password(email: Email, db: Session = Depends(get_db)):
     try:
+
         # Verificar si el correo se encuentra registrado
-        if verify_email(email) == False:
+        if verify_email(email.email) == False:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail='Email not registered'
@@ -128,12 +129,14 @@ async def recovery_password(email: str, db: Session = Depends(get_db)):
         code = generate_verification_code()
 
         payload = {
-            'email': email,
+            'email': email.email,
             'code': code
         }
         # Generar token 
 
         token, refresh_token, exp = encode_token(payload, expiration_minutes=5)
+
+        #Falta establecer la ruta de la pagina del front
 
         # generar body del correo 
         body = f"""
@@ -148,7 +151,7 @@ async def recovery_password(email: str, db: Session = Depends(get_db)):
 
         send =  await send_email(
             subject= subject,
-            email_to = email,
+            email_to = email.email,
             body = body
         )
         print(send)
@@ -167,6 +170,29 @@ async def recovery_password(email: str, db: Session = Depends(get_db)):
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f'Error sending email {e}'
         )
+
+    
+#Endpoint para cambiar contraseña
+@router.post('/update')
+def update_password(data: UpdatePassword, token : Annotated[dict, Depends(decode_token)], db: Session = Depends(get_db)):
+    try: 
+        hashed_password = security.hash_password(data.password)
+        query = text(""" UPDATE users SET hashed_password = :password WHERE email = :email""")
+
+        db.execute(query, {'password': hashed_password, 'email': token['email']})
+
+        
+        db.commit()
+
+        return {'success': True, 'message': 'User updated successfully'}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f'Error al actualizar la contraseña {e}'
+        )
+
+
     
 
 
