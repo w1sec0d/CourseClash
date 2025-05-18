@@ -2,6 +2,9 @@
 
 import React, { useState } from 'react';
 import { ChevronLeft, CheckCircle, Award, Clock, AlertCircle, Video, FileText, BookOpen, MessageSquare, Lock } from 'lucide-react';
+import AchievementCard from '../../components/course/AchievementCard';
+import CourseProgress from '../../components/course/CourseProgress';
+import UpcomingActivities from '../../components/course/UpcomingActivities';
 import CourseHeader from '../../components/course/CourseHeader';
 import CourseStats from '../../components/course/CourseStats';
 import ModuleCard from '../../components/course/ModuleCard';
@@ -30,32 +33,14 @@ interface ModuleProps {
   isExpanded: boolean;
 }
 
-interface AnnouncementProps {
-  id: string;
-  title: string;
-  author: string;
-  date: string;
-  content: string;
-  isImportant?: boolean;
-}
-
-interface ResourceProps {
-  title: string;
-  type: string;
-  size?: string;
-  count?: number;
-}
-
-interface RankingProps {
-  id: string;
+interface AchievementProps {
   name: string;
-  avatar: string;
-  level: number;
-  xp: number;
-  completedTasks: number;
-  totalTasks: number;
-  trend: 'up' | 'down' | 'stable';
+  icon: React.ReactNode;
+  color: string;
+  description?: string;
+  unlocked?: boolean;
 }
+
 
 const CourseDetailView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'content' | 'announcements' | 'resources' | 'progress' | 'ranking'>('content');
@@ -63,6 +48,20 @@ const CourseDetailView: React.FC = () => {
   const announcements = mockAnnouncements;
   const resources = mockResources;
   const ranking = mockRanking;
+
+  // Obtener actividades incompletas y no bloqueadas
+  const upcomingActivities = modules.flatMap(module => 
+    module.content
+      .filter(content => 
+        content.status === 'available' || content.status === 'in-progress'
+      )
+      .map(content => ({
+        title: content.title,
+        module: `Módulo ${module.id}`,
+        daysUntil: content.dueDate ? Math.floor((new Date(content.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0,
+        xpReward: content.xpReward
+      }))
+  );
 
   const toggleModule = (moduleId: string) => {
     setModules(modules.map(module => 
@@ -85,6 +84,28 @@ const CourseDetailView: React.FC = () => {
       icon: <Clock size={20} className="text-emerald-600" />,
       label: 'Próxima tarea',
       value: 'En 3 días'
+    }
+  ];
+
+  // Lista de logros
+  const achievements: AchievementProps[] = [
+    {
+      name: 'Principiante',
+      icon: <Award className="h-8 w-8" />,
+      color: 'blue',
+      description: 'Completaste el primer módulo'
+    },
+    {
+      name: 'Puntual',
+      icon: <Clock className="h-8 w-8" />,
+      color: 'emerald',
+      description: 'Entregaste todas las tareas a tiempo'
+    },
+    {
+      name: 'Consistente',
+      icon: <CheckCircle className="h-8 w-8" />,
+      color: 'rose',
+      description: 'Has completado actividades diariamente'
     }
   ];
 
@@ -189,22 +210,27 @@ const CourseDetailView: React.FC = () => {
 
           {activeTab === 'progress' && (
             <div className="p-6">
-              <div className="bg-gray-100 p-6 rounded-lg">
-                <h3 className="text-lg font-medium mb-4">Progreso del curso</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total de módulos</span>
-                    <span className="font-medium">3/3 completados</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Actividades completadas</span>
-                    <span className="font-medium">7/14 completadas</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Puntos XP</span>
-                    <span className="font-medium">185/300 puntos</span>
+              <div className="space-y-8">
+                  
+                {/* Sección de detalles del progreso */}
+                <CourseProgress modules={modules} />
+
+                {/* Sección de logros */}
+                <div className="bg-white p-6 rounded-lg shadow-sm">
+                  <h3 className="text-lg font-medium mb-4">Logros desbloqueados</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {achievements.map((achievement, index) => (
+                      <AchievementCard
+                        key={achievement.name}
+                        achievement={achievement}
+                        index={index}
+                      />
+                    ))}
                   </div>
                 </div>
+
+                {/* Sección de próximas actividades */}
+                <UpcomingActivities activities={upcomingActivities} />
               </div>
             </div>
           )}
