@@ -19,6 +19,14 @@ export interface ModuleProps {
   isExpanded: boolean;
 }
 
+export interface AchievementProps {
+  name: string;
+  icon: React.ReactNode;
+  color: string;
+  description?: string;
+  unlocked?: boolean;
+}
+
 export interface AnnouncementProps {
   id: string;
   title: string;

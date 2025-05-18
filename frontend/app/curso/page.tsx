@@ -11,6 +11,7 @@ import ModuleCard from '../../components/course/ModuleCard';
 import AnnouncementCard from '../../components/course/AnnouncementCard';
 import ResourceCard from '../../components/course/ResourceCard';
 import Ranking from '../../components/course/Ranking';
+import { AchievementProps } from './types';
 import { mockModules, mockAnnouncements, mockResources, mockRanking } from './data';
 
 // Types
@@ -31,14 +32,6 @@ interface ModuleProps {
   progress: number;
   content: CourseContentProps[];
   isExpanded: boolean;
-}
-
-interface AchievementProps {
-  name: string;
-  icon: React.ReactNode;
-  color: string;
-  description?: string;
-  unlocked?: boolean;
 }
 
 
