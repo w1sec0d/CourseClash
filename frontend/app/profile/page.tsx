@@ -1,16 +1,18 @@
 "use client"
 
-import React, { useState } from 'react';
-import { ChevronLeft, CheckCircle, Award, Clock, AlertCircle, Video, FileText, BookOpen, MessageSquare, Lock } from 'lucide-react';
-import { UserProfileProps, ProfileStatsProps, ProfileCourseProps } from './types';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, CheckCircle, Award, Clock, AlertCircle, Video, FileText, BookOpen, MessageSquare, Lock, Info } from 'lucide-react';
+import { UserProfileProps, ProfileStatsProps, ProfileCourseProps, AchievementProps, CustomizationItem, CurrencyActions } from './types';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import ProfileImage from '@/components/profile/ProfileImage';
+
 
 const mockProfile: UserProfileProps = {
   id: '1',
   name: 'Juan Pérez',
   email: 'juan.perez@example.com',
-  avatar: '/images/placeholder.png',
+  frame: 'default',
   bio: 'Desarrollador web apasionado por la tecnología y el aprendizaje continuo.',
   level: 5,
   xp: 1250,
@@ -46,29 +48,109 @@ const mockProfile: UserProfileProps = {
     customizationItems: [
       {
         id: '1',
-        name: 'Avatar Estelar',
-        type: 'avatar',
+        name: 'Marco Estelar',
+        type: 'frame',
         price: 100,
+        preview: '/images/customization/frame_stellar.png',
         unlocked: true,
-        preview: '/images/customization/avatar1.png'
+        frameStyle: {
+          color: '#2563eb',
+          thickness: 4,
+          pattern: 'dashed',
+          glow: true
+        }
       },
       {
         id: '2',
-        name: 'Tema Nocturno',
-        type: 'theme',
+        name: 'Marco Nocturno',
+        type: 'frame',
         price: 150,
         unlocked: false,
-        preview: '/images/customization/theme1.png'
+        preview: '/images/customization/frame-dark.png',
+        frameStyle: {
+          color: '#1e293b',
+          thickness: 6,
+          pattern: 'solid',
+          glow: false
+        }
       },
       {
         id: '3',
-        name: 'Placa de Excelencia',
+        name: 'Marco de Excelencia',
         type: 'badge',
         price: 200,
         unlocked: false,
-        preview: '/images/customization/badge1.png'
+        preview: '/images/customization/badge-excellence.png'
       }
-    ]
+    ],
+    activeTheme: 'default',
+    activeFrame: 'default',
+    activeBadge: 'default'
+  }
+};
+
+// Función para obtener el estilo del marco
+const getFrameStyle = (frame: string) => {
+  const frameStyles: Record<string, string> = {
+    'default': 'border-gray-200',
+    'stellar': 'border-emerald-600',
+    'gold': 'border-yellow-500',
+    'rainbow': 'border-gradient-to-r from-pink-500 via-purple-500 to-blue-500'
+  };
+  return frameStyles[frame] || frameStyles['default'];
+};
+
+// Currency Actions Implementation
+const currencyActions: CurrencyActions = {
+  async purchaseItem(itemId: string) {
+    const item = mockProfile.currency.customizationItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (!this.canPurchase(item)) {
+      throw new Error('Insufficient funds');
+    }
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Update state
+    mockProfile.currency.balance -= item.price;
+    item.unlocked = true;
+
+    // Update active customization if it's the first unlocked item of its type
+    if (item.type === 'frame' && !mockProfile.currency.customizationItems.some(i => i.type === 'frame' && i.unlocked)) {
+      mockProfile.currency.activeFrame = itemId;
+    }
+    if (item.type === 'theme' && !mockProfile.currency.customizationItems.some(i => i.type === 'theme' && i.unlocked)) {
+      mockProfile.currency.activeTheme = itemId;
+    }
+    if (item.type === 'badge' && !mockProfile.currency.customizationItems.some(i => i.type === 'badge' && i.unlocked)) {
+      mockProfile.currency.activeBadge = itemId;
+    }
+  },
+
+  applyCustomization(itemId: string) {
+    const item = mockProfile.currency.customizationItems.find(i => i.id === itemId);
+    if (!item || !item.unlocked) return;
+
+    // Update active customization
+    if (item.type === 'frame') mockProfile.currency.activeFrame = itemId;
+    if (item.type === 'theme') mockProfile.currency.activeTheme = itemId;
+    if (item.type === 'badge') mockProfile.currency.activeBadge = itemId;
+  },
+
+  async getDailyReward() {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Add daily reward
+    mockProfile.currency.balance += 50;
+    mockProfile.currency.lastUpdated = new Date().toISOString();
+    mockProfile.currency.nextReward = new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toISOString();
+  },
+
+  canPurchase(item: CustomizationItem) {
+    return item.price <= mockProfile.currency.balance;
   }
 };
 
@@ -122,14 +204,8 @@ const ProfilePage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Perfil</h1>
           <button className="text-blue-500 hover:text-blue-700 font-medium">Editar perfil</button>
         </div>
-        <div className="mt-4">
-          <Image
-            src={mockProfile.avatar}
-            alt={mockProfile.name}
-            width={128}
-            height={128}
-            className="rounded-full border-4 border-white"
-          />
+        <div className="mt-4 relative">
+          <ProfileImage />
           <h2 className="mt-4 text-2xl font-bold text-gray-900">{mockProfile.name}</h2>
           <p className="text-gray-600">Nivel {mockProfile.level}</p>
           <p className="mt-2 text-gray-500">{mockProfile.bio}</p>
@@ -280,6 +356,59 @@ const ProfilePage: React.FC = () => {
                   {mockProfile.currency.nextReward}
                 </span>
               </div>
+              <div className="mt-4">
+                <button
+                  onClick={() => currencyActions.getDailyReward()}
+                  className="w-full px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={new Date(mockProfile.currency.nextReward) > new Date()}
+                >
+                  Recoger recompensa diaria
+                </button>
+              </div>
+            </motion.div>
+
+            {/* Active Customizations */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white rounded-lg shadow p-6"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Personalización activa</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Marco</h4>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full border-2" style={{ borderColor: getFrameStyle(mockProfile.currency.activeFrame) }}>
+                        <Image
+                          src="/images/default-profile.png"
+                          alt="Marco activo"
+                          width={24}
+                          height={24}
+                          className="rounded-full"
+                        />
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-500">{mockProfile.currency.activeFrame}</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Tema</h4>
+                  <span className="text-sm text-gray-500">{mockProfile.currency.activeTheme}</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Insignia</h4>
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                    <Image
+                      src={`/images/customization/${mockProfile.currency.activeBadge}.png`}
+                      alt="Insignia activa"
+                      width={32}
+                      height={32}
+                    />
+                  </div>
+                </div>
+              </div>
             </motion.div>
 
             {/* Customization Items */}
@@ -317,6 +446,28 @@ const ProfilePage: React.FC = () => {
                         </span>
                       )}
                     </div>
+                  </div>
+                  <div className="mt-4">
+                    {item.unlocked ? (
+                      <button
+                        onClick={() => currencyActions.applyCustomization(item.id)}
+                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      >
+                        Aplicar
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => currencyActions.purchaseItem(item.id)}
+                        className={`w-full px-4 py-2 rounded-md text-sm font-medium ${
+                          currencyActions.canPurchase(item)
+                            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        }`}
+                        disabled={!currencyActions.canPurchase(item)}
+                      >
+                        {currencyActions.canPurchase(item) ? 'Comprar' : 'Fondos insuficientes'}
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               ))}

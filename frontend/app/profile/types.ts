@@ -4,7 +4,7 @@ export interface UserProfileProps {
   id: string;
   name: string;
   email: string;
-  avatar: string;
+  frame: string;
   bio: string;
   level: number;
   xp: number;
@@ -24,15 +24,33 @@ export interface UserProfileProps {
     balance: number;
     lastUpdated: string;
     nextReward: string;
-    customizationItems: {
-      id: string;
-      name: string;
-      type: 'avatar' | 'theme' | 'badge';
-      price: number;
-      unlocked: boolean;
-      preview: string;
-    }[];
+    customizationItems: CustomizationItem[];
+    activeTheme: string;
+    activeFrame: string;
+    activeBadge: string;
   };
+}
+
+export interface CustomizationItem {
+  id: string;
+  name: string;
+  type: 'frame' | 'theme' | 'badge';
+  price: number;
+  unlocked: boolean;
+  preview: string;
+  frameStyle?: {
+    color?: string;
+    thickness?: number;
+    pattern?: 'solid' | 'dashed' | 'dotted';
+    glow?: boolean;
+  };
+}
+
+export interface CurrencyActions {
+  purchaseItem: (itemId: string) => Promise<void>;
+  applyCustomization: (itemId: string) => void;
+  getDailyReward: () => Promise<void>;
+  canPurchase: (item: CustomizationItem) => boolean;
 }
 
 export interface ProfileStatsProps {
