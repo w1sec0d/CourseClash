@@ -33,7 +33,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
-  
+
   const handleForgotPassword = async () => {
     const { value: email, isConfirmed } = await Swal.fire({
       title: '¿Olvidaste tu contraseña?',
@@ -56,7 +56,7 @@ export default function Login() {
         return null;
       },
     });
-    
+
     if (isConfirmed && email) {
       console.log('📧 Password reset requested for:', email);
       try {
@@ -85,8 +85,8 @@ export default function Login() {
     try {
       // Call the login function from auth context
       const result = await login(data.email, data.password);
-      console.log('Login successful:', result);
-      
+      console.log('✅ Login successful:', result);
+
       // Redirect to dashboard after successful login
       router.push('/dashboard');
     } catch (error) {
@@ -263,7 +263,7 @@ export default function Login() {
             </div>
             <div className='text-sm'>
               <button
-                type="button"
+                type='button'
                 onClick={handleForgotPassword}
                 className='font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer border-0 bg-transparent'
               >
