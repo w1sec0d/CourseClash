@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"courseclash/duel-service/internal/models"
+	"courseclash/duel-service/internal/services"
 )
 
 // Esta función es la encargada de gestionar los duelos, recibe ambos jugadores y las preguntas que regirán el duelo
@@ -107,11 +108,25 @@ func endDuel(player1 *models.Player, player2 *models.Player) {
 		isDraw = true
 	}
 
+	// Calcular el rango final de cada jugador según su puntaje total actualizado
+	newRank1 := services.GetRankByScore(player1.Score)
+	if player1.Rank != string(newRank1) {
+		player1.Rank = string(newRank1)
+		// Aquí en el futuro podrías actualizar el rango en la base de datos
+	}
+	newRank2 := services.GetRankByScore(player2.Score)
+	if player2.Rank != string(newRank2) {
+		player2.Rank = string(newRank2)
+		// Aquí en el futuro podrías actualizar el rango en la base de datos
+	}
+
 	finalMessage := map[string]interface{}{
 		"type": "duel_end",
 		"data": map[string]interface{}{
 			"player1_score": player1.Score,
 			"player2_score": player2.Score,
+			"player1_rank":  player1.Rank,
+			"player2_rank":  player2.Rank,
 			"is_draw":       isDraw,
 			"winner_id":     winnerID, // Será una cadena vacía si isDraw es true
 		},
@@ -128,6 +143,6 @@ func endDuel(player1 *models.Player, player2 *models.Player) {
 		}
 	}
 
-	log.Printf("Duelo finalizado. P1 (%s): %d, P2 (%s): %d. Ganador: %s, Empate: %t",
-		player1.ID, player1.Score, player2.ID, player2.Score, winnerID, isDraw)
+	log.Printf("Duelo finalizado. P1 (%s): %d, P2 (%s): %d. Ganador: %s, Empate: %t | Rangos: P1: %s, P2: %s",
+		player1.ID, player1.Score, player2.ID, player2.Score, winnerID, isDraw, player1.Rank, player2.Rank)
 }

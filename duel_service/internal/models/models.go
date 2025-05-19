@@ -8,6 +8,7 @@ import (
 type Player struct {
 	ID    string
 	Score int
+	Rank  string // El rango actual del jugador, persistente
 	Conn  *websocket.Conn
 	Done  chan struct{}
 }
