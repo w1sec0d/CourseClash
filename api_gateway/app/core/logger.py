@@ -13,7 +13,7 @@ import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 
 # Directorio para logs
@@ -26,7 +26,7 @@ class StructuredFormatter(logging.Formatter):
 
     def format(self, record):
         log_record = {
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "level": record.levelname,
             "message": record.getMessage(),
             "pathname": record.pathname,
