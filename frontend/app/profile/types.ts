@@ -1,4 +1,22 @@
-import { AchievementProps } from '../curso/types';
+export interface AchievementProps {
+  name: string;
+  icon: React.ReactNode;
+  color: string;
+  description: string;
+  courseId?: string;
+  courseName?: string;
+  unlocked?: boolean;
+}
+
+export interface CourseAchievement {
+  courseName: string;
+  achievements: AchievementProps[];
+}
+
+export interface CourseAchievement {
+  courseName: string;
+  achievements: AchievementProps[];
+}
 
 export interface UserProfileProps {
   id: string;
@@ -10,7 +28,7 @@ export interface UserProfileProps {
   xp: number;
   completedCourses: number;
   enrolledCourses: number;
-  achievements: AchievementProps[];
+  achievements: CourseAchievement[];
   rank: number;
   totalStudents: number;
   trending: 'up' | 'down' | 'stable';

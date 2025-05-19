@@ -1,12 +1,16 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, CheckCircle, Award, Clock, AlertCircle, Video, FileText, BookOpen, MessageSquare, Lock, Info } from 'lucide-react';
+import { ChevronLeft, CheckCircle, Award, Clock, AlertCircle, Video, FileText, BookOpen, MessageSquare, Lock, Info, Code } from 'lucide-react';
 import { UserProfileProps, ProfileStatsProps, ProfileCourseProps, AchievementProps, CustomizationItem, CurrencyActions } from './types';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import ProfileImage from '@/components/profile/ProfileImage';
 
+interface CourseAchievement {
+  courseName: string;
+  achievements: AchievementProps[];
+}
 
 const mockProfile: UserProfileProps = {
   id: '1',
@@ -20,16 +24,38 @@ const mockProfile: UserProfileProps = {
   enrolledCourses: 5,
   achievements: [
     {
-      name: 'Principiante',
-      icon: <Award className="h-8 w-8" />,
-      color: 'blue',
-      description: 'Completaste el primer módulo'
+      courseName: 'Desarrollo Web Básico',
+      achievements: [
+        {
+          name: 'Principiante',
+          icon: <Award className="h-8 w-8" />,
+          color: 'blue',
+          description: 'Completaste el primer módulo'
+        },
+        {
+          name: 'HTML Maestro',
+          icon: <FileText className="h-8 w-8" />,
+          color: 'emerald',
+          description: 'Dominas HTML avanzado'
+        }
+      ]
     },
     {
-      name: 'Puntual',
-      icon: <Clock className="h-8 w-8" />,
-      color: 'emerald',
-      description: 'Siempre entregas tareas a tiempo'
+      courseName: 'JavaScript Avanzado',
+      achievements: [
+        {
+          name: 'Puntual',
+          icon: <Clock className="h-8 w-8" />,
+          color: 'emerald',
+          description: 'Siempre entregas tareas a tiempo'
+        },
+        {
+          name: 'Experto en Funciones',
+          icon: <Code className="h-8 w-8" />,
+          color: 'purple',
+          description: 'Dominas funciones de orden superior'
+        }
+      ]
     }
   ],
   rank: 15,
@@ -87,17 +113,6 @@ const mockProfile: UserProfileProps = {
     activeFrame: 'default',
     activeBadge: 'default'
   }
-};
-
-// Función para obtener el estilo del marco
-const getFrameStyle = (frame: string) => {
-  const frameStyles: Record<string, string> = {
-    'default': 'border-gray-200',
-    'stellar': 'border-emerald-600',
-    'gold': 'border-yellow-500',
-    'rainbow': 'border-gradient-to-r from-pink-500 via-purple-500 to-blue-500'
-  };
-  return frameStyles[frame] || frameStyles['default'];
 };
 
 // Currency Actions Implementation
@@ -198,7 +213,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      {/* Header */}
+      {/* User info */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">Perfil</h1>
@@ -311,20 +326,55 @@ const ProfilePage: React.FC = () => {
         )}
 
         {activeTab === 'achievements' && (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {mockProfile.achievements.map((achievement) => (
+          <div className="space-y-8">
+            {mockProfile.achievements.map((courseAchievement: CourseAchievement) => (
               <motion.div
-                key={achievement.name}
+                key={courseAchievement.courseName}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="bg-white rounded-lg shadow p-6"
+                className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl shadow-lg overflow-hidden"
               >
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-full bg-${achievement.color}-100`}>{achievement.icon}</div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{achievement.name}</h3>
-                    <p className="text-sm text-gray-500">{achievement.description}</p>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-emerald-100 rounded-full">
+                        <BookOpen className="h-6 w-6 text-emerald-600" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {courseAchievement.courseName}
+                      </h3>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm">
+                        {courseAchievement.achievements.length}
+                      </span>
+                      <span className="text-sm text-gray-500">logros</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {courseAchievement.achievements.map((achievement: AchievementProps) => (
+                      <div
+                        key={achievement.name}
+                        className="bg-white p-4 rounded-lg shadow-sm transform hover:scale-105 transition-transform duration-300 border border-gray-100"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className={`p-3 rounded-full bg-${achievement.color}-100`}>
+                            {achievement.icon}
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900">{achievement.name}</h4>
+                            <p className="text-sm text-gray-600">{achievement.description}</p>
+                            {achievement.unlocked === false && (
+                              <div className="mt-2 flex items-center space-x-2">
+                                <Lock className="h-4 w-4 text-gray-400" />
+                                <span className="text-xs text-gray-400">Pendiente</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </motion.div>
@@ -402,7 +452,7 @@ const ProfilePage: React.FC = () => {
                   <h4 className="text-sm font-medium text-gray-900 mb-2">Marco</h4>
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                      <div className="w-6 h-6 rounded-full border-2" style={{ borderColor: getFrameStyle(mockProfile.currency.activeFrame) }}>
+                      <div className="w-6 h-6 rounded-full border-2 border-gray-200">
                         <Image
                           src="/images/default-profile.png"
                           alt="Marco activo"
