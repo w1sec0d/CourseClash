@@ -104,12 +104,15 @@ services:
       - courseclash-network
     command: --default-authentication-plugin=mysql_native_password
 
+  # Base de datos Mongo (para Duelos)
   mongo:
     image: mongo:latest
+    container_name: courseclash-mongo
     ports:
       - "27017:27017"
     volumes:
-      - ./mongo:/data/db
+      - mongo_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
       - courseclash-network
 
