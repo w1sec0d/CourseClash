@@ -37,6 +37,7 @@ export interface AnnouncementProps {
 }
 
 export interface ResourceProps {
+  id: string;
   title: string;
   type: string;
   size?: string;
