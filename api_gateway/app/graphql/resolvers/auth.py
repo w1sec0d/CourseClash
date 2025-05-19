@@ -18,6 +18,7 @@ import strawberry
 from typing import List, Optional
 from datetime import datetime
 import os
+from enum import Enum, auto
 
 # Importar funciones de la base de datos simulada para autenticación
 from app.utils.mock_db import (
@@ -31,7 +32,7 @@ from app.utils.mock_db import (
 
 # Tipos GraphQL para el módulo de autenticación
 @strawberry.enum
-class UserRole(str):
+class UserRole(Enum):
     STUDENT = "STUDENT"
     TEACHER = "TEACHER"
     ADMIN = "ADMIN"
