@@ -17,7 +17,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param request body models.RequestDuelRequest true "Datos del duelo"
-// @Success 200 {object} models.RequestDuelResponse
+// @Success 200 {object} models.RequestDuelResponse "{"player_id_vs_player_id"}"
 // @Failure 400 {object} models.ErrorResponseInvalidRequest "{\"invalid_request\":\"Invalid request\"}"
 // @Failure 409 {object} models.ErrorResponseDuelAlreadyRequested "{\"duel_already_requested\":\"Duel already requested\"}"
 // @Router /api/duels/request [post]
@@ -46,7 +46,7 @@ func requestDuelHandler(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param accept body models.AcceptDuelRequest true "ID del duelo"
-// @Success 200 {object} models.AcceptDuelResponse 
+// @Success 200 {object} models.AcceptDuelResponse "{"message": "Duel accepted"}"
 // @Failure 400 {object} models.ErrorResponseInvalidRequest "{\"invalid_request\":\"Invalid request\"}"
 // @Failure 404 {object} models.ErrorResponseDuelNotFound "{\"duel_not_found\":\"Duel not found\"}"
 // @Router /api/duels/accept [post]

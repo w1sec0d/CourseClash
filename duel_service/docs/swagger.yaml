@@ -6,22 +6,38 @@ definitions:
     type: object
   models.AcceptDuelResponse:
     properties:
-      duel_accepted:
+      duel_id:
+        example: player123_vs_player456
+        type: string
+      message:
+        example: Duel accepted successfully
         type: string
     type: object
   models.ErrorResponseDuelAlreadyRequested:
     properties:
-      duel_already_requested:
+      error_code:
+        example: duel_already_requested
+        type: string
+      message:
+        example: A duel between these players has already been requested
         type: string
     type: object
   models.ErrorResponseDuelNotFound:
     properties:
-      duel_not_found:
+      error_code:
+        example: duel_not_found
+        type: string
+      message:
+        example: No duel found with the provided ID
         type: string
     type: object
   models.ErrorResponseInvalidRequest:
     properties:
-      invalid_request:
+      error_code:
+        example: invalid_request
+        type: string
+      message:
+        example: The request body is missing required fields or is malformed
         type: string
     type: object
   models.RequestDuelRequest:
@@ -33,7 +49,11 @@ definitions:
     type: object
   models.RequestDuelResponse:
     properties:
-      Juan_vs_Carlos:
+      duel_id:
+        example: player123_vs_player456
+        type: string
+      message:
+        example: Duel successfully requested
         type: string
     type: object
 info:
@@ -55,7 +75,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: '{"message": "Duel accepted"}'
           schema:
             $ref: '#/definitions/models.AcceptDuelResponse'
         "400":
@@ -85,7 +105,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: '{"player_id_vs_player_id"}'
           schema:
             $ref: '#/definitions/models.RequestDuelResponse'
         "400":

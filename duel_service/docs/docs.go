@@ -41,7 +41,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "{\"message\": \"Duel accepted\"}",
                         "schema": {
                             "$ref": "#/definitions/models.AcceptDuelResponse"
                         }
@@ -87,7 +87,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "{\"player_id_vs_player_id\"}",
                         "schema": {
                             "$ref": "#/definitions/models.RequestDuelResponse"
                         }
@@ -156,32 +156,52 @@ const docTemplate = `{
         "models.AcceptDuelResponse": {
             "type": "object",
             "properties": {
-                "duel_accepted": {
-                    "type": "string"
+                "duel_id": {
+                    "type": "string",
+                    "example": "player123_vs_player456"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Duel accepted successfully"
                 }
             }
         },
         "models.ErrorResponseDuelAlreadyRequested": {
             "type": "object",
             "properties": {
-                "duel_already_requested": {
-                    "type": "string"
+                "error_code": {
+                    "type": "string",
+                    "example": "duel_already_requested"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "A duel between these players has already been requested"
                 }
             }
         },
         "models.ErrorResponseDuelNotFound": {
             "type": "object",
             "properties": {
-                "duel_not_found": {
-                    "type": "string"
+                "error_code": {
+                    "type": "string",
+                    "example": "duel_not_found"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "No duel found with the provided ID"
                 }
             }
         },
         "models.ErrorResponseInvalidRequest": {
             "type": "object",
             "properties": {
-                "invalid_request": {
-                    "type": "string"
+                "error_code": {
+                    "type": "string",
+                    "example": "invalid_request"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "The request body is missing required fields or is malformed"
                 }
             }
         },
@@ -199,8 +219,13 @@ const docTemplate = `{
         "models.RequestDuelResponse": {
             "type": "object",
             "properties": {
-                "Juan_vs_Carlos": {
-                    "type": "string"
+                "duel_id": {
+                    "type": "string",
+                    "example": "player123_vs_player456"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Duel successfully requested"
                 }
             }
         }

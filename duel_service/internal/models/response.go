@@ -1,26 +1,31 @@
 package models
 
-// RequestDuelResponse representa la respuesta al solicitar un duelo.
+// RequestDuelResponse representa la respuesta exitosa al solicitar un duelo.
 type RequestDuelResponse struct {
-	DuelID string `json:"duel_id"`
+	DuelID  string `json:"duel_id" example:"player123_vs_player456"`
+	Message string `json:"message" example:"Duel successfully requested"`
 }
 
-// AcceptDuelResponse representa la respuesta al aceptar un duelo.
+// AcceptDuelResponse representa la respuesta exitosa al aceptar un duelo.
 type AcceptDuelResponse struct {
-	DuelAccepted string `json:"duel_accepted"`
+	DuelID  string `json:"duel_id" example:"player123_vs_player456"`
+	Message string `json:"message" example:"Duel accepted successfully"`
 }
 
-// ErrorResponseInvalidRequest representa un error de request inválido.
+// ErrorResponseInvalidRequest representa un error de solicitud malformada o inválida.
 type ErrorResponseInvalidRequest struct {
-	Error string `json:"error"`
+	ErrorCode string `json:"error_code" example:"invalid_request"`
+	Message   string `json:"message" example:"The request body is missing required fields or is malformed"`
 }
 
-// ErrorResponseDuelAlreadyRequested representa un error de duelo ya solicitado.
+// ErrorResponseDuelAlreadyRequested representa un error cuando ya existe un duelo entre los jugadores.
 type ErrorResponseDuelAlreadyRequested struct {
-	Error string `json:"error"`
+	ErrorCode string `json:"error_code" example:"duel_already_requested"`
+	Message   string `json:"message" example:"A duel between these players has already been requested"`
 }
 
-// ErrorResponseDuelNotFound representa un error de duelo no encontrado.
+// ErrorDuelNotFound representa un error cuando no se encuentra un duelo con el ID dado.
 type ErrorResponseDuelNotFound struct {
-	Error string `json:"error"`
+	ErrorCode string `json:"error_code" example:"duel_not_found"`
+	Message   string `json:"message" example:"No duel found with the provided ID"`
 }
