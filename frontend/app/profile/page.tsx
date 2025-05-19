@@ -205,10 +205,32 @@ const ProfilePage: React.FC = () => {
           <button className="text-blue-500 hover:text-blue-700 font-medium">Editar perfil</button>
         </div>
         <div className="mt-4 relative">
-          <ProfileImage />
-          <h2 className="mt-4 text-2xl font-bold text-gray-900">{mockProfile.name}</h2>
-          <p className="text-gray-600">Nivel {mockProfile.level}</p>
-          <p className="mt-2 text-gray-500">{mockProfile.bio}</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl p-8 shadow-xl transform hover:scale-105 transition-transform duration-300"
+          >
+            <div className="flex flex-col items-center text-center space-y-4">
+              <ProfileImage className="w-32 h-32 mb-4" />
+              <h2 className="text-3xl font-bold text-white">{mockProfile.name}</h2>
+              <div className="flex items-center space-x-2">
+                <span className="text-white">Nivel</span>
+                <span className="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold text-white">{mockProfile.level}</span>
+              </div>
+              <p className="text-white/90">{mockProfile.bio}</p>
+              <div className="flex items-center justify-center space-x-4 mt-4">
+                <div className="flex items-center space-x-2">
+                  <Award className="h-5 w-5 text-white" />
+                  <span className="text-white/90">{mockProfile.completedCourses} cursos completados</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-5 w-5 text-white" />
+                  <span className="text-white/90">{mockProfile.enrolledCourses} cursos en progreso</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
 
