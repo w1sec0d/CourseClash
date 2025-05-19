@@ -11,15 +11,11 @@ from .db import get_db
 app = FastAPI(title="CourseClash Auth Service", 
               description="API for CourseClash authentication and user management")
 
-
-
-
 # Rutas de autenticación y usuarios
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(register_router)
 
-
 # Punto de entrada del microservicio
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host = "0.0.0.0", port = 8000)
+    uvicorn.run("app.main:app", host = "0.0.0.0", port = 8001)
