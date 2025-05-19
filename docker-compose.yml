@@ -6,7 +6,7 @@ services:
     build:
       context: ./auth_user_service
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - DATABASE_URL=mysql://root:password@mysql:3306/auth_db
       - JWT_SECRET=your_jwt_secret_key
@@ -25,7 +25,7 @@ services:
     build:
       context: ./course_service
     ports:
-      - "8001:8001"
+      - '8001:8001'
     environment:
       - DATABASE_URL=mysql://root:password@mysql:3306/course_db
       - JWT_SECRET=your_jwt_secret_key
@@ -43,7 +43,7 @@ services:
       context: ./duel_service
       dockerfile: Dockerfile
     ports:
-      - "8002:8002"
+      - '8002:8002'
     environment:
       - MONGODB_URI=mongodb://mongo:27017/duel_db
     depends_on:
@@ -56,7 +56,7 @@ services:
     build:
       context: ./api_gateway
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       - AUTH_SERVICE_URL=http://auth_user_service:8000
       - COURSE_SERVICE_URL=http://course_service:8001
@@ -64,10 +64,10 @@ services:
       - JWT_SECRET=your_jwt_secret_key
     volumes:
       - ./api_gateway:/app
-    depends_on:
-      - auth_user_service
-      - course_service
-      - duel_service
+    # depends_on:
+    #   - auth_user_service
+    #   - course_service
+    #   - duel_service
     networks:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
@@ -78,7 +78,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - API_URL=http://api_gateway:8080
@@ -87,7 +87,15 @@ services:
     networks:
       - courseclash-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:3000',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -97,7 +105,7 @@ services:
   mysql:
     image: mysql:8.0
     ports:
-      - "3306:3306"
+      - '3306:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=auth_db
@@ -112,7 +120,7 @@ services:
   mongo:
     image: mongo:6.0
     ports:
-      - "27017:27017"
+      - '27017:27017'
     volumes:
       - mongo_data:/data/db
     networks:

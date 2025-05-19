@@ -6,15 +6,8 @@ interface ButtonGroupProps {
   children: React.ReactNode;
 }
 
-export const ButtonGroup: React.FC<ButtonGroupProps> = ({ 
-  className = '',
-  children 
-}) => {
-  return (
-    <div className={`flex items-center ${className}`}>
-      {children}
-    </div>
-  );
+export const ButtonGroup = ({ className = '', children }: ButtonGroupProps) => {
+  return <div className={`flex items-center ${className}`}>{children}</div>;
 };
 
 export default ButtonGroup;

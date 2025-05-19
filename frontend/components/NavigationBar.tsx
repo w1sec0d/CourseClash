@@ -2,8 +2,9 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useState } from 'react';
+import clsx from 'clsx';
 
-export const NavigationBar: React.FC = () => {
+export const NavigationBar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -27,30 +28,38 @@ export const NavigationBar: React.FC = () => {
             <div className='md:block hidden'>
               <div className='ml-10 items-baseline flex space-x-4'>
                 <Link
-                  href='/#inicio'
-                  className='text-white px-3 py-2 rounded-md text-sm font-medium
-                hover:bg-emerald-600'
+                  href='/'
+                  className={clsx(
+                    'text-white px-3 py-2 rounded-md text-sm font-medium',
+                    'hover:bg-emerald-600'
+                  )}
                 >
                   Inicio
                 </Link>
                 <Link
                   href='/#caracteristicas'
-                  className='text-white px-3 py-2 rounded-md text-sm font-medium
-                hover:bg-emerald-600'
+                  className={clsx(
+                    'text-white px-3 py-2 rounded-md text-sm font-medium',
+                    'hover:bg-emerald-600'
+                  )}
                 >
                   Características
                 </Link>
                 <Link
                   href='/duelos'
-                  className='text-white px-3 py-2 rounded-md text-sm font-medium
-                hover:bg-emerald-600'
+                  className={clsx(
+                    'text-white px-3 py-2 rounded-md text-sm font-medium',
+                    'hover:bg-emerald-600'
+                  )}
                 >
                   Duelos
                 </Link>
                 <Link
                   href='/precios'
-                  className='text-white px-3 py-2 rounded-md text-sm font-medium
-                hover:bg-emerald-600'
+                  className={clsx(
+                    'text-white px-3 py-2 rounded-md text-sm font-medium',
+                    'hover:bg-emerald-600'
+                  )}
                 >
                   Precios
                 </Link>
@@ -61,15 +70,19 @@ export const NavigationBar: React.FC = () => {
             <div className='ml-4 items-center md:ml-6 flex space-x-3'>
               <Link
                 href='/login'
-                className='bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium
-              hover:bg-emerald-400 transition-colors duration-300'
+                className={clsx(
+                  'bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium',
+                  'hover:bg-emerald-400 transition-colors duration-300'
+                )}
               >
                 Iniciar Sesión
               </Link>
               <Link
                 href='/registro'
-                className='bg-white text-emerald-700 px-4 py-2 rounded-md text-sm font-medium
-              hover:bg-gray-100 border border-emerald-700 transition-colors duration-300'
+                className={clsx(
+                  'bg-white text-emerald-700 px-4 py-2 rounded-md text-sm font-medium',
+                  'hover:bg-gray-100 border border-emerald-700 transition-colors duration-300'
+                )}
               >
                 Registrarse
               </Link>
@@ -79,8 +92,10 @@ export const NavigationBar: React.FC = () => {
             <button
               type='button'
               onClick={toggleMobileMenu}
-              className='inline-flex p-2 hover:bg-emerald-500 focus:outline-none bg-emerald-600
-            items-center justify-center rounded-md text-white'
+              className={clsx(
+                'inline-flex p-2 bg-emerald-600 items-center justify-center rounded-md text-white',
+                'hover:bg-emerald-500 focus:outline-none'
+              )}
             >
               <svg
                 className='h-6 w-6'
@@ -105,29 +120,37 @@ export const NavigationBar: React.FC = () => {
           <div className='px-2 pt-2 pb-3 sm:px-3 space-y-1'>
             <Link
               href='/#inicio'
-              className='text-white px-3 py-2 rounded-md text-base font-medium
-          hover:bg-emerald-600 block'
+              className={clsx(
+                'text-white px-3 py-2 rounded-md text-base font-medium block',
+                'hover:bg-emerald-600'
+              )}
             >
               Inicio
             </Link>
             <Link
               href='/#caracteristicas'
-              className='text-white px-3 py-2 rounded-md text-base font-medium
-          hover:bg-emerald-600 block'
+              className={clsx(
+                'text-white px-3 py-2 rounded-md text-base font-medium block',
+                'hover:bg-emerald-600'
+              )}
             >
               Características
             </Link>
             <Link
               href='/duelos'
-              className='text-white px-3 py-2 rounded-md text-base font-medium
-          hover:bg-emerald-600 block'
+              className={clsx(
+                'text-white px-3 py-2 rounded-md text-base font-medium block',
+                'hover:bg-emerald-600'
+              )}
             >
               Duelos
             </Link>
             <Link
               href='/precios'
-              className='text-white px-3 py-2 rounded-md text-base font-medium
-          hover:bg-emerald-600 block'
+              className={clsx(
+                'text-white px-3 py-2 rounded-md text-base font-medium block',
+                'hover:bg-emerald-600'
+              )}
             >
               Precios
             </Link>
@@ -136,8 +159,10 @@ export const NavigationBar: React.FC = () => {
             <div className='items-center px-5 flex space-x-3'>
               <Link
                 href='/login'
-                className='bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium
-            w-full text-center hover:bg-emerald-400'
+                className={clsx(
+                  'bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium',
+                  'w-full text-center hover:bg-emerald-400'
+                )}
               >
                 Iniciar Sesión
               </Link>
@@ -145,8 +170,10 @@ export const NavigationBar: React.FC = () => {
             <div className='mt-3 px-5'>
               <Link
                 href='/registro'
-                className='bg-white text-emerald-700 px-4 py-2 rounded-md text-sm font-medium
-            w-full text-center hover:bg-gray-100 border border-emerald-700 block'
+                className={clsx(
+                  'bg-white text-emerald-700 px-4 py-2 rounded-md text-sm font-medium',
+                  'w-full text-center hover:bg-gray-100 border border-emerald-700 block'
+                )}
               >
                 Registrarse
               </Link>
