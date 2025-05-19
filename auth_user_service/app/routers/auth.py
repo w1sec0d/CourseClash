@@ -26,7 +26,7 @@ router = APIRouter(prefix='/auth', tags=['auth'])
 # Ruta que permite autenticar un usuario y genera un token si el usuario es valido
 # Input: username debe ser el correo y password
 # Salida: Un objeto con la informacion del usuario, token, token de refresco y expiracion del token
-@router.post('/token')
+@router.post('/login')
 def login(form_data: Login, db: Session = Depends(get_db)):
     try:
         # Obtiene toda la información del usuario

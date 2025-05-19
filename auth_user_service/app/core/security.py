@@ -2,16 +2,16 @@ from jose import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 
 import os 
 import bcrypt
 import secrets
 
-#load_dotenv()
+load_dotenv()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl = '/auth/token')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl = '/auth/login')
 
 #Función encargada de generar el token
 #Input: paylod información que se quiere enviar en el token, expiration tiempo de expiracion del token
