@@ -9,7 +9,7 @@ type RequestDuelResponse struct {
 // AcceptDuelResponse representa la respuesta exitosa al aceptar un duelo.
 type AcceptDuelResponse struct {
 	DuelID  string `json:"duel_id" example:"player123_vs_player456"`
-	Message string `json:"message" example:"Duel accepted successfully"`
+	Message string `json:"message" example:"Duel accepted"`
 }
 
 // ErrorResponseInvalidRequest representa un error de solicitud malformada o inválida.
