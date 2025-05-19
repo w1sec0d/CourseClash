@@ -22,12 +22,12 @@ def encode_token(payload: dict, expiration_minutes: int = 60) -> str:
     expiration = datetime.now(timezone.utc) + timedelta(minutes=expiration_minutes)
     payload['exp'] = expiration
 
-    token = jwt.encode(payload, os.environ.get('SECRET'), algorithm= os.environ.get('ALGORITM')) 
+    token = jwt.encode(payload, os.environ['SECRET'], algorithm= os.environ['ALGORITM']) 
 
     #Generación de token de refresco
     expiration = datetime.now(timezone.utc) + timedelta(days=1)
     payload['exp'] = expiration
-    refresh_token = jwt.encode(payload, os.environ.get('SECRET'), algorithm= os.environ.get('ALGORITM'))
+    refresh_token = jwt.encode(payload, os.environ['SECRET'], algorithm= os.environ['ALGORITM'])
     
    
     return token, refresh_token, expiration.isoformat()
@@ -37,7 +37,7 @@ def encode_token(payload: dict, expiration_minutes: int = 60) -> str:
 #Output: Informacion de carga del token id, email
 def decode_token(token: Annotated[str, Depends(oauth2_scheme)]) -> dict:
     try: 
-        data = jwt.decode(token=token, key=os.environ["SECRET"], algorithms=["HS256"])
+        data = jwt.decode(token=token, key=os.environ["SECRET"], algorithms=os.environ['ALGORITM'])
 
         return data
     except jwt.ExpiredSignatureError:
