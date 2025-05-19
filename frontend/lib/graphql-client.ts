@@ -15,8 +15,9 @@ export async function fetchGraphQL({
   cache?: RequestCache;
 }) {
   try {
-    // El endpoint predeterminado es nuestra ruta de API local
-    const endpoint = '/api/graphql';
+    // Endpoint del API Gateway
+    const apiGatewayUrl = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8080';
+    const endpoint = `${apiGatewayUrl}/graphql`;
 
     const res = await fetch(endpoint, {
       method: 'POST',
