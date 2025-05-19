@@ -1,8 +1,8 @@
 import os
 from fastapi_mail import ConnectionConfig
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
-load_dotenv()
+#load_dotenv()
 
 # Configura Fast Mail con los nombres correctos
 conf = ConnectionConfig(
