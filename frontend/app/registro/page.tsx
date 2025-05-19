@@ -7,6 +7,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema } from '@/lib/form-schemas';
 import { useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
 
 interface RegisterFormValues {
   firstName: string;
@@ -23,7 +25,7 @@ export default function Register() {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
+    setError,
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -36,18 +38,39 @@ export default function Register() {
       user_type: '',
     },
   });
-  const [submitError, setSubmitError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { register: registerUser } = useAuth();
+  const router = useRouter();
 
   const onSubmit = async (data: RegisterFormValues) => {
-    setSubmitError('');
+    setIsLoading(true);
     try {
-      // Aquí deberías llamar a tu API de registro
-      // await registerUser(data);
-      console.log('Form data:', data);
-      reset();
+      // Create full name from first and last name
+      const fullName = `${data.firstName} ${data.lastName}`.trim();
+      
+      // Map form data to user registration data
+      const userData = {
+        username: data.email.split('@')[0], // Create username from email
+        email: data.email,
+        password: data.password,
+        name: fullName,
+        role: data.user_type === 'teacher' ? 'TEACHER' as const : 'STUDENT' as const,
+      };
+
+      const result = await registerUser(userData);
+      console.log('Registration successful:', result);
+      
+      // Redirect to dashboard after successful registration
+      router.push('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
-      setSubmitError('Error al crear la cuenta. Intenta de nuevo.');
+      setError('root', {
+        message: error instanceof Error 
+          ? error.message 
+          : 'Error al crear la cuenta. Intenta de nuevo.'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -170,9 +193,9 @@ export default function Register() {
               </span>
             </div>
           </div>
-          {submitError && (
+          {errors.root && (
             <div className='p-4 text-white bg-red-500 rounded-lg mb-6'>
-              {submitError}
+              {errors.root.message as string}
             </div>
           )}
           <form
@@ -337,8 +360,13 @@ export default function Register() {
               </label>
             </div>
             <div>
-              <Button type='submit' variant='primary' className='w-full'>
-                Crear Cuenta
+              <Button 
+                type='submit' 
+                variant='primary' 
+                className='w-full' 
+                disabled={isLoading}
+              >
+                {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
               </Button>
             </div>
           </form>

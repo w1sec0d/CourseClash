@@ -49,13 +49,17 @@ app = FastAPI(
 setup_middlewares(app)
 
 # Configuración de CORS (Intercambio de Recursos de Origen Cruzado)
-# Permite que el frontend se comunique con la API desde diferentes orígenes
-# En producción, se recomienda especificar orígenes específicos en lugar de usar "*"
+# Solo permite solicitudes desde localhost para mayor seguridad
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción, reemplazar con orígenes específicos
+    allow_origins=[
+        "http://localhost:3000",  # React dev server
+        "http://127.0.0.1:3000",  # React dev server alternative
+        "http://localhost:8000",   # Common API port
+        "http://127.0.0.1:8000"    # Common API port alternative
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

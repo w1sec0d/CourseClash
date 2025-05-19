@@ -36,10 +36,14 @@ export default function Login() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
+      // Call the login function from auth context
       const result = await login(data.email, data.password);
       console.log('Login successful:', result);
-      router.push('/inicio');
+      
+      // Redirect to dashboard after successful login
+      router.push('/dashboard');
     } catch (error) {
+      // Set form error to display to the user
       setError('root', {
         message:
           error instanceof Error
