@@ -1,92 +1,211 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Annotated
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from sqlalchemy import text
 
-from ..core.config import settings
-from ..core.security import get_token_from_auth0, get_user_info_from_auth0
-from ..db import get_db, sync_auth0_user
+#Impotación de funciones para codificación y decodificación del token
+from ..core.security import encode_token, decode_token, generate_verification_code
+
+#Imporatación de esquema de usuario
 from ..models.user import User
+from ..models.login import Login, Email, UpdatePassword
 
-router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/token")
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-) -> Dict[str, Any]:
-    """Endpoint para obtener un token de acceso usando Auth0"""
+
+#Conexion de la base de datos
+from ..db import get_db
+
+from ..core import security
+from ..services import auth_service
+
+#servicio de verificación de correo
+from ..services.auth_service import verify_email, send_email
+
+router = APIRouter(prefix='/auth', tags=['auth'])
+
+# Ruta que permite autenticar un usuario y genera un token si el usuario es valido
+# Input: username debe ser el correo y password
+# Salida: Un objeto con la informacion del usuario, token, token de refresco y expiracion del token
+@router.post('/login')
+def login(form_data: Login, db: Session = Depends(get_db)):
     try:
-        # Obtener token de Auth0
-        auth0_response = get_token_from_auth0(form_data.username, form_data.password)
+        # Obtiene toda la información del usuario
+        user = auth_service.get_user_by_email(form_data.username)
+        if user['success'] == False: 
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials"
+            )
         
-        # Obtener información del usuario desde Auth0
-        access_token = auth0_response.get("access_token")
-        user_info = get_user_info_from_auth0(access_token)
-        
-        # Sincronizar usuario con la base de datos
-        user = sync_auth0_user(db, user_info)
-        
-        # Devolver la respuesta de Auth0 con información adicional
-        return {
-            **auth0_response,
-            "user_id": user.id,
-            "email": user.email,
-            "name": user.name
+        # Verificar contraseña
+        if not security.verify_password(form_data.password, user['user'].password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials"
+            )
+
+        # Generar token
+        payload = {
+            'id': user['user'].id,
+            'email': user['user'].email,
+            'is_superuser': user['user'].is_superuser
         }
+
+        token, token_refresh, exp = encode_token(payload)
+
+        return {'user':user['user'], 'token': token, 'token_refresh': token_refresh, 'exp': exp}
+    
+    except HTTPException as e:
+        raise e  
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f'Unexpected error occurred, please try again later {e}.'
+        )
+
+
+
+# Ruta que permite obtener la información del usuario autenticado
+# Input: token de acceso en el header
+# Outpur: Objeto de tipo User (ver modelo User)
+
+@router.get('/me')
+def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
+
+    db: Session = next(get_db())
+    query = text(""" SELECT * FROM users where id = :id""")
+    result = db.execute(query, {'id': user['id']}).fetchone()
+    if not result: 
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='User not found'
+        )
+    user = User(
+        id=result[0],
+        username=result[1],
+        email=result[2],
+        full_name=result[4],
+        is_active=result[5],
+        is_superuser=result[6],
+        created_at=str(result[7])
+    )
+
+    return user
+
+# Ruta para refrescar el token
+# Input: token de refresco 
+# Output : json con informacion del usuario, token, token de refresco y expiracion del token
+@router.post('/refresh')
+def refresh_token(user: Annotated[dict, Depends(decode_token)]):
+    try:
+        payload = {
+            'id': user['id'],
+            'email': user['email']
+        }
+
+        # Obtiene toda la información del usuario
+        user = auth_service.get_user_by_email(user['email'])
+
+        # Generar token y su expiración
+        token, token_refresh, exp = encode_token(payload)
+
+        return  {'user': user['user'], 'token': token, 'token_refresh': token_refresh, 'exp': exp}
+        
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"No se pudo autenticar: {str(e)}",
-            headers={"WWW-Authenticate": "Bearer"}
+            detail=f'Error refreshing token {e}'
         )
 
-@router.get("/me", response_model=Dict[str, Any])
-async def get_current_user_info(
-    request: Request,
-    db: Session = Depends(get_db)
-) -> Dict[str, Any]:
-    """Endpoint para obtener información del usuario actual"""
-    # Obtener el token de autorización del encabezado
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token de autorización no proporcionado",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-    
-    token = auth_header.split(" ")[1]
-    
+# Ruta para recuperar la contraseña
+# Input: email
+# Output : Json con token, expiración y mensaje de éxito
+@router.post('/recovery')
+async def recovery_password(email: Email, db: Session = Depends(get_db)):
     try:
-        # Obtener información del usuario desde Auth0
-        user_info = get_user_info_from_auth0(token)
-        
-        # Sincronizar usuario con la base de datos
-        user = sync_auth0_user(db, user_info)
-        
-        # Devolver información del usuario
-        return {
-            "id": user.id,
-            "auth0_id": user.auth0_id,
-            "email": user.email,
-            "name": user.name,
-            "nickname": user.nickname,
-            "picture": user.picture,
-            "rank": user.rank,
-            "points": user.points,
-            "level": user.level
+
+        # Verificar si el correo se encuentra registrado
+        if verify_email(email.email) == False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Email not registered'
+            )
+
+        # Generar un codigo de verificación
+        code = generate_verification_code()
+
+        payload = {
+            'email': email.email,
+            'code': code
         }
+        # Generar token 
+
+        token, refresh_token, exp = encode_token(payload, expiration_minutes=5)
+
+        #Falta establecer la ruta de la pagina del front
+
+
+        # generar body del correo 
+        body = f"""
+            <h1>¿Olvidaste tu contraseña? Solucionémoslo juntos</h1>
+            <p>Para recuperar tu contraseña, ingresa el siguiente código en la aplicación:</p>
+            <h2>{code}</h2>
+            <p>Si no solicitaste este cambio, ignora este correo.</p>
+        """
+
+        # Enviar correo
+        subject = "Recuperación de contraseña"
+
+        send =  await send_email(
+            subject= subject,
+            email_to = email.email,
+            body = body
+        )
+
+        return {
+            'success': True,
+            'message': 'Email sent successfully',
+            'exp': exp
+        }
+    
+    except HTTPException as e:
+        raise e
+    
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"No se pudo obtener información del usuario: {str(e)}",
-            headers={"WWW-Authenticate": "Bearer"}
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f'Error sending email {e}'
         )
 
-@router.get("/callback")
-async def auth0_callback(code: str, state: str = None):
-    """Endpoint para manejar el callback de Auth0 (usado en flujo de autorización)"""
-    # Este endpoint es necesario para el flujo de autorización de Auth0
-    # Normalmente redirige al frontend con el código de autorización
-    return {"code": code, "state": state}
+    
+#Endpoint para cambiar contraseña
+#Input: Data contraseña nueva y el token 
+#Output: Mensaje de confirmacion
+@router.post('/update')
+def update_password(data: UpdatePassword, token : Annotated[dict, Depends(decode_token)], db: Session = Depends(get_db)):
+    try: 
+        hashed_password = security.hash_password(data.password)
+        query = text(""" UPDATE users SET hashed_password = :password WHERE email = :email""")
+
+        db.execute(query, {'password': hashed_password, 'email': token['email']})
+
+        
+        db.commit()
+
+        return {'success': True, 'message': 'User updated successfully'}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f'Error al actualizar la contraseña {e}'
+        )
+
+
+    
+
+
+
+
+
+
