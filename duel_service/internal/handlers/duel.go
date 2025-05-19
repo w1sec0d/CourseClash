@@ -13,7 +13,7 @@ import (
 1. Envia la pregunta a ambos jugadores usando broadcastQuestion y comienza a contar el tiempo
 2. Recibe las respuestas de cada jugador usando receiveAnswer()
 3. Calcula la puntuación de cada jugador de acuerdo a su respuesta y tiempo que tardaron
-4. Finalmente se registra el resultado final con las puntuaciones de ambos jugadores
+4. Finalmente se registra el resultado final con las puntuaciones de ambos jugadores y sus rangos actualizados en un JSON
 */
 
 func HandleDuel(player1 *models.Player, player2 *models.Player, questions []models.Question) {
@@ -107,6 +107,8 @@ func endDuel(player1 *models.Player, player2 *models.Player) {
 	} else {
 		isDraw = true
 	}
+
+	//TODO Al traer el jugador de la base de datos es necesario que este rango se calcule con base a su ELO, no solo respecto a el puntaje del duelo
 
 	// Calcular el rango final de cada jugador según su puntaje total actualizado
 	newRank1 := services.GetRankByScore(player1.Score)
