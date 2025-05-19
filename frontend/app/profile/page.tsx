@@ -6,6 +6,7 @@ import { UserProfileProps, ProfileStatsProps, ProfileCourseProps, AchievementPro
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import ProfileImage from '@/components/profile/ProfileImage';
+import TabNavigation from '@/components/TabNavigation';
 
 interface CourseAchievement {
   courseName: string;
@@ -190,8 +191,10 @@ const mockCourses: ProfileCourseProps[] = [
   }
 ];
 
+type TabId = 'courses' | 'achievements' | 'stats' | 'currency';
+
 const ProfilePage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'courses' | 'achievements' | 'stats' | 'currency'>('courses');
+  const [activeTab, setActiveTab] = useState<TabId>('courses');
 
   const stats: ProfileStatsProps[] = [
     {
@@ -250,42 +253,16 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          <button
-            onClick={() => setActiveTab('courses')}
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'courses' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Mis Cursos
-          </button>
-          <button
-            onClick={() => setActiveTab('achievements')}
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'achievements' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Logros
-          </button>
-          <button
-            onClick={() => setActiveTab('stats')}
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'stats' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Estadísticas
-          </button>
-          <button
-            onClick={() => setActiveTab('currency')}
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'currency' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Monedas
-          </button>
-        </nav>
-      </div>
+      <TabNavigation
+        tabs={[
+          { id: 'courses' as TabId, label: 'Mis Cursos' },
+          { id: 'achievements' as TabId, label: 'Logros' },
+          { id: 'stats' as TabId, label: 'Estadísticas' },
+          { id: 'currency' as TabId, label: 'Monedas' }
+        ] as const}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId)}
+      />
 
       {/* Content */}
       <div className="space-y-8">
