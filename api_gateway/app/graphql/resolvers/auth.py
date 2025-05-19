@@ -51,20 +51,24 @@ class User:
 
 
 @strawberry.type
-class AuthResponse:
-    user: Optional[User] = None
+class AuthSuccess:
+    user: User
     token: str
-    refreshToken: Optional[str] = None
-    expiresAt: Optional[str] = None
+    refreshToken: str
+    expiresAt: str
 
 
-@strawberry.input
-class RegisterInput:
-    username: str
-    email: str
-    password: str
-    name: Optional[str] = None
-    role: Optional[UserRole] = None
+@strawberry.type
+class AuthError:
+    message: str
+    code: str
+
+
+# Unión de tipos para la respuesta de autenticación
+AuthResult = strawberry.union("AuthResult", (AuthSuccess, AuthError))
+
+
+# Eliminamos las clases de entrada ya que usaremos argumentos directos
 
 
 # Consultas (Queries)
@@ -139,48 +143,92 @@ class Query:
 @strawberry.type
 class Mutation:
     @strawberry.mutation
-    async def login(self, email: str, password: str) -> AuthResponse:
+    async def login(self, email: str, password: str) -> AuthResult:
         """
         Inicia sesión de un usuario con email y contraseña.
 
         Args:
-            email (str): Correo electrónico del usuario
-            password (str): Contraseña del usuario
+            input (LoginInput): Objeto con email y contraseña del usuario
 
         Returns:
-            AuthResponse: Token de autenticación e información del usuario
+            Union[AuthSuccess, AuthError]:
+                - AuthSuccess: Si el inicio de sesión es exitoso, contiene el token y la información del usuario
+                - AuthError: Si hay un error en la autenticación, contiene el mensaje y código de error
 
-        Raises:
-            Exception: Si las credenciales son inválidas
+        Códigos de error posibles:
+            - INVALID_CREDENTIALS: Las credenciales proporcionadas son incorrectas
+            - ACCOUNT_LOCKED: La cuenta está bloqueada temporalmente
+            - SERVER_ERROR: Error del servidor al procesar la solicitud
         """
-        # En una aplicación real, aquí se hashearía la contraseña para compararla
-        # En este ejemplo, solo verificamos si el usuario existe y la contraseña es 'password123'
-        user_data = get_user_by_email(email)
+        try:
+            # Validar que se hayan proporcionado credenciales
+            if not email or not password:
+                return AuthError(
+                    message="Correo y contraseña son requeridos", code="INVALID_INPUT"
+                )
 
-        if not user_data or password != "password123":
-            raise Exception("Correo o contraseña inválidos")
+            # Obtener usuario por email
+            user_data = get_user_by_email(email)
 
-        # Generar token de autenticación
-        token_data = generate_mock_token(user_data["id"])
+            # Verificar si el usuario existe
+            if not user_data:
+                return AuthError(
+                    message="Correo o contraseña inválidos", code="INVALID_CREDENTIALS"
+                )
 
-        return AuthResponse(
-            user=User(
-                id=user_data["id"],
-                username=user_data["username"],
-                email=user_data["email"],
-                name=user_data.get("name"),
-                avatar=user_data.get("avatar"),
-                role=user_data["role"],
-                createdAt=user_data["createdAt"],
-                updatedAt=user_data.get("updatedAt"),
-            ),
-            token=token_data["token"],
-            refreshToken=token_data["refreshToken"],
-            expiresAt=token_data["expiresAt"],
-        )
+            # En una aplicación real, aquí se verificaría la contraseña hasheada
+            # Esto es solo un ejemplo con una contraseña fija
+            if password != "password123":
+                return AuthError(
+                    message="Correo o contraseña inválidos", code="INVALID_CREDENTIALS"
+                )
+
+            # Verificar si la cuenta está activa (ejemplo de validación adicional)
+            if user_data.get("status") == "LOCKED":
+                return AuthError(
+                    message="Correo o contraseña inválidos", code="INVALID_CREDENTIALS"
+                )
+
+            # Generar token de autenticación
+            token_data = generate_mock_token(user_data["id"])
+
+            if not token_data:
+                return AuthError(
+                    message="Error al generar el token de autenticación",
+                    code="TOKEN_GENERATION_ERROR",
+                )
+
+            return AuthSuccess(
+                user=User(
+                    id=user_data["id"],
+                    username=user_data["username"],
+                    email=user_data["email"],
+                    name=user_data.get("name"),
+                    avatar=user_data.get("avatar"),
+                    role=user_data["role"],
+                    createdAt=user_data["createdAt"],
+                    updatedAt=user_data.get("updatedAt"),
+                ),
+                token=token_data["token"],
+                refreshToken=token_data["refreshToken"],
+                expiresAt=token_data["expiresAt"],
+            )
+
+        except Exception as e:
+            # En producción, se debería registrar este error en un sistema de monitoreo
+            return AuthError(
+                message="Error inesperado al iniciar sesión", code="SERVER_ERROR"
+            )
 
     @strawberry.mutation
-    async def register(self, input: RegisterInput) -> AuthResponse:
+    async def register(
+        self,
+        username: str,
+        email: str,
+        password: str,
+        name: Optional[str] = None,
+        role: Optional[UserRole] = None,
+    ) -> AuthResult:
         """
         Registra un nuevo usuario en el sistema.
 
@@ -188,27 +236,33 @@ class Mutation:
             input (RegisterInput): Datos del nuevo usuario
 
         Returns:
-            AuthResponse: Token de autenticación e información del usuario
+            AuthSuccess: Token de autenticación e información del usuario
 
         Raises:
             Exception: Si el usuario ya existe
         """
         # Crear nuevo usuario
+        # En producción, la contraseña debería estar hasheada
+        hashed_password = f"hashed_{password}"  # Esto es un ejemplo, usar bcrypt o similar en producción
+
         new_user = add_user(
-            username=input.username,
-            email=input.email,
-            password="password123",  # En producción, esto debería estar hasheado
-            name=input.name,
-            role=input.role or "STUDENT",
+            username=username,
+            email=email,
+            password=hashed_password,
+            name=name,
+            role=role or "STUDENT",
         )
 
         if not new_user:
-            raise Exception("El usuario ya existe")
+            return AuthError(
+                message="El usuario ya existe con este correo o nombre de usuario",
+                code="USER_ALREADY_EXISTS",
+            )
 
         # Generar token de autenticación
         token_data = generate_mock_token(new_user["id"])
 
-        return AuthResponse(
+        return AuthSuccess(
             user=User(
                 id=new_user["id"],
                 username=new_user["username"],
@@ -225,7 +279,7 @@ class Mutation:
         )
 
     @strawberry.mutation
-    async def refreshToken(self, refreshToken: str) -> AuthResponse:
+    async def refreshToken(self, refreshToken: str) -> AuthSuccess:
         """
         Renueva el token de autenticación usando un refresh token.
 
@@ -233,7 +287,7 @@ class Mutation:
             refreshToken (str): Token de refresco obtenido durante el login
 
         Returns:
-            AuthResponse: Nuevo token e información del usuario
+            AuthSuccess: Nuevo token e información del usuario
 
         Raises:
             Exception: Si el refresh token es inválido o el usuario no existe
@@ -255,7 +309,7 @@ class Mutation:
         # Generar un nuevo token de autenticación
         token_data = generate_mock_token(user_data["id"])
 
-        return AuthResponse(
+        return AuthSuccess(
             user=User(
                 id=user_data["id"],
                 username=user_data["username"],

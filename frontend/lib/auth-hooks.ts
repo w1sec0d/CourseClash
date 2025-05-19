@@ -19,7 +19,16 @@ export type AuthResponse = {
   token: string;
   refreshToken?: string;
   expiresAt?: string;
+  __typename?: string; // Para manejar la unión de tipos
 };
+
+export type AuthError = {
+  message: string;
+  code: string;
+  __typename: 'AuthError';
+};
+
+export type LoginResult = AuthResponse | AuthError;
 
 export function useLogin() {
   const [loading, setLoading] = useState(false);
@@ -33,19 +42,26 @@ export function useLogin() {
       const loginMutation = `
         mutation Login($email: String!, $password: String!) {
           login(email: $email, password: $password) {
-            user {
-              id
-              username
-              email
-              name
-              avatar
-              role
-              createdAt
-              updatedAt
+            __typename
+            ... on AuthSuccess {
+              user {
+                id
+                username
+                email
+                name
+                avatar
+                role
+                createdAt
+                updatedAt
+              }
+              token
+              refreshToken
+              expiresAt
             }
-            token
-            refreshToken
-            expiresAt
+            ... on AuthError {
+              message
+              code
+            }
           }
         }
       `;
@@ -54,6 +70,10 @@ export function useLogin() {
         query: loginMutation,
         variables: { email, password },
       });
+      
+      if (data.login.__typename === 'AuthError') {
+        throw new Error(data.login.message || 'Error de autenticación');
+      }
       
       const authResponse = data.login as AuthResponse;
       
@@ -89,29 +109,52 @@ export function useRegister() {
     
     try {
       const registerMutation = `
-        mutation Register($input: RegisterInput!) {
-          register(input: $input) {
-            user {
-              id
-              username
-              email
-              name
-              avatar
-              role
-              createdAt
-              updatedAt
+        mutation Register(
+          $username: String!
+          $email: String!
+          $password: String!
+          $name: String
+          $role: UserRole
+        ) {
+          register(
+            username: $username
+            email: $email
+            password: $password
+            name: $name
+            role: $role
+          ) {
+            __typename
+            ... on AuthSuccess {
+              user {
+                id
+                username
+                email
+                name
+                avatar
+                role
+                createdAt
+                updatedAt
+              }
+              token
+              refreshToken
+              expiresAt
             }
-            token
-            refreshToken
-            expiresAt
+            ... on AuthError {
+              message
+              code
+            }
           }
         }
       `;
       
       const data = await fetchGraphQL({
         query: registerMutation,
-        variables: { input: userData },
+        variables: userData,
       });
+      
+      if (data.register.__typename === 'AuthError') {
+        throw new Error(data.register.message || 'Error al registrar el usuario');
+      }
       
       const authResponse = data.register as AuthResponse;
       
