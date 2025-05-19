@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Annotated
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -8,7 +8,7 @@ from ..core.security import encode_token, decode_token, generate_verification_co
 
 #Imporatación de esquema de usuario
 from ..models.user import User
-from ..models.login import Login, Email, code, UpdatePassword
+from ..models.login import Login, Email, UpdatePassword
 
 
 
@@ -47,7 +47,8 @@ def login(form_data: Login, db: Session = Depends(get_db)):
         # Generar token
         payload = {
             'id': user['user'].id,
-            'email': user['user'].email
+            'email': user['user'].email,
+            'is_superuser': user['user'].is_superuser
         }
 
         token, token_refresh, exp = encode_token(payload)

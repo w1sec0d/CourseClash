@@ -14,11 +14,23 @@ router = APIRouter(prefix='/users', tags=['users'])
 #Input: 
 #Output: Lista de jsons con la información de cada usuario
 @router.get('/users')
-def get_users(db: Session = Depends(get_db)):
+def get_users(user: Annotated[dict, Depends(decode_token)], db: Session = Depends(get_db)):
     try: 
+        
+        is_admin = bool(user['is_superuser'])
+
+        if is_admin == False: 
+            raise HTTPException(
+                status_code= status.HTTP_401_UNAUTHORIZED,
+                detail='No tienes autorizado acceder a este recurso'
+            )
+
+        
         result = db.execute(text("SELECT * FROM users")).mappings().all()
         users = [row for row in result]
         return users
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
