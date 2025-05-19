@@ -16,10 +16,10 @@ import (
 // @Tags duelos
 // @Accept json
 // @Produce json
-// @Param request body models.RequestDuelRequest true "Datos del duelo"
-// @Success 200 {object} models.RequestDuelResponse "{"player_id_vs_player_id"}"
-// @Failure 400 {object} models.ErrorResponseInvalidRequest "{\"invalid_request\":\"Invalid request\"}"
-// @Failure 409 {object} models.ErrorResponseDuelAlreadyRequested "{\"duel_already_requested\":\"Duel already requested\"}"
+// @Param request body models.RequestDuelRequest true "Datos del duelo" example:{"requester_id":"player123","opponent_id":"player456"}
+// @Success 200 {object} models.RequestDuelResponse "Duelo solicitado exitosamente"
+// @Failure 400 {object} models.ErrorResponseInvalidRequest "Solicitud inválida o malformada"
+// @Failure 409 {object} models.ErrorResponseDuelAlreadyRequested "Ya existe un duelo entre estos jugadores"
 // @Router /api/duels/request [post]
 func requestDuelHandler(c *gin.Context) {
 	var request models.RequestDuelRequest
@@ -45,10 +45,10 @@ func requestDuelHandler(c *gin.Context) {
 // @Tags duelos
 // @Accept json
 // @Produce json
-// @Param accept body models.AcceptDuelRequest true "ID del duelo"
-// @Success 200 {object} models.AcceptDuelResponse "{"message": "Duel accepted"}"
-// @Failure 400 {object} models.ErrorResponseInvalidRequest "{\"invalid_request\":\"Invalid request\"}"
-// @Failure 404 {object} models.ErrorResponseDuelNotFound "{\"duel_not_found\":\"Duel not found\"}"
+// @Param accept body models.AcceptDuelRequest true "ID del duelo" example:{"duel_id":"player123_vs_player456"}
+// @Success 200 {object} models.AcceptDuelResponse "Duelo aceptado exitosamente"
+// @Failure 400 {object} models.ErrorResponseInvalidRequest "Solicitud inválida o malformada"
+// @Failure 404 {object} models.ErrorResponseDuelNotFound "No se encontró el duelo con el ID proporcionado"
 // @Router /api/duels/accept [post]
 func acceptDuelHandler(c *gin.Context) {
 	var accept models.AcceptDuelRequest
@@ -69,12 +69,14 @@ func acceptDuelHandler(c *gin.Context) {
 
 // wsDuelHandler maneja la conexión WebSocket para un duelo.
 // @Summary Conexión WebSocket para duelo
-// @Description Establece una conexión WebSocket para un jugador en un duelo
+// @Description Establece una conexión WebSocket para un jugador en un duelo. Permite la comunicación en tiempo real durante el duelo.
 // @Tags duelos
 // @Produce json
-// @Param duel_id path string true "ID del duelo"
-// @Param player_id path string true "ID del jugador"
-// @Success 101 {string} string "WebSocket connection established"
+// @Param duel_id path string true "ID del duelo" example:"player123_vs_player456"
+// @Param player_id path string true "ID del jugador" example:"player123"
+// @Success 101 {string} string "Conexión WebSocket establecida para comunicación en tiempo real durante el duelo"
+// @Failure 404 {object} string "Duelo no encontrado"
+// @Failure 401 {object} string "Jugador no autorizado para este duelo"
 // @Router /ws/duels/{duel_id}/{player_id} [get]
 func wsDuelHandler(c *gin.Context) {
 	duelID := c.Param("duel_id")

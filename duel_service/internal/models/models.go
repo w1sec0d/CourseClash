@@ -29,11 +29,11 @@ type DuelConnection struct {
 
 // RequestDuelRequest representa el body para solicitar un duelo.
 type RequestDuelRequest struct {
-	RequesterID string `json:"requester_id"`
-	OpponentID  string `json:"opponent_id"`
+	RequesterID string `json:"requester_id" example:"player123" binding:"required"`
+	OpponentID  string `json:"opponent_id" example:"player456" binding:"required"`
 }
 
 // AcceptDuelRequest representa el body para aceptar un duelo.
 type AcceptDuelRequest struct {
-	DuelID string `json:"duel_id"`
+	DuelID string `json:"duel_id" example:"player123_vs_player456" binding:"required"`
 }

@@ -41,19 +41,19 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"message\": \"Duel accepted\"}",
+                        "description": "Duelo aceptado exitosamente",
                         "schema": {
                             "$ref": "#/definitions/models.AcceptDuelResponse"
                         }
                     },
                     "400": {
-                        "description": "{\\\"invalid_request\\\":\\\"Invalid request\\\"}",
+                        "description": "Solicitud inválida o malformada",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponseInvalidRequest"
                         }
                     },
                     "404": {
-                        "description": "{\\\"duel_not_found\\\":\\\"Duel not found\\\"}",
+                        "description": "No se encontró el duelo con el ID proporcionado",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponseDuelNotFound"
                         }
@@ -87,19 +87,19 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"player_id_vs_player_id\"}",
+                        "description": "Duelo solicitado exitosamente",
                         "schema": {
                             "$ref": "#/definitions/models.RequestDuelResponse"
                         }
                     },
                     "400": {
-                        "description": "{\\\"invalid_request\\\":\\\"Invalid request\\\"}",
+                        "description": "Solicitud inválida o malformada",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponseInvalidRequest"
                         }
                     },
                     "409": {
-                        "description": "{\\\"duel_already_requested\\\":\\\"Duel already requested\\\"}",
+                        "description": "Ya existe un duelo entre estos jugadores",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponseDuelAlreadyRequested"
                         }
@@ -109,7 +109,7 @@ const docTemplate = `{
         },
         "/ws/duels/{duel_id}/{player_id}": {
             "get": {
-                "description": "Establece una conexión WebSocket para un jugador en un duelo",
+                "description": "Establece una conexión WebSocket para un jugador en un duelo. Permite la comunicación en tiempo real durante el duelo.",
                 "produces": [
                     "application/json"
                 ],
@@ -135,7 +135,19 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "101": {
-                        "description": "WebSocket connection established",
+                        "description": "Conexión WebSocket establecida para comunicación en tiempo real durante el duelo",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Jugador no autorizado para este duelo",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Duelo no encontrado",
                         "schema": {
                             "type": "string"
                         }
@@ -147,9 +159,13 @@ const docTemplate = `{
     "definitions": {
         "models.AcceptDuelRequest": {
             "type": "object",
+            "required": [
+                "duel_id"
+            ],
             "properties": {
                 "duel_id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "player123_vs_player456"
                 }
             }
         },
@@ -207,12 +223,18 @@ const docTemplate = `{
         },
         "models.RequestDuelRequest": {
             "type": "object",
+            "required": [
+                "opponent_id",
+                "requester_id"
+            ],
             "properties": {
                 "opponent_id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "player456"
                 },
                 "requester_id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "player123"
                 }
             }
         },

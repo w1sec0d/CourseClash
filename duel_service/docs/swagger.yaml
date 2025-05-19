@@ -2,7 +2,10 @@ definitions:
   models.AcceptDuelRequest:
     properties:
       duel_id:
+        example: player123_vs_player456
         type: string
+    required:
+    - duel_id
     type: object
   models.AcceptDuelResponse:
     properties:
@@ -43,9 +46,14 @@ definitions:
   models.RequestDuelRequest:
     properties:
       opponent_id:
+        example: player456
         type: string
       requester_id:
+        example: player123
         type: string
+    required:
+    - opponent_id
+    - requester_id
     type: object
   models.RequestDuelResponse:
     properties:
@@ -75,15 +83,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: '{"message": "Duel accepted"}'
+          description: Duelo aceptado exitosamente
           schema:
             $ref: '#/definitions/models.AcceptDuelResponse'
         "400":
-          description: '{\"invalid_request\":\"Invalid request\"}'
+          description: Solicitud inválida o malformada
           schema:
             $ref: '#/definitions/models.ErrorResponseInvalidRequest'
         "404":
-          description: '{\"duel_not_found\":\"Duel not found\"}'
+          description: No se encontró el duelo con el ID proporcionado
           schema:
             $ref: '#/definitions/models.ErrorResponseDuelNotFound'
       summary: Acepta un duelo
@@ -105,15 +113,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: '{"player_id_vs_player_id"}'
+          description: Duelo solicitado exitosamente
           schema:
             $ref: '#/definitions/models.RequestDuelResponse'
         "400":
-          description: '{\"invalid_request\":\"Invalid request\"}'
+          description: Solicitud inválida o malformada
           schema:
             $ref: '#/definitions/models.ErrorResponseInvalidRequest'
         "409":
-          description: '{\"duel_already_requested\":\"Duel already requested\"}'
+          description: Ya existe un duelo entre estos jugadores
           schema:
             $ref: '#/definitions/models.ErrorResponseDuelAlreadyRequested'
       summary: Solicita un duelo
@@ -121,7 +129,8 @@ paths:
       - duelos
   /ws/duels/{duel_id}/{player_id}:
     get:
-      description: Establece una conexión WebSocket para un jugador en un duelo
+      description: Establece una conexión WebSocket para un jugador en un duelo. Permite
+        la comunicación en tiempo real durante el duelo.
       parameters:
       - description: ID del duelo
         in: path
@@ -137,7 +146,16 @@ paths:
       - application/json
       responses:
         "101":
-          description: WebSocket connection established
+          description: Conexión WebSocket establecida para comunicación en tiempo
+            real durante el duelo
+          schema:
+            type: string
+        "401":
+          description: Jugador no autorizado para este duelo
+          schema:
+            type: string
+        "404":
+          description: Duelo no encontrado
           schema:
             type: string
       summary: Conexión WebSocket para duelo
