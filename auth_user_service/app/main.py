@@ -1,38 +1,25 @@
-from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
+import uvicorn
+from fastapi import FastAPI
+from .routers.auth import router as auth_router
+from .routers.users import router as users_router
+from .routers.register import router as register_router
 
-from .core.config import settings
-from .db import engine, Base, get_db
-from .routers import auth, users
+# Importacion de la base de datos
+from .db import get_db
 
-# Crear tablas en la base de datos
-Base.metadata.create_all(bind=engine)
+# Creación del microservicio de autenticación
+app = FastAPI(title="CourseClash Auth Service", 
+              description="API for CourseClash authentication and user management")
 
-# Inicializar la aplicación FastAPI
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    debug=settings.DEBUG
-)
 
-# Configurar CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-# Incluir routers
-app.include_router(auth.router, prefix=settings.API_V1_STR)
-app.include_router(users.router, prefix=settings.API_V1_STR)
 
-@app.get("/")
-def read_root():
-    return {"message": "Bienvenido al servicio de autenticación y usuarios de CourseClash"}
+# Rutas de autenticación y usuarios
+app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(register_router)
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok", "service": "auth_user_service"}
+
+# Punto de entrada del microservicio
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", host = "0.0.0.0", port = 8000)
