@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import { UserProfileProps } from '../../app/profile/types';
+import { UserProfileProps } from '../types';
 
 interface ProfileImageProps {
   user?: UserProfileProps;

@@ -1,4 +1,4 @@
-import { CourseItem } from './CourseSidebar';
+import { CourseItem } from './Sidebar';
 
 // Datos de ejemplo para cursos favoritos
 export const mockFavorites: CourseItem[] = [

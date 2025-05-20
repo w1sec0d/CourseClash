@@ -5,7 +5,7 @@ import { ChevronLeft, CheckCircle, Award, Clock, AlertCircle, Video, FileText, B
 import { UserProfileProps, ProfileStatsProps, ProfileCourseProps, AchievementProps, CustomizationItem, CurrencyActions } from './types';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import ProfileImage from '@/components/profile/ProfileImage';
+import ProfileImage from '@/app/perfil/components/ProfileImage';
 import TabNavigation from '@/components/TabNavigation';
 
 interface CourseAchievement {
