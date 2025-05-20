@@ -28,3 +28,4 @@ class code(BaseModel):
 class UpdatePassword(BaseModel):
     password: str
     code: str  # Código de verificación
+    email: str  # Email del usuario

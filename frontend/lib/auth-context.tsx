@@ -44,7 +44,8 @@ type AuthContextType = {
   updatePassword: (
     newPassword: string,
     code: string,
-    email: string
+    email: string,
+    token: string
   ) => Promise<UpdatePasswordResponse>;
   logout: () => Promise<boolean>; // Función para cerrar sesión
 };
@@ -125,9 +126,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const handleUpdatePassword = useCallback(
-    async (newPassword: string, code: string, email: string) => {
+    async (newPassword: string, code: string, email: string, token: string) => {
       try {
-        const result = await updatePassword(newPassword, code, email);
+        const result = await updatePassword(newPassword, code, email, token);
         return result;
       } catch (error) {
         console.error('Error updating password:', error);

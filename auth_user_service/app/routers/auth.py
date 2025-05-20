@@ -413,6 +413,7 @@ async def recovery_password(email: Email, db: Session = Depends(get_db)):
             "message": "Email sent successfully",
             "exp": exp,
             "code": code,  # Incluimos el código en la respuesta para desarrollo
+            "token": token,
         }
 
     except HTTPException as e:
@@ -450,6 +451,16 @@ def update_password(
                 },
             )
 
+        # Verificar que el email coincida
+        if token["email"] != data.email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "message": "Email does not match token",
+                    "code": AuthErrorCode.INVALID_TOKEN,
+                },
+            )
+
         # Verificar que el código coincida
         if token["code"] != data.code:
             raise HTTPException(
@@ -465,7 +476,7 @@ def update_password(
 
         # Si estamos usando datos simulados
         if USE_MOCK_DATA:
-            result = update_password_mock(token["email"], hashed_password)
+            result = update_password_mock(data.email, hashed_password)
             if not result["success"]:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -477,7 +488,7 @@ def update_password(
         query = text(
             """UPDATE users SET hashed_password = :password WHERE email = :email"""
         )
-        db.execute(query, {"password": hashed_password, "email": token["email"]})
+        db.execute(query, {"password": hashed_password, "email": data.email})
         db.commit()
 
         return {"success": True, "message": "Password updated successfully"}

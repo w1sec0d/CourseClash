@@ -116,7 +116,7 @@ export default function Login() {
 
           if (newPassword) {
             try {
-              await updatePassword(newPassword, code, email);
+              await updatePassword(newPassword, code, email, result.token);
               Swal.fire({
                 icon: 'success',
                 title: '¡Contraseña actualizada!',

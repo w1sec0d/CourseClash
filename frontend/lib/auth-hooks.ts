@@ -52,6 +52,7 @@ export type AuthResponse = {
 export type PasswordResetResponse = {
   message: string;
   code: string;
+  token: string;
   __typename: 'ForgotPasswordSuccess' | 'ForgotPasswordError';
 };
 
@@ -392,6 +393,7 @@ export function useForgotPassword() {
             ... on ForgotPasswordSuccess {
               message
               code
+              token
             }
             ... on ForgotPasswordError {
               message
@@ -438,6 +440,7 @@ export function useForgotPassword() {
         }
       }
 
+      console.log('data recieved', data.forgotPassword);
       setLoading(false);
       return data.forgotPassword as PasswordResetResponse;
     } catch (err: unknown) {
@@ -456,11 +459,14 @@ export function useForgotPassword() {
   }, []);
 
   const updatePassword = useCallback(
-    async (newPassword: string, code: string, email: string) => {
+    async (newPassword: string, code: string, email: string, token: string) => {
       setLoading(true);
       setError(null);
 
       console.log('🔑 Updating password:', {
+        email,
+        code,
+        token: token.substring(0, 10) + '...', // Log only part of token for security
         timestamp: new Date().toISOString(),
       });
 
@@ -484,11 +490,16 @@ export function useForgotPassword() {
         const data = await fetchGraphQL({
           query: updatePasswordMutation,
           variables: { newPassword, code, email },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         console.log('📥 Received password update response:', {
           type: data.updatePassword.__typename,
           success: data.updatePassword.__typename === 'UpdatePasswordSuccess',
+          message: data.updatePassword.message,
+          code: data.updatePassword.code,
           timestamp: new Date().toISOString(),
         });
 
@@ -506,11 +517,15 @@ export function useForgotPassword() {
         }
 
         setLoading(false);
-        return data.updatePassword as PasswordResetResponse;
+        return data.updatePassword as UpdatePasswordResponse;
       } catch (err: unknown) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to update password';
-        console.error('❌ Password update error:', errorMessage);
+        console.error('❌ Password update error:', {
+          message: errorMessage,
+          error: err,
+          timestamp: new Date().toISOString(),
+        });
         setError(errorMessage);
         setLoading(false);
 

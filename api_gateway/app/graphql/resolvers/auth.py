@@ -73,6 +73,7 @@ AuthResult = strawberry.union("AuthResult", (AuthSuccess, AuthError))
 class ForgotPasswordSuccess:
     message: str
     code: str
+    token: str
 
 
 @strawberry.type
@@ -408,40 +409,101 @@ class Mutation:
         newPassword: str,
         code: str,
         email: str,
+        info,
     ) -> UpdatePasswordResult:
         try:
             auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000")
             update_password_url = f"{auth_service_url}/auth/update-password"
 
+            # Get the token from the Authorization header
+            auth_header = info.context["request"].headers.get("authorization")
+            if not auth_header:
+                print("❌ No authorization header found")
+                return UpdatePasswordError(
+                    message="No authorization token provided", code="INVALID_TOKEN"
+                )
+
+            # Extract the token from the Bearer header
+            try:
+                scheme, token = auth_header.split()
+                if scheme.lower() != "bearer":
+                    print("❌ Invalid authorization scheme:", scheme)
+                    return UpdatePasswordError(
+                        message="Invalid authorization scheme", code="INVALID_TOKEN"
+                    )
+            except ValueError as e:
+                print("❌ Error parsing authorization header:", str(e))
+                return UpdatePasswordError(
+                    message="Invalid authorization header format", code="INVALID_TOKEN"
+                )
+
+            print(
+                "🔑 Request details:",
+                {
+                    "url": update_password_url,
+                    "email": email,
+                    "code": code,
+                    "token_length": len(token),
+                    "timestamp": datetime.now().isoformat(),
+                },
+            )
+
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    update_password_url,
-                    json={"email": email, "code": code, "new_password": newPassword},
-                )
+                try:
+                    response = await client.post(
+                        update_password_url,
+                        json={
+                            "email": email,
+                            "code": code,
+                            "password": newPassword,
+                        },
+                        headers={"Authorization": f"Bearer {token}"},
+                    )
 
-                if response.status_code != 200:
-                    error_detail = "Error al procesar la solicitud"
-                    error_code = "SERVER_ERROR"
-                    try:
-                        error_data = response.json()
-                        if isinstance(error_data.get("detail"), dict):
-                            error_detail = error_data["detail"].get(
-                                "message", error_detail
-                            )
-                            error_code = error_data["detail"].get("code", error_code)
-                        elif isinstance(error_data.get("detail"), str):
-                            error_detail = error_data["detail"]
-                    except Exception as json_error:
-                        print(f"Error parsing response: {str(json_error)}")
+                    print(
+                        "📥 Auth service response:",
+                        {
+                            "status_code": response.status_code,
+                            "headers": dict(response.headers),
+                            "timestamp": datetime.now().isoformat(),
+                        },
+                    )
 
-                    return UpdatePasswordError(message=error_detail, code=error_code)
+                    if response.status_code != 200:
+                        error_detail = "Error al procesar la solicitud"
+                        error_code = "SERVER_ERROR"
+                        try:
+                            error_data = response.json()
+                            print("❌ Error response data:", error_data)
+                            if isinstance(error_data.get("detail"), dict):
+                                error_detail = error_data["detail"].get(
+                                    "message", error_detail
+                                )
+                                error_code = error_data["detail"].get(
+                                    "code", error_code
+                                )
+                            elif isinstance(error_data.get("detail"), str):
+                                error_detail = error_data["detail"]
+                        except Exception as json_error:
+                            print(f"❌ Error parsing response: {str(json_error)}")
 
-                return UpdatePasswordSuccess(
-                    message="Contraseña actualizada correctamente"
-                )
+                        return UpdatePasswordError(
+                            message=error_detail, code=error_code
+                        )
+
+                    return UpdatePasswordSuccess(
+                        message="Contraseña actualizada correctamente"
+                    )
+
+                except httpx.RequestError as e:
+                    print(f"❌ Request error: {str(e)}")
+                    return UpdatePasswordError(
+                        message=f"Error connecting to auth service: {str(e)}",
+                        code="SERVER_ERROR",
+                    )
 
         except Exception as e:
-            print(f"Error en updatePassword: {str(e)}")
+            print(f"❌ Unexpected error in updatePassword: {str(e)}")
             return UpdatePasswordError(
                 message="Error al procesar la solicitud de restablecimiento de contraseña",
                 code="SERVER_ERROR",
@@ -506,6 +568,7 @@ class Mutation:
                 return ForgotPasswordSuccess(
                     message="Si el correo existe en nuestra base de datos, recibirás instrucciones para restablecer tu contraseña",
                     code=recovery_data["code"],
+                    token=recovery_data["token"],
                 )
 
         except Exception as e:
