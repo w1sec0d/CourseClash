@@ -4,9 +4,6 @@ from sqlalchemy import text
 from ..db import get_db
 from ..models.user import UserInterno
 from fastapi_mail import FastMail, MessageSchema
-from ..utils.config import USE_MOCK_DATA
-from ..utils.mock_db import verify_email_mock, get_user_by_email_mock, update_password_mock
-
 from ..config import conf
 
 
@@ -15,6 +12,7 @@ from ..config import conf
 # Output: un objeto de tipo UserInterno
 # Ejemplo de tupla: (1, 'username', 'email', 'hashed_password', 'full_name', is_active True, is superiority False, datetime)
 # Ejemplo de objeto: UserInterno(id=1, username='username', email='email', password='hashed_password', full_name='full_name', is_active=True, is_superuser=False, created_at='2023-10-01 12:00:00')
+
 
 def transform_user(user: tuple) -> UserInterno:
     return UserInterno(
@@ -25,70 +23,58 @@ def transform_user(user: tuple) -> UserInterno:
         full_name=user[4],
         is_active=user[5],
         is_superuser=user[6],
-        created_at=str(user[7])
+        created_at=str(user[7]),
     )
 
-# Servicio de verificación de correo 
+
+# Servicio de verificación de correo
 # Input: email
 # Output: True si el correo se encuentra registrado, False si no
-def verify_email(email: str) -> bool: 
-    # Si está configurado para usar datos simulados
-    if USE_MOCK_DATA:
-        return verify_email_mock(email)
-    
-    # Si no, usa la base de datos real
-    try: 
+def verify_email(email: str) -> bool:
+    try:
         db: Session = next(get_db())
         query = text(""" SELECT * FROM users WHERE email = :email""")
-        user = db.execute(query, {'email': email})
+        user = db.execute(query, {"email": email})
         result = user.fetchone()
-        
-        if result: 
+
+        if result:
             return True
-        else: 
+        else:
             return False
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f'Error verifying email {e}'
+            detail=f"Error verifying email {e}",
         )
-    
 
-# Servicio para obtener la información de un usuario por su id. Solo se utilizando de este microservicio 
-# Input: email 
+
+# Servicio para obtener la información de un usuario por su id. Solo se utilizando de este microservicio
+# Input: email
 # Output: un objeto de tipo UserInterno
 # Ejemplo de objeto: UserInterno(id=1, username='username', email='email', password='hashed_password', full_name='full_name', is_active=True, is_superuser=False, created_at='2023-10-01 12:00:00')
 def get_user_by_email(email: str) -> UserInterno:
-    # Si está configurado para usar datos simulados
-    if USE_MOCK_DATA:
-        return get_user_by_email_mock(email)
-    
-    # Si no, usa la base de datos real
     try:
         db: Session = next(get_db())
         query = text(""" SELECT * FROM users WHERE email = :email""")
-        user = db.execute(query, {'email': email})
+        user = db.execute(query, {"email": email})
         result = user.fetchone()
 
-        if not result: 
-            return {'success': False}
-        
-        user = transform_user(result)
-        return {'success': True, 'user': user}
-    except Exception as e:
-        return {'success': False, 'error': str(e)}
+        if not result:
+            return {"success": False}
 
-    
+        user = transform_user(result)
+        return {"success": True, "user": user}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 # Servicio para enviar un correo de recuperación de contraseña
 # Input: subject: Asunto del mensaje, email_to: A quien va dirijido el correo, body
 # Output: un objeto con el mensaje de éxito
 async def send_email(subject: str, email_to: str, body: str):
     message = MessageSchema(
-        subject = subject,
-        recipients = [email_to],
-        body = body, 
-        subtype = "html"
+        subject=subject, recipients=[email_to], body=body, subtype="html"
     )
     fm = FastMail(conf)
     await fm.send_message(message)
-    return {'message': 'Email sent successfully'}
+    return {"message": "Email sent successfully"}

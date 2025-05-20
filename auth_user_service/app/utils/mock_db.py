@@ -130,6 +130,55 @@ def update_password_mock(email: str, new_password: str) -> Dict:
     
     return {"success": False, "error": "User not found"}
 
+def register_user_mock(username: str, email: str, password: str, full_name: str, 
+                     is_active: bool = True, is_superuser: bool = False) -> Dict:
+    """
+    Registra un nuevo usuario en la base de datos simulada
+    
+    Args:
+        username: Nombre de usuario
+        email: Correo electrónico
+        password: Contraseña (sin hashear)
+        full_name: Nombre completo
+        is_active: Si el usuario está activo
+        is_superuser: Si el usuario es administrador
+        
+    Returns:
+        Dict con el resultado de la operación
+    """
+    # Verificar si el correo ya existe
+    if verify_email_mock(email):
+        return {"success": False, "error": "Email already registered"}
+    
+    # Verificar si el nombre de usuario ya existe
+    if any(user["username"] == username for user in mock_users):
+        return {"success": False, "error": "Username already taken"}
+    
+    # Asignar un nuevo ID (el máximo actual + 1)
+    next_id = max(user["id"] for user in mock_users) + 1
+    
+    # Crear el nuevo usuario
+    new_user = {
+        "id": next_id,
+        "username": username,
+        "email": email,
+        "password": password,  # No se hashea aquí porque se espera que ya venga hasheado
+        "full_name": full_name,
+        "is_active": is_active,
+        "is_superuser": is_superuser,
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    
+    # Agregar a la lista de usuarios
+    mock_users.append(new_user)
+    
+    return {
+        "success": True,
+        "user_id": next_id,
+        "message": "User registered successfully"
+    }
+
+
 def get_user_by_id_mock(user_id: int) -> Optional[User]:
     """Obtiene un usuario por su ID de la base de datos simulada"""
     for user in mock_users:
