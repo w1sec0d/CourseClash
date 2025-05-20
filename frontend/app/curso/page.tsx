@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import CourseNavbar from './components/CourseNavbar';
 import Sidebar from './components/Sidebar';
 import SidebarOverlay from './components/SidebarOverlay';
-import Post from './components/Post';
-import CreatePostForm from './components/CreatePostForm';
 import SidebarImportantFiles from './components/SidebarImportantFiles';
 import CourseHeader from './components/CourseHeader';
 import { AnunciosTab, MaterialesTab, TareasTab, DuelosTab, RankingTab, EstadisticasTab, LogrosTab } from './components/tabs';

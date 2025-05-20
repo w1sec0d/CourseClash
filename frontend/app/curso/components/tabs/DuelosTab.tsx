@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface Duelo {
   id: number;
@@ -22,6 +22,73 @@ interface DuelosTabProps {
 }
 
 const DuelosTab: React.FC<DuelosTabProps> = ({ duelos = [] }) => {
+  const [showCreateDuel, setShowCreateDuel] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Datos de ejemplo para los miembros del curso
+  const courseMembers = [
+    {
+      id: 1,
+      name: 'María González',
+      avatar: 'https://randomuser.me/api/portraits/women/65.jpg',
+      level: 12,
+      role: 'Estudiante'
+    },
+    {
+      id: 2,
+      name: 'Carlos Rodríguez',
+      avatar: 'https://randomuser.me/api/portraits/men/42.jpg',
+      level: 14,
+      role: 'Estudiante'
+    },
+    {
+      id: 3,
+      name: 'Ana Martínez',
+      avatar: 'https://randomuser.me/api/portraits/women/28.jpg',
+      level: 10,
+      role: 'Estudiante'
+    },
+    {
+      id: 4,
+      name: 'Juan Pérez',
+      avatar: 'https://randomuser.me/api/portraits/men/51.jpg',
+      level: 15,
+      role: 'Estudiante'
+    },
+    {
+      id: 5,
+      name: 'Laura Sánchez',
+      avatar: 'https://randomuser.me/api/portraits/women/22.jpg',
+      level: 13,
+      role: 'Estudiante'
+    }
+  ];
+  
+  // Temas disponibles para duelos
+  const availableTopics = [
+    'Álgebra Lineal',
+    'Cálculo Diferencial',
+    'Geometría Analítica',
+    'Probabilidad',
+    'Estadística',
+    'Ecuaciones Diferenciales'
+  ];
+  
+  // Filtrar miembros según la búsqueda
+  const filteredMembers = courseMembers.filter(member =>
+    member.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const handleCreateDuel = (memberId: number) => {
+    // Aquí iría la lógica para crear el duelo
+    console.log(`Duelo creado con el miembro ${memberId} sobre el tema ${selectedTopic}`);
+    setShowCreateDuel(false);
+    setSelectedTopic('');
+    setSearchQuery('');
+    // Mostrar notificación o feedback al usuario
+    alert('Invitación de duelo enviada con éxito');
+  };
   // Datos de ejemplo si no se proporcionan duelos
   const sampleDuelos: Duelo[] = duelos.length > 0 ? duelos : [
     {
@@ -109,7 +176,10 @@ const DuelosTab: React.FC<DuelosTabProps> = ({ duelos = [] }) => {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-800">Duelos académicos</h2>
-        <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition flex items-center">
+        <button 
+          onClick={() => setShowCreateDuel(true)} 
+          className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition flex items-center"
+        >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
           </svg>
@@ -216,6 +286,109 @@ const DuelosTab: React.FC<DuelosTabProps> = ({ duelos = [] }) => {
           </div>
         ))}
       </div>
+      
+      {/* Modal para crear duelo */}
+      {showCreateDuel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-4 bg-emerald-600 text-white flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Crear nuevo duelo</h3>
+              <button 
+                onClick={() => setShowCreateDuel(false)}
+                className="text-white hover:text-emerald-100 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-4 overflow-y-auto flex-grow">
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-medium mb-2">Tema del duelo</label>
+                <select
+                  value={selectedTopic}
+                  onChange={(e) => setSelectedTopic(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                >
+                  <option value="">Selecciona un tema</option>
+                  {availableTopics.map((topic, index) => (
+                    <option key={index} value={topic}>{topic}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-medium mb-2">Buscar compañeros</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Nombre del estudiante..."
+                    className="w-full p-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                  <svg 
+                    className="w-4 h-4 absolute left-2 top-3 text-gray-400" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-medium mb-2">Estudiantes disponibles</label>
+                <div className="max-h-60 overflow-y-auto">
+                  {filteredMembers.length > 0 ? (
+                    filteredMembers.map((member) => (
+                      <div 
+                        key={member.id} 
+                        className="flex items-center justify-between p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 rounded-full overflow-hidden mr-3">
+                            <img
+                              src={member.avatar}
+                              alt={`Avatar de ${member.name}`}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-800">{member.name}</h4>
+                            <p className="text-xs text-gray-500">Nivel {member.level} • {member.role}</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => handleCreateDuel(member.id)}
+                          disabled={!selectedTopic}
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${selectedTopic ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} transition-colors`}
+                        >
+                          Invitar
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-500">No se encontraron estudiantes</div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+              <button 
+                onClick={() => setShowCreateDuel(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg text-sm font-medium hover:bg-gray-300 transition mr-2"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
