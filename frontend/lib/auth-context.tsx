@@ -5,7 +5,7 @@
 // en toda la aplicación, permitiendo a los componentes acceder fácilmente al usuario actual
 // y a las funciones de autenticación.
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { User, AuthResponse, useCurrentUser, useLogin, useLogout, useRegister } from './auth-hooks';
 import { getAuthToken } from './graphql-client';
 
@@ -38,6 +38,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const isLoading = userLoading || loginLoading || registerLoading;
 
+  // Define all handler functions with useCallback before useEffect hooks
+  // Envuelve la función de login para obtener automáticamente el usuario después del inicio de sesión
+  const handleLogin = useCallback(async (email: string, password: string) => {
+    const result = await login(email, password);
+    await fetchCurrentUser();
+    return result;
+  }, [login, fetchCurrentUser]);
+
+  // Envuelve la función de registro para obtener automáticamente el usuario después del registro
+  const handleRegister = useCallback(async (userData: {
+    username: string;
+    email: string;
+    password: string;
+    name?: string;
+    role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
+  }) => {
+    const result = await register(userData);
+    await fetchCurrentUser();
+    return result;
+  }, [register, fetchCurrentUser]);
+
+  // Envuelve la función de cierre de sesión para limpiar el estado del usuario
+  const handleLogout = useCallback(async () => {
+    const result = await logout();
+    setIsAuthenticated(false);
+    return result;
+  }, [logout, setIsAuthenticated]);
+
   useEffect(() => {
     // Check if there's a token in localStorage
     const token = getAuthToken();
@@ -56,33 +84,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setIsAuthenticated(!!user);
   }, [user]);
-
-  // Envuelve la función de login para obtener automáticamente el usuario después del inicio de sesión
-  const handleLogin = async (email: string, password: string) => {
-    const result = await login(email, password);
-    await fetchCurrentUser();
-    return result;
-  };
-
-  // Envuelve la función de registro para obtener automáticamente el usuario después del registro
-  const handleRegister = async (userData: {
-    username: string;
-    email: string;
-    password: string;
-    name?: string;
-    role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
-  }) => {
-    const result = await register(userData);
-    await fetchCurrentUser();
-    return result;
-  };
-
-  // Envuelve la función de cierre de sesión para limpiar el estado del usuario
-  const handleLogout = async () => {
-    const result = await logout();
-    setIsAuthenticated(false);
-    return result;
-  };
+  
+  // Set up a timer to refresh the token before it expires
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    // Set a timer to refresh the token 5 minutes before it expires
+    const tokenRefreshInterval = setInterval(async () => {
+      try {
+        // This would call your refresh token mutation
+        // For now, we'll just re-fetch the current user to verify the session
+        await fetchCurrentUser();
+      } catch (error) {
+        console.error('Error refreshing token:', error);
+        // If refreshing fails, log the user out
+        handleLogout();
+      }
+    }, 25 * 60 * 1000); // Every 25 minutes (assuming tokens expire after 30 minutes)
+    
+    return () => clearInterval(tokenRefreshInterval);
+  }, [isAuthenticated, fetchCurrentUser, handleLogout]);
 
   const value = {
     user,

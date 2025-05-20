@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Button from '../components/Button';
 import FeatureCard from '../components/FeatureCard';
 
-export const LandingPage = () => {
+export default function Page() {
   return (
     <div>
       {/* Sección de inicio */}
@@ -1290,4 +1290,4 @@ export const LandingPage = () => {
   );
 };
 
-export default LandingPage;
+

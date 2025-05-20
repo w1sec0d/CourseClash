@@ -7,6 +7,18 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema } from '@/lib/form-schemas';
 import { useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
+
+interface RegisterFormValues {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  terms: boolean;
+  user_type: string;
+}
 
 export default function Register() {
   const {
@@ -14,8 +26,7 @@ export default function Register() {
     handleSubmit,
     formState: { errors },
     setError,
-    reset,
-  } = useForm({
+  } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       firstName: '',
@@ -23,22 +34,41 @@ export default function Register() {
       email: '',
       password: '',
       confirmPassword: '',
-      user_type: '',
       terms: false,
+      user_type: '',
     },
   });
-  const [submitError, setSubmitError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { register: registerUser } = useAuth();
+  const router = useRouter();
 
-  const onSubmit = async (data: any) => {
-    setSubmitError('');
+  const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      // Aquí deberías llamar a tu API de registro
-      // await registerUser(data);
-      reset();
+      // Create full name from first and last name
+      const fullName = `${data.firstName} ${data.lastName}`.trim();
+      
+      // Map form data to user registration data
+      const userData = {
+        username: data.email.split('@')[0], // Create username from email
+        email: data.email,
+        password: data.password,
+        name: fullName,
+        role: data.user_type === 'teacher' ? 'TEACHER' as const : 'STUDENT' as const,
+      };
+
+      const result = await registerUser(userData);
+      console.log('Registration successful:', result);
+      
+      // Redirect to dashboard after successful registration
+      router.push('/dashboard');
     } catch (error) {
-      setSubmitError('Error al crear la cuenta. Intenta de nuevo.');
+      console.error('Registration error:', error);
+      setError('root', {
+        message: error instanceof Error 
+          ? error.message 
+          : 'Error al crear la cuenta. Intenta de nuevo.'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -163,9 +193,9 @@ export default function Register() {
               </span>
             </div>
           </div>
-          {submitError && (
+          {errors.root && (
             <div className='p-4 text-white bg-red-500 rounded-lg mb-6'>
-              {submitError}
+              {errors.root.message as string}
             </div>
           )}
           <form
@@ -291,6 +321,11 @@ export default function Register() {
                 <option value='teacher'>Profesor</option>
                 <option value='student'>Estudiante</option>
               </select>
+              {errors.user_type && (
+                <p className='text-red-500 text-sm mt-1'>
+                  {errors.user_type.message as string}
+                </p>
+              )}
             </div>
             <div className='items-start flex'>
               <input
@@ -325,8 +360,13 @@ export default function Register() {
               </label>
             </div>
             <div>
-              <Button type='submit' variant='primary' className='w-full'>
-                Crear Cuenta
+              <Button 
+                type='submit' 
+                variant='primary' 
+                className='w-full' 
+                disabled={isLoading}
+              >
+                {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
               </Button>
             </div>
           </form>

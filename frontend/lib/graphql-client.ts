@@ -15,8 +15,26 @@ export async function fetchGraphQL({
   cache?: RequestCache;
 }) {
   try {
-    // El endpoint predeterminado es nuestra ruta de API local
-    const endpoint = '/api/graphql';
+    // Endpoint del API Gateway
+    const apiGatewayUrl =
+      process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8080';
+    const endpoint = `${apiGatewayUrl}/graphql`;
+
+    // Start request timing for performance monitoring
+    const requestStartTime = performance.now();
+
+    // Get operation name for better logging
+    const operationType = query.includes('mutation') ? 'Mutation' : 'Query';
+    const operationNameMatch = query.match(/(?:mutation|query)\s+(\w+)/i);
+    const operationName = operationNameMatch ? operationNameMatch[1] : 'Unknown';
+
+    // Show detailed request info with timestamp
+    console.group(`🔄 GraphQL ${operationType}: ${operationName} (${new Date().toISOString()})`)
+    console.log('📡 Request to:', endpoint);
+    console.log('📝 Query:', query.slice(0, 150) + (query.length > 150 ? '...' : ''));
+    console.log('📦 Variables:', variables);
+    console.log('🔖 Headers:', { ...headers, 'Content-Type': 'application/json' });
+    console.groupEnd();
 
     const res = await fetch(endpoint, {
       method: 'POST',
@@ -29,14 +47,35 @@ export async function fetchGraphQL({
         variables,
       }),
       cache,
+      credentials: 'include', // Include credentials for cross-origin requests if needed
     });
 
-    const json = await res.json();
+    // Handle HTTP errors
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`HTTP error ${res.status}: ${errorText}`);
+    }
 
-    // Manejo de errores GraphQL
+    const json = await res.json();
+    
+    // Calculate request duration
+    const requestDuration = performance.now() - requestStartTime;
+    
+    // Log response information
+    console.group(`📷 GraphQL Response: ${operationName} (${requestDuration.toFixed(0)}ms)`);
     if (json.errors) {
-      const { message } = json.errors[0] || 'Error during GraphQL request';
-      throw new Error(message);
+      console.error('❌ GraphQL Errors:', json.errors);
+      console.log('⏱ Duration:', `${requestDuration.toFixed(0)}ms`);
+      console.groupEnd();
+      
+      const error = json.errors[0] || { message: 'Error during GraphQL request' };
+      const errorMessage = error.message || 'Unknown GraphQL error';
+      throw new Error(errorMessage);
+    } else {
+      console.log('✅ Status: Success');
+      console.log('📄 Data Keys:', Object.keys(json.data || {}));
+      console.log('⏱ Duration:', `${requestDuration.toFixed(0)}ms`);
+      console.groupEnd();
     }
 
     return json.data;

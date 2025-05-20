@@ -1,4 +1,39 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import Swal from 'sweetalert2';
+
 export default function Dashboard() {
+  const { user } = useAuth();
+  const hasShownWelcome = useRef(false);
+
+  useEffect(() => {
+    // Show welcome message when user logs in and we haven't shown it yet
+    if (user?.name && !hasShownWelcome.current) {
+      hasShownWelcome.current = true;
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.onmouseenter = Swal.stopTimer;
+          toast.onmouseleave = Swal.resumeTimer;
+        }
+      });
+
+      Toast.fire({
+        icon: 'success',
+        title: `¡Bienvenid@, ${user.name}!`,
+        background: '#065f46', // emerald-800
+        color: '#ffffff',
+        iconColor: '#10b981' // emerald-500
+      });
+
+    }
+  }, [user]);
   return (
     <div className='bg-white min-h-screen'>
       <nav className='bg-emerald-700 text-white shadow-lg'>
