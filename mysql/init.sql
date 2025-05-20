@@ -1,4 +1,3 @@
--- Crear una única base de datos para la arquitectura SOA
 CREATE DATABASE IF NOT EXISTS courseclash_db;
 
 -- Usar la base de datos courseclash_db
@@ -13,17 +12,10 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(100),
     is_active BOOLEAN DEFAULT TRUE,
     is_superuser BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS user_profiles (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     avatar_url VARCHAR(255),
     bio TEXT,
-    rank_id INT,
     experience_points INT DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Tablas de cursos
@@ -67,6 +59,7 @@ CREATE TABLE IF NOT EXISTS submissions (
     user_id INT NOT NULL,
     content TEXT,
     file_url VARCHAR(255),
+    additional_files JSON,
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -93,14 +86,6 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Tablas para duelos y gamificación
-CREATE TABLE IF NOT EXISTS ranks (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
-    min_experience INT NOT NULL,
-    image_url VARCHAR(255)
-);
-
 CREATE TABLE IF NOT EXISTS achievements (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -119,39 +104,32 @@ CREATE TABLE IF NOT EXISTS user_achievements (
     FOREIGN KEY (achievement_id) REFERENCES achievements(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS duels (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    challenger_id INT NOT NULL,
-    opponent_id INT NOT NULL,
-    course_id INT NOT NULL,
-    status ENUM('pending', 'accepted', 'rejected', 'completed') DEFAULT 'pending',
-    winner_id INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP,
-    FOREIGN KEY (challenger_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (opponent_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-    FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE SET NULL
+CREATE TABLE IF NOT EXISTS messages (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	sender_id INT NOT NULL,
+	receiver_id INT NOT NULL,
+	message TEXT NOT NULL,
+	sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+	FOREIGN KEY (receiver_id) REFERENCES users(id) on delete CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS duel_questions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    duel_id INT NOT NULL,
-    question TEXT NOT NULL,
-    correct_answer TEXT NOT NULL,
-    options JSON,
-    FOREIGN KEY (duel_id) REFERENCES duels(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS notifications(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	user_id INT NOT NULL,
+	message TEXT NOT NULL,
+	link_url VARCHAR(255),
+	is_read BOOLEAN DEFAULT FALSE,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTRAMP,
+	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS duel_answers (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    duel_id INT NOT NULL,
-    question_id INT NOT NULL,
-    user_id INT NOT NULL,
-    answer TEXT,
-    is_correct BOOLEAN,
-    answer_time INT, -- tiempo en segundos
-    FOREIGN KEY (duel_id) REFERENCES duels(id) ON DELETE CASCADE,
-    FOREIGN KEY (question_id) REFERENCES duel_questions(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS subscriptions (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	user_id INT NOT NULL,
+	plan_name VARCHAR(100),
+	start_date DATE,
+	end_date DATE,
+	is_active BOOLEAN DEFAULT TRUE,
+	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
