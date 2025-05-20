@@ -6,7 +6,7 @@ import Sidebar from './components/Sidebar';
 import SidebarOverlay from './components/SidebarOverlay';
 import Post from './components/Post';
 import CreatePostForm from './components/CreatePostForm';
-import ImportantFilesSection from './components/ImportantFiles';
+import SidebarImportantFiles from './components/SidebarImportantFiles';
 import CourseHeader from './components/CourseHeader';
 
 export default function Curso() {
@@ -121,7 +121,7 @@ export default function Curso() {
         
 
 
-        <div className='mx-auto md:p-6 container p-4'>
+        <div className='mx-auto md:p-6 container p-4 relative'>
           <div className='mb-6'>
             <CourseHeader
               title="Matemáticas Avanzadas"
@@ -146,7 +146,7 @@ export default function Curso() {
               tabColor="yellow"
               textColor="gray-50"
             />
-            <ImportantFilesSection files={importantFiles} />
+            <SidebarImportantFiles files={importantFiles} />
             <CreatePostForm />
             <div className='space-y-6'>
               {posts.map((post) => (
