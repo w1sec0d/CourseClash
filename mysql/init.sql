@@ -1,4 +1,3 @@
--- Crear una única base de datos para la arquitectura SOA
 CREATE DATABASE IF NOT EXISTS courseclash_db;
 
 -- Usar la base de datos courseclash_db
@@ -13,17 +12,10 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(100),
     is_active BOOLEAN DEFAULT TRUE,
     is_superuser BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS user_profiles (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     avatar_url VARCHAR(255),
     bio TEXT,
-    rank_id INT,
     experience_points INT DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Tablas de cursos
@@ -94,14 +86,6 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Tablas para duelos y gamificación
-CREATE TABLE IF NOT EXISTS ranks (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
-    min_experience INT NOT NULL,
-    image_url VARCHAR(255)
-);
-
 CREATE TABLE IF NOT EXISTS achievements (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -149,5 +133,3 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 	is_active BOOLEAN DEFAULT TRUE,
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
-
