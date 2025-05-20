@@ -12,6 +12,8 @@ import AnnouncementCard from '../../components/course/AnnouncementCard';
 import ResourceCard from '../../components/course/ResourceCard';
 import RankingCard from '../../components/course/Ranking';
 import TabNavigation from '../../components/TabNavigation';
+import CourseSidebar from '../../components/sidebar/CourseSidebar';
+import { mockFavorites, mockCategorizedCourses } from '../../components/sidebar/mockData';
 import { AchievementProps } from './types';
 import { mockModules, mockAnnouncements, mockResources, mockRanking } from './data';
 import Link from 'next/link';
@@ -57,7 +59,8 @@ const CourseDetailView: React.FC = () => {
       total: 30,
       unlocked: 12
     },
-    progression: 45
+    progression: 45,
+    rankingPosition: 12
   };
   
   // Mock achievements
@@ -77,67 +80,90 @@ const CourseDetailView: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto py-4">
-      {/* Back button and navigation */}
-      <div className="flex items-center mb-2 px-4">
-        <Link href="/" className="flex items-center text-gray-600 hover:text-blue-600 transition-colors">
-          <ChevronLeft size={20} />
-          <span className="ml-1">Volver a mis cursos</span>
-        </Link>
-      </div>
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar */}
+      <CourseSidebar 
+        favorites={mockFavorites}
+        categorizedCourses={mockCategorizedCourses}
+        activeCourseId="1"
+      />
       
-      {/* Course Banner with Hero Image */}
-      <div className="relative w-full h-64 bg-gradient-to-r from-blue-900 to-indigo-800 rounded-lg overflow-hidden mb-4">
-        {/* Background image would go here */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <h1 className="text-5xl font-bold text-white tracking-wider">{courseData.title.toUpperCase()}</h1>
-        </div>
-        
-        {/* Bottom stats bar - similar to Steam UI */}
-        <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center bg-black/40 backdrop-blur-sm p-3 text-white">
-          <div className="flex space-x-6">
-            <div className="flex flex-col">
-              <span className="text-xs text-gray-300">ÚLTIMA ACTIVIDAD</span>
-              <span className="font-medium">{courseData.lastActivity}</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs text-gray-300">TIEMPO TOTAL</span>
-              <span className="font-medium">{courseData.hoursCompleted} horas</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs text-gray-300">LOGROS</span>
-              <span className="font-medium">{courseData.achievementCount.unlocked}/{courseData.achievementCount.total}</span>
-            </div>
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-6xl mx-auto py-4">
+          {/* Back button and navigation */}
+          <div className="flex items-center mb-2 px-4">
+            <Link href="/" className="flex items-center text-gray-600 hover:text-blue-600 transition-colors">
+              <ChevronLeft size={20} />
+              <span className="ml-1">Volver a mis cursos</span>
+            </Link>
           </div>
           
-          <div className="flex space-x-2">
-            <button className="p-2 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors">
-              <Settings size={18} />
-            </button>
-            <button className="p-2 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors">
-              <Info size={18} />
-            </button>
-            <button className="p-2 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors">
-              <Star size={18} className="text-yellow-400 fill-yellow-400" />
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Main content area */}
-      <div className="flex flex-col md:flex-row gap-4 px-4">
-        {/* Left column - Main content */}
-        <div className="w-full md:w-2/3">
-          {/* Download/Access Course Button */}
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg p-4 mb-6 flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-bold">Accede al curso ahora</h2>
-              <p className="text-blue-100">{courseData.progression}% completado</p>
+          {/* Course Banner with Hero Image */}
+          <div className="relative w-full h-64 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-lg overflow-hidden mb-4">
+            {/* Background image would go here */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <h1 className="text-5xl font-bold text-white tracking-wider">{courseData.title.toUpperCase()}</h1>
             </div>
-            <button className="bg-white text-blue-600 font-medium py-2 px-6 rounded-md flex items-center hover:bg-blue-50 transition-colors">
-              <Download size={18} className="mr-2" />
-              CONTINUAR
-            </button>
+            
+            {/* Bottom stats bar - similar to Steam UI */}
+            <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center bg-black/40 backdrop-blur-sm p-4 text-white">
+              <div className="flex space-x-6">
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-300">ÚLTIMA ACTIVIDAD</span>
+                  <span className="font-medium">{courseData.lastActivity}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-300">TIEMPO TOTAL</span>
+                  <span className="font-medium">{courseData.hoursCompleted} horas</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-300">LOGROS</span>
+                  <span className="font-medium">{courseData.achievementCount.unlocked}/{courseData.achievementCount.total}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-300">RANKING</span>
+                  <span className="font-medium">#{courseData.rankingPosition}</span>
+                </div>
+              </div>
+              
+              <div className="flex space-x-2">
+                <button className="p-2 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors">
+                  <Settings size={18} />
+                </button>
+                <button className="p-2 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors">
+                  <Info size={18} />
+                </button>
+                <button className="p-2 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors">
+                  <Star size={18} className="text-yellow-400 fill-yellow-400" />
+                </button>
+              </div>
+            </div>
+          </div>
+      
+          {/* Main content area */}
+          <div className="flex flex-col md:flex-row gap-4 px-4">
+            {/* Left column - Main content */}
+            <div className="w-full md:w-2/3">
+          {/* Course Progress Bar - Steam Style */}
+          <div className="bg-gradient-to-r from-green-500 to-green-800 text-white rounded-lg mb-6 overflow-hidden">
+            <div className="flex justify-between items-center p-4">
+              <div className="flex flex-col">
+                <h2 className="text-xl font-bold">Progreso del curso</h2>
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-100">{courseData.progression}% completado</span>
+                  <span className="text-xs text-green-200 bg-green-700/50 px-2 py-0.5 rounded-full">Nivel 3</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Progress bar */}
+            <div className="h-2 w-full bg-green-900/30">
+              <div 
+                className="h-2 bg-white" 
+                style={{ width: `${courseData.progression}%` }}
+              ></div>
+            </div>
           </div>
           
           {/* Tabs Navigation */}
@@ -156,7 +182,7 @@ const CourseDetailView: React.FC = () => {
           </div>
           
           {/* Tab content area */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="bg-white p-4 rounded-lg shadow-lg">
             {/* Activity Feed Header - similar to Steam's "ACTIVITY" */}
             <h2 className="text-sm font-medium text-gray-500 mb-4">
               {activeTab === 'content' ? 'CONTENIDO DEL CURSO' :
@@ -293,7 +319,7 @@ const CourseDetailView: React.FC = () => {
         {/* Right column - Sidebar */}
         <div className="w-full md:w-1/3 space-y-6">
           {/* Course Information */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="bg-white p-4 rounded-lg shadow-lg">
             <h2 className="text-sm font-medium text-gray-500 mb-3">INFORMACIÓN DEL CURSO</h2>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -328,7 +354,7 @@ const CourseDetailView: React.FC = () => {
           </div>
           
           {/* Achievements Section */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="bg-white p-4 rounded-lg shadow-lg">
             <h2 className="text-sm font-medium text-gray-500 mb-3">LOGROS</h2>
             <div className="flex justify-between items-center mb-3">
               <span>Has desbloqueado {courseData.achievementCount.unlocked} de {courseData.achievementCount.total}</span>
@@ -363,7 +389,7 @@ const CourseDetailView: React.FC = () => {
           </div>
           
           {/* Recent Activity or Friends Activity */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="bg-white p-4 rounded-lg shadow-lg">
             <h2 className="text-sm font-medium text-gray-500 mb-3">ACTIVIDAD RECIENTE</h2>
             <div className="p-3 bg-gray-50 rounded-md mb-3">
               <div className="flex items-start">
@@ -385,6 +411,8 @@ const CourseDetailView: React.FC = () => {
                   <p className="text-sm">Has completado el Quiz #2 con 85 puntos</p>
                 </div>
               </div>
+            </div>
+          </div>
             </div>
           </div>
         </div>
