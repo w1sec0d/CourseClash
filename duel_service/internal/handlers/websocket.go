@@ -7,6 +7,7 @@ import (
 
 	"courseclash/duel-service/internal/duelsync"
 	"courseclash/duel-service/internal/models"
+	"courseclash/duel-service/internal/services"
 
 	"github.com/gorilla/websocket"
 )
@@ -23,13 +24,35 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 	// Termina la conexión cuando todo se ha ejecutado
 	defer conn.Close()
 
+	// Recibir la información inicial del jugador, incluyendo su ELO
+	var initialData map[string]interface{}
+	if err := conn.ReadJSON(&initialData); err != nil {
+		log.Printf("Error al leer datos iniciales del jugador %s: %v", playerID, err)
+		conn.WriteMessage(websocket.TextMessage, []byte("Error al recibir datos iniciales. Cerrando conexión."))
+		return
+	}
+
+	// Extraer el ELO del jugador, con un valor por defecto si no se proporciona
+	playerElo := services.DefaultElo // ELO inicial por defecto
+	if elo, ok := initialData["elo"].(float64); ok {
+		playerElo = int(elo)
+	}
+
 	// Crear el canal Done para este jugador. Este canal permite reconocder cuando un jugador termino
 	playerDoneChan := make(chan struct{})
 	player := &models.Player{
 		ID:    playerID,
 		Score: 0,
+		Elo:   playerElo,
 		Conn:  conn,
 		Done:  playerDoneChan,
+	}
+
+	// Extraer el rango actual si se proporciona, o calcularlo basado en el ELO
+	if rank, ok := initialData["rank"].(string); ok && rank != "" {
+		player.Rank = rank
+	} else {
+		player.Rank = string(services.GetRankByElo(playerElo))
 	}
 
 	duelsync.Mu.Lock()

@@ -108,29 +108,45 @@ func endDuel(player1 *models.Player, player2 *models.Player) {
 		isDraw = true
 	}
 
-	//TODO Al traer el jugador de la base de datos es necesario que este rango se calcule con base a su ELO, no solo respecto a el puntaje del duelo
-
-	// Calcular el rango final de cada jugador según su puntaje total actualizado
-	newRank1 := services.GetRankByScore(player1.Score)
-	if player1.Rank != string(newRank1) {
-		player1.Rank = string(newRank1)
-		// Aquí en el futuro podrías actualizar el rango en la base de datos
-	}
-	newRank2 := services.GetRankByScore(player2.Score)
-	if player2.Rank != string(newRank2) {
-		player2.Rank = string(newRank2)
-		// Aquí en el futuro podrías actualizar el rango en la base de datos
-	}
+	// Calcular los nuevos ELOs basados en el resultado del duelo
+	player1Won := player1.Score > player2.Score
+	player2Won := player2.Score > player1.Score
+	
+	// Guardar los ELOs originales para reportar el cambio
+	oldElo1 := player1.Elo
+	oldElo2 := player2.Elo
+	
+	// Calcular los nuevos ELOs
+	player1.Elo = services.CalculateEloChange(player1.Elo, player2.Elo, player1Won, isDraw)
+	player2.Elo = services.CalculateEloChange(player2.Elo, player1.Elo, player2Won, isDraw)
+	
+	// Calcular los nuevos rangos basados en el ELO actualizado
+	newRank1 := services.GetRankByElo(player1.Elo)
+	newRank2 := services.GetRankByElo(player2.Elo)
+	
+	// Actualizar los rangos de los jugadores
+	player1.Rank = string(newRank1)
+	player2.Rank = string(newRank2)
 
 	finalMessage := map[string]interface{}{
 		"type": "duel_end",
 		"data": map[string]interface{}{
 			"player1_score": player1.Score,
 			"player2_score": player2.Score,
-			"player1_rank":  player1.Rank,
-			"player2_rank":  player2.Rank,
-			"is_draw":       isDraw,
-			"winner_id":     winnerID, // Será una cadena vacía si isDraw es true
+			"player1_elo": map[string]interface{}{
+				"previous": oldElo1,
+				"current":  player1.Elo,
+				"change":   player1.Elo - oldElo1,
+			},
+			"player2_elo": map[string]interface{}{
+				"previous": oldElo2,
+				"current":  player2.Elo,
+				"change":   player2.Elo - oldElo2,
+			},
+			"player1_rank": player1.Rank,
+			"player2_rank": player2.Rank,
+			"is_draw":      isDraw,
+			"winner_id":    winnerID, // Será una cadena vacía si isDraw es true
 		},
 	}
 
@@ -145,6 +161,7 @@ func endDuel(player1 *models.Player, player2 *models.Player) {
 		}
 	}
 
-	log.Printf("Duelo finalizado. P1 (%s): %d, P2 (%s): %d. Ganador: %s, Empate: %t | Rangos: P1: %s, P2: %s",
-		player1.ID, player1.Score, player2.ID, player2.Score, winnerID, isDraw, player1.Rank, player2.Rank)
+	log.Printf("Duelo finalizado. P1 (%s): %d, P2 (%s): %d. Ganador: %s, Empate: %t | ELOs: P1: %d→%d, P2: %d→%d | Rangos: P1: %s, P2: %s",
+		player1.ID, player1.Score, player2.ID, player2.Score, winnerID, isDraw, 
+		oldElo1, player1.Elo, oldElo2, player2.Elo, player1.Rank, player2.Rank)
 }

@@ -8,6 +8,7 @@ import (
 type Player struct {
 	ID    string
 	Score int
+	Elo   int    // Puntuación ELO del jugador en el curso específico
 	Rank  string // El rango actual del jugador, persistente
 	Conn  *websocket.Conn
 	Done  chan struct{}
