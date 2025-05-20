@@ -46,8 +46,14 @@ services:
     ports:
       - "8002:8002"
     restart: unless-stopped
+    env_file:
+      - ./duel_service/duel_service.env
     environment:
       - GIN_MODE=release
+    depends_on:
+      - mongo
+    networks:
+      - courseclash-network
     healthcheck:
       test:
         [
@@ -56,14 +62,12 @@ services:
           "--no-verbose",
           "--tries=1",
           "--spider",
-          "http://localhost:8080/swagger/index.html",
+          "http://localhost:8002/swagger/index.html",
         ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-    networks:
-      - courseclash-network
 
   # API Gateway
   api_gateway:
