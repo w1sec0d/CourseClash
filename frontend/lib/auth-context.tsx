@@ -21,6 +21,8 @@ import {
   useLogout,
   useRegister,
   useForgotPassword,
+  PasswordResetResponse,
+  UpdatePasswordResponse,
 } from './auth-hooks';
 import { getAuthToken } from './graphql-client';
 
@@ -38,8 +40,12 @@ type AuthContextType = {
     name?: string;
     role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
   }) => Promise<AuthResponse>;
-  resetPassword: (email: string) => Promise<AuthResponse>;
-  updatePassword: (newPassword: string, code: string) => Promise<AuthResponse>;
+  resetPassword: (email: string) => Promise<PasswordResetResponse>;
+  updatePassword: (
+    newPassword: string,
+    code: string,
+    email: string
+  ) => Promise<UpdatePasswordResponse>;
   logout: () => Promise<boolean>; // Función para cerrar sesión
 };
 
@@ -119,9 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const handleUpdatePassword = useCallback(
-    async (newPassword: string, code: string) => {
+    async (newPassword: string, code: string, email: string) => {
       try {
-        const result = await updatePassword(newPassword, code);
+        const result = await updatePassword(newPassword, code, email);
         return result;
       } catch (error) {
         console.error('Error updating password:', error);

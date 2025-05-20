@@ -41,6 +41,7 @@ export type AuthErrorCode =
   | 'TOKEN_EXPIRED';
 
 export type AuthResponse = {
+  code: any;
   user: User;
   token: string;
   refreshToken?: string;
@@ -50,7 +51,7 @@ export type AuthResponse = {
 
 export type PasswordResetResponse = {
   message: string;
-  code?: string;
+  code: string;
   __typename: 'ForgotPasswordSuccess' | 'ForgotPasswordError';
 };
 
@@ -68,6 +69,11 @@ export type AuthContextType = {
 };
 
 export type LoginResult = AuthResponse | AuthError;
+
+export type UpdatePasswordResponse = {
+  message: string;
+  __typename: 'UpdatePasswordSuccess' | 'UpdatePasswordError';
+};
 
 export function useLogin() {
   const [loading, setLoading] = useState(false);
@@ -450,7 +456,7 @@ export function useForgotPassword() {
   }, []);
 
   const updatePassword = useCallback(
-    async (newPassword: string, code: string) => {
+    async (newPassword: string, code: string, email: string) => {
       setLoading(true);
       setError(null);
 
@@ -460,8 +466,8 @@ export function useForgotPassword() {
 
       try {
         const updatePasswordMutation = `
-        mutation UpdatePassword($password: String!, $code: String!) {
-          updatePassword(password: $password, code: $code) {
+        mutation UpdatePassword($newPassword: String!, $code: String!, $email: String!) {
+          updatePassword(newPassword: $newPassword, code: $code, email: $email) {
             __typename
             ... on UpdatePasswordSuccess {
               message
@@ -477,7 +483,7 @@ export function useForgotPassword() {
         console.log('📤 Sending password update request to API Gateway');
         const data = await fetchGraphQL({
           query: updatePasswordMutation,
-          variables: { password: newPassword, code },
+          variables: { newPassword, code, email },
         });
 
         console.log('📥 Received password update response:', {

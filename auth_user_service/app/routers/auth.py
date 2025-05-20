@@ -437,6 +437,8 @@ def update_password(
     token: Annotated[dict, Depends(decode_token)],
     db: Session = Depends(get_db),
 ):
+    print("🔑 Token recibido:", token)
+    print("🔑 Data recibida:", data)
     try:
         # Verificar que el token contenga el email y el código
         if "email" not in token or "code" not in token:

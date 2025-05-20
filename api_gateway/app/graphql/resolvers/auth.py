@@ -87,6 +87,23 @@ ForgotPasswordResult = strawberry.union(
 )
 
 
+@strawberry.type
+class UpdatePasswordSuccess:
+    message: str
+
+
+@strawberry.type
+class UpdatePasswordError:
+    message: str
+    code: str
+
+
+# Union type for update password response
+UpdatePasswordResult = strawberry.union(
+    "UpdatePasswordResult", (UpdatePasswordSuccess, UpdatePasswordError)
+)
+
+
 # Eliminamos las clases de entrada ya que usaremos argumentos directos
 
 
@@ -391,37 +408,17 @@ class Mutation:
         newPassword: str,
         code: str,
         email: str,
-    ) -> bool:
-        """
-        Actualiza la contraseña del usuario.
-
-        Args:
-            newPassword (str): Nueva contraseña
-            code (str): Código de verificación
-            email (str): Correo electrónico del usuario
-
-        """
+    ) -> UpdatePasswordResult:
         try:
-            # Preparar los datos para el microservicio de autenticación
             auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000")
             update_password_url = f"{auth_service_url}/auth/update-password"
-            print("Update password URL: ", update_password_url)
 
-            # Utilizar el cliente HTTP para realizar la petición al microservicio
             async with httpx.AsyncClient(timeout=10.0) as client:
-                # Realizar la petición al microservicio de autenticación
                 response = await client.post(
                     update_password_url,
                     json={"email": email, "code": code, "new_password": newPassword},
                 )
-                print("Response: ", response)
 
-                # Log para depuración
-                print(
-                    f"Update password request to {update_password_url} - Status: {response.status_code}"
-                )
-
-                # Si hay un error HTTP, devolver un error
                 if response.status_code != 200:
                     error_detail = "Error al procesar la solicitud"
                     error_code = "SERVER_ERROR"
@@ -434,21 +431,18 @@ class Mutation:
                             error_code = error_data["detail"].get("code", error_code)
                         elif isinstance(error_data.get("detail"), str):
                             error_detail = error_data["detail"]
-
                     except Exception as json_error:
                         print(f"Error parsing response: {str(json_error)}")
 
-                    return ForgotPasswordError(message=error_detail, code=error_code)
+                    return UpdatePasswordError(message=error_detail, code=error_code)
 
-                    # Procesar la respuesta exitosa
-                return ForgotPasswordSuccess(
-                    message="Contraseña actualizada correctamente",
-                    code="",
+                return UpdatePasswordSuccess(
+                    message="Contraseña actualizada correctamente"
                 )
 
         except Exception as e:
             print(f"Error en updatePassword: {str(e)}")
-            return ForgotPasswordError(
+            return UpdatePasswordError(
                 message="Error al procesar la solicitud de restablecimiento de contraseña",
                 code="SERVER_ERROR",
             )

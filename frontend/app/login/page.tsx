@@ -91,7 +91,7 @@ export default function Login() {
           },
         });
 
-        if (code) {
+        if (code && code.length === 6 && code === result.code) {
           // Pedir la nueva contraseña
           const { value: newPassword } = await Swal.fire({
             title: 'Nueva contraseña',
@@ -116,7 +116,7 @@ export default function Login() {
 
           if (newPassword) {
             try {
-              await updatePassword(newPassword, code);
+              await updatePassword(newPassword, code, email);
               Swal.fire({
                 icon: 'success',
                 title: '¡Contraseña actualizada!',
