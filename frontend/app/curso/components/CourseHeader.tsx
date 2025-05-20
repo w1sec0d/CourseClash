@@ -1,28 +1,78 @@
-'use client';
-
 import React from 'react';
+import TabNavigation from '@/components/TabNavigation';
+import CourseStats from './CourseStats';
+import CourseMetrics from './CourseMetrics';
+
+type TabId = string;
 
 interface CourseHeaderProps {
   title: string;
-  ranking?: string;
+  bannerImage: string;
+  ranking: string;
+  progress: number;
+  level: string;
+  shields: number;
+  totalShields: number;
+  coins: number;
+  power: number;
+  activeTab: string;
+  onTabChange: (tabId: string) => void;
+  tabs: Array<{
+    id: string;
+    label: string;
+  }>;
+  tabColor?: string;
+  textColor?: string;
 }
 
-const CourseHeader: React.FC<CourseHeaderProps> = ({ title, ranking = "3º Lugar" }) => {
+const CourseHeader: React.FC<CourseHeaderProps> = ({
+  title,
+  bannerImage,
+  ranking,
+  progress,
+  level,
+  shields,
+  totalShields,
+  coins,
+  power,
+  activeTab,
+  onTabChange,
+  tabs,
+  tabColor = 'yellow',
+  textColor = 'gray-50'
+}) => {
   return (
-    <div className="justify-between items-center mb-4 flex">
-      <p className="text-2xl font-bold text-emerald-800">{title}</p>
-      <div className="items-center flex space-x-2">
-        <span className="text-sm text-gray-500">Ranking del curso:</span>
-        <div className="items-center bg-amber-100 text-amber-800 px-2 py-1 flex rounded">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 mr-1"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"></path>
-          </svg>
-          <span className="font-medium">{ranking}</span>
+    <div className="bg-green-500 rounded-lg mb-6 overflow-hidden">
+      <div className="h-40 bg-gradient-to-r from-blue-600 to-purple-600 relative">
+        <img 
+          alt="Banner del curso" 
+          src={bannerImage} 
+          className="object-cover opacity-60 w-full h-full"
+        />
+        <div className="absolute inset-0 flex items-end m-3">
+          <p className="text-4xl font-bold text-white drop-shadow-lg">{title}</p>
+        </div>
+      </div>
+      <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-5">
+        <div className="justify-between items-center mb-4 flex flex-wrap">
+          <CourseStats ranking={ranking} progress={progress} level={level} />
+          <CourseMetrics 
+            shields={shields} 
+            totalShields={totalShields} 
+            coins={coins} 
+            power={power} 
+          />
+        </div>
+        <div className="mt-4">
+          <div>
+            <TabNavigation<TabId> 
+              tabs={tabs as Array<{id: TabId, label: string}>}
+              activeTab={activeTab as TabId}
+              onTabChange={onTabChange as (tabId: TabId) => void}
+              tabColor={tabColor}
+              text={textColor}
+            />
+          </div>
         </div>
       </div>
     </div>
