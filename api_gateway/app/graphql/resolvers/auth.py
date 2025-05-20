@@ -18,6 +18,7 @@ import strawberry
 from typing import List, Optional
 from datetime import datetime
 import os
+import httpx
 from enum import Enum, auto
 
 # Importar funciones de la base de datos simulada para autenticación
@@ -148,7 +149,8 @@ class Mutation:
         Inicia sesión de un usuario con email y contraseña.
 
         Args:
-            input (LoginInput): Objeto con email y contraseña del usuario
+            email (str): Correo electrónico del usuario
+            password (str): Contraseña del usuario
 
         Returns:
             Union[AuthSuccess, AuthError]:
@@ -167,55 +169,65 @@ class Mutation:
                     message="Correo y contraseña son requeridos", code="INVALID_INPUT"
                 )
 
-            # Obtener usuario por email
-            user_data = get_user_by_email(email)
-
-            # Verificar si el usuario existe
-            if not user_data:
-                return AuthError(
-                    message="Correo o contraseña inválidos", code="INVALID_CREDENTIALS"
+            # Preparar los datos para el microservicio de autenticación
+            auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8001")
+            login_url = f"{auth_service_url}/auth/login"
+            
+            # Utilizar el cliente HTTP para realizar la petición al microservicio
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                # Realizar la petición al microservicio de autenticación
+                # Nota: el microservicio espera 'username' como el correo y 'password'
+                response = await client.post(
+                    login_url,
+                    json={"username": email, "password": password}
                 )
-
-            # En una aplicación real, aquí se verificaría la contraseña hasheada
-            # Esto es solo un ejemplo con una contraseña fija
-            if password != "password123":
-                return AuthError(
-                    message="Correo o contraseña inválidos", code="INVALID_CREDENTIALS"
+                
+                # Log para depuración
+                print(f"Login request to {login_url} - Status: {response.status_code}")
+                
+                # Si hay un error HTTP, devolver un error de autenticación
+                if response.status_code != 200:
+                    error_detail = "Credenciales inválidas"
+                    try:
+                        error_data = response.json()
+                        if "detail" in error_data:
+                            error_detail = error_data["detail"]
+                    except Exception as json_error:
+                        print(f"Error parsing response: {str(json_error)}")
+                    
+                    return AuthError(
+                        message=error_detail,
+                        code="AUTHENTICATION_ERROR"
+                    )
+                
+                # Procesar la respuesta exitosa
+                auth_data = response.json()
+                
+                # Mapear la respuesta del microservicio al formato GraphQL
+                user_data = auth_data.get("user", {})
+                
+                return AuthSuccess(
+                    user=User(
+                        id=str(user_data.get("id", "")),
+                        username=user_data.get("username", ""),
+                        email=user_data.get("email", ""),
+                        name=user_data.get("full_name"),
+                        # El microservicio no devuelve avatar, usamos None
+                        avatar=None,
+                        # Convertir is_superuser a ADMIN o mantener STUDENT como default
+                        role="ADMIN" if user_data.get("is_superuser") else "STUDENT",
+                        createdAt=user_data.get("created_at", ""),
+                        # El microservicio no devuelve updated_at, usamos None
+                        updatedAt=None,
+                    ),
+                    token=auth_data.get("token", ""),
+                    refreshToken=auth_data.get("token_refresh", ""),
+                    expiresAt=auth_data.get("exp", ""),
                 )
-
-            # Verificar si la cuenta está activa (ejemplo de validación adicional)
-            if user_data.get("status") == "LOCKED":
-                return AuthError(
-                    message="Correo o contraseña inválidos", code="INVALID_CREDENTIALS"
-                )
-
-            # Generar token de autenticación
-            token_data = generate_mock_token(user_data["id"])
-
-            if not token_data:
-                return AuthError(
-                    message="Error al generar el token de autenticación",
-                    code="TOKEN_GENERATION_ERROR",
-                )
-
-            return AuthSuccess(
-                user=User(
-                    id=user_data["id"],
-                    username=user_data["username"],
-                    email=user_data["email"],
-                    name=user_data.get("name"),
-                    avatar=user_data.get("avatar"),
-                    role=user_data["role"],
-                    createdAt=user_data["createdAt"],
-                    updatedAt=user_data.get("updatedAt"),
-                ),
-                token=token_data["token"],
-                refreshToken=token_data["refreshToken"],
-                expiresAt=token_data["expiresAt"],
-            )
 
         except Exception as e:
             # En producción, se debería registrar este error en un sistema de monitoreo
+            print(f"Login error: {str(e)}")
             return AuthError(
                 message="Error inesperado al iniciar sesión", code="SERVER_ERROR"
             )

@@ -2,7 +2,7 @@
 docker stop api-gateway
 docker rm api-gateway
 docker build -t courseclash-api-gateway:1.0 .
-docker run --name api-gateway -p 8080:8080 courseclash-api-gateway:1.0
+docker run --name api-gateway -p 8080:8080 -e AUTH_SERVICE_URL=http://localhost:8001 courseclash-api-gateway:1.0
 
 -- AUTH USER SERVICE --
 docker stop auth-user

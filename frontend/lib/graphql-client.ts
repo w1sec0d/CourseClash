@@ -26,15 +26,28 @@ export async function fetchGraphQL({
     // Get operation name for better logging
     const operationType = query.includes('mutation') ? 'Mutation' : 'Query';
     const operationNameMatch = query.match(/(?:mutation|query)\s+(\w+)/i);
-    const operationName = operationNameMatch ? operationNameMatch[1] : 'Unknown';
+    const operationName = operationNameMatch
+      ? operationNameMatch[1]
+      : 'Unknown';
 
     // Show detailed request info with timestamp
-    console.group(`🔄 GraphQL ${operationType}: ${operationName} (${new Date().toISOString()})`)
+    console.group(
+      `🔄 GraphQL ${operationType}: ${operationName} (${new Date().toISOString()})`
+    );
     console.log('📡 Request to:', endpoint);
-    console.log('📝 Query:', query.slice(0, 150) + (query.length > 150 ? '...' : ''));
+    console.log(
+      '📝 Query:',
+      query.slice(0, 150) + (query.length > 150 ? '...' : '')
+    );
     console.log('📦 Variables:', variables);
-    console.log('🔖 Headers:', { ...headers, 'Content-Type': 'application/json' });
+    console.log('🔖 Headers:', {
+      ...headers,
+      'Content-Type': 'application/json',
+    });
     console.groupEnd();
+
+    // delay request
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const res = await fetch(endpoint, {
       method: 'POST',
@@ -57,18 +70,22 @@ export async function fetchGraphQL({
     }
 
     const json = await res.json();
-    
+
     // Calculate request duration
     const requestDuration = performance.now() - requestStartTime;
-    
+
     // Log response information
-    console.group(`📷 GraphQL Response: ${operationName} (${requestDuration.toFixed(0)}ms)`);
+    console.group(
+      `📷 GraphQL Response: ${operationName} (${requestDuration.toFixed(0)}ms)`
+    );
     if (json.errors) {
       console.error('❌ GraphQL Errors:', json.errors);
       console.log('⏱ Duration:', `${requestDuration.toFixed(0)}ms`);
       console.groupEnd();
-      
-      const error = json.errors[0] || { message: 'Error during GraphQL request' };
+
+      const error = json.errors[0] || {
+        message: 'Error during GraphQL request',
+      };
       const errorMessage = error.message || 'Unknown GraphQL error';
       throw new Error(errorMessage);
     } else {
