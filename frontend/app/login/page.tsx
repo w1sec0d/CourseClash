@@ -32,7 +32,7 @@ export default function Login() {
     },
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { login, resetPassword } = useAuth();
+  const { login, resetPassword, updatePassword } = useAuth();
   const router = useRouter();
 
   const handleForgotPassword = async () => {
@@ -63,36 +63,107 @@ export default function Login() {
       try {
         const result = await resetPassword(email);
         console.log('resultForgot', result);
-        Swal.fire({
-          icon: 'success',
-          title: '¡Solicitud enviada!',
-          text: `Hemos enviado un correo a ${email} con instrucciones para restablecer tu contraseña.`,
+
+        // Mostrar el código de verificación en modo desarrollo
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔑 Verification code:', result.code);
+        }
+
+        // Pedir el código de verificación
+        const { value: code } = await Swal.fire({
+          title: 'Código de verificación',
+          input: 'text',
+          inputLabel: 'Ingresa el código que recibiste en tu correo',
+          inputPlaceholder: 'Código de 6 caracteres',
+          showCancelButton: true,
+          confirmButtonText: 'Verificar',
+          cancelButtonText: 'Cancelar',
           confirmButtonColor: '#10b981',
+          cancelButtonColor: '#6b7280',
+          inputValidator: (value) => {
+            if (!value) {
+              return 'Necesitas ingresar el código de verificación';
+            }
+            if (value.length !== 6) {
+              return 'El código debe tener 6 caracteres';
+            }
+            return null;
+          },
         });
+
+        if (code) {
+          // Pedir la nueva contraseña
+          const { value: newPassword } = await Swal.fire({
+            title: 'Nueva contraseña',
+            input: 'password',
+            inputLabel: 'Ingresa tu nueva contraseña',
+            inputPlaceholder: '••••••••',
+            showCancelButton: true,
+            confirmButtonText: 'Cambiar contraseña',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+            inputValidator: (value) => {
+              if (!value) {
+                return 'Necesitas ingresar una contraseña';
+              }
+              if (value.length < 8) {
+                return 'La contraseña debe tener al menos 8 caracteres';
+              }
+              return null;
+            },
+          });
+
+          if (newPassword) {
+            try {
+              await updatePassword(newPassword, code);
+              Swal.fire({
+                icon: 'success',
+                title: '¡Contraseña actualizada!',
+                text: 'Tu contraseña ha sido actualizada exitosamente.',
+                confirmButtonColor: '#10b981',
+              });
+            } catch (error) {
+              if (error instanceof AuthError) {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: error.message,
+                  confirmButtonColor: '#10b981',
+                });
+              }
+            }
+          }
+        }
       } catch (error: unknown) {
         if (error instanceof AuthError) {
-          if (error.code === 'USER_NOT_FOUND') {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'El correo electrónico no está registrado en nuestra plataforma. Por favor, verifica tu correo electrónico o regístrate.',
-              confirmButtonColor: '#10b981',
-            });
-          } else if (error.isServerError) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error del servidor',
-              text: 'Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo más tarde.',
-              confirmButtonColor: '#10b981',
-            });
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: error.message,
-              confirmButtonColor: '#10b981',
-            });
+          let title = 'Error';
+          let message = error.message;
+
+          switch (error.code) {
+            case 'USER_NOT_FOUND':
+              title = 'Usuario no encontrado';
+              message =
+                'El correo electrónico no está registrado en nuestra plataforma. Por favor, verifica tu correo electrónico o regístrate.';
+              break;
+            case 'SERVER_ERROR':
+              title = 'Error del servidor';
+              message =
+                'Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo más tarde.';
+              break;
+            case 'INVALID_CODE':
+              title = 'Código inválido';
+              message =
+                'El código de verificación es inválido o ha expirado. Por favor solicita un nuevo código.';
+              break;
           }
+
+          Swal.fire({
+            icon: 'error',
+            title,
+            text: message,
+            confirmButtonColor: '#10b981',
+          });
         } else {
           Swal.fire({
             icon: 'error',
@@ -116,12 +187,17 @@ export default function Login() {
       router.push('/dashboard');
     } catch (error) {
       // Set form error to display to the user
-      setError('root', {
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al iniciar sesión. Por favor, intenta de nuevo.',
-      });
+      if (error instanceof AuthError) {
+        setError('root', {
+          message: error.message,
+          type: error.code,
+        });
+      } else {
+        setError('root', {
+          message: 'Error al iniciar sesión. Por favor, intenta de nuevo.',
+          type: 'UNKNOWN_ERROR',
+        });
+      }
     } finally {
       setIsLoading(false);
     }

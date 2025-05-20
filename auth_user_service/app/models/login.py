@@ -1,25 +1,30 @@
 from pydantic import BaseModel
 
+
 # Modelo para el inicio de sesion
 class Login(BaseModel):
     username: str
     password: str
 
-#Modelo para la respuesta de inicio de sesión
+
+# Modelo para la respuesta de inicio de sesión
 class loginResponse(BaseModel):
     user: dict
     token: str
     expiresAt: str
 
-#Modelo para la recuperación de contraseña
+
+# Modelo para la recuperación de contraseña
 class Email(BaseModel):
     email: str
 
-#Modelo para verificar el codigo
+
+# Modelo para verificar el codigo
 class code(BaseModel):
     code: str
 
-#Modelo para Actualizar la contraseña
+
+# Modelo para Actualizar la contraseña
 class UpdatePassword(BaseModel):
     password: str
-
+    code: str  # Código de verificación

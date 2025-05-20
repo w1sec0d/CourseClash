@@ -33,6 +33,19 @@ from ..utils.mock_db import (
     get_user_by_id_mock,
 )
 
+
+# Definición de códigos de error
+class AuthErrorCode:
+    UNKNOWN_ERROR = "UNKNOWN_ERROR"
+    USER_NOT_FOUND = "USER_NOT_FOUND"
+    INVALID_CREDENTIALS = "INVALID_CREDENTIALS"
+    SERVER_ERROR = "SERVER_ERROR"
+    INVALID_CODE = "INVALID_CODE"
+    EMAIL_EXISTS = "EMAIL_EXISTS"
+    INVALID_TOKEN = "INVALID_TOKEN"
+    TOKEN_EXPIRED = "TOKEN_EXPIRED"
+
+
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # ============================================
@@ -206,13 +219,21 @@ def login(form_data: Login, db: Session = Depends(get_db)):
 
         if not user_data.get("success", False):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={
+                    "message": "Invalid credentials",
+                    "code": AuthErrorCode.INVALID_CREDENTIALS,
+                },
             )
 
         # Verificar contraseña
         if not verify_password(form_data.password, user_data["user"].password):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={
+                    "message": "Invalid credentials",
+                    "code": AuthErrorCode.INVALID_CREDENTIALS,
+                },
             )
 
         # Generar token
@@ -241,7 +262,10 @@ def login(form_data: Login, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Unexpected error occurred, please try again later: {str(e)}",
+            detail={
+                "message": f"Unexpected error occurred, please try again later: {str(e)}",
+                "code": AuthErrorCode.SERVER_ERROR,
+            },
         )
 
 
@@ -348,7 +372,10 @@ async def recovery_password(email: Email, db: Session = Depends(get_db)):
         if not email_exists:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"message": "Email not registered", "code": "USER_NOT_FOUND"},
+                detail={
+                    "message": "Email not registered",
+                    "code": AuthErrorCode.USER_NOT_FOUND,
+                },
             )
 
         # Generar un codigo de verificación
@@ -361,7 +388,7 @@ async def recovery_password(email: Email, db: Session = Depends(get_db)):
         # generar body del correo
         body = f"""
             <h1>¿Olvidaste tu contraseña? Solucionémoslo juntos</h1>
-            <p>Para recuperar tu contraseña, ingresa el siguiente código en la aplicación:</p>
+            <p>Para recuperar tu contraseña, ingresa el codigo enviado a tu correo:</p>
             <h2>{code}</h2>
             <p>Si no solicitaste este cambio, ignora este correo.</p>
         """
@@ -381,7 +408,12 @@ async def recovery_password(email: Email, db: Session = Depends(get_db)):
             print(f"Body: {body}")
             print("=================\n")
 
-        return {"success": True, "message": "Email sent successfully", "exp": exp}
+        return {
+            "success": True,
+            "message": "Email sent successfully",
+            "exp": exp,
+            "code": code,  # Incluimos el código en la respuesta para desarrollo
+        }
 
     except HTTPException as e:
         raise e
@@ -391,7 +423,7 @@ async def recovery_password(email: Email, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
                 "message": f"Error sending email: {str(e)}",
-                "code": "SERVER_ERROR",
+                "code": AuthErrorCode.SERVER_ERROR,
             },
         )
 
@@ -399,18 +431,31 @@ async def recovery_password(email: Email, db: Session = Depends(get_db)):
 # Endpoint para cambiar contraseña
 # Input: Data contraseña nueva y el token
 # Output: Mensaje de confirmación
-@router.post("/update")
+@router.post("/update-password")
 def update_password(
     data: UpdatePassword,
     token: Annotated[dict, Depends(decode_token)],
     db: Session = Depends(get_db),
 ):
     try:
-        # Verificar que el token contenga el email
-        if "email" not in token:
+        # Verificar que el token contenga el email y el código
+        if "email" not in token or "code" not in token:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid token: email not found",
+                detail={
+                    "message": "Invalid token: missing required information",
+                    "code": AuthErrorCode.INVALID_TOKEN,
+                },
+            )
+
+        # Verificar que el código coincida
+        if token["code"] != data.code:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "message": "Invalid verification code",
+                    "code": AuthErrorCode.INVALID_CODE,
+                },
             )
 
         # Generar la contraseña hasheada
@@ -441,7 +486,10 @@ def update_password(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating password: {str(e)}",
+            detail={
+                "message": f"Error updating password: {str(e)}",
+                "code": AuthErrorCode.SERVER_ERROR,
+            },
         )
 
 
@@ -490,7 +538,10 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         if email_exists:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered",
+                detail={
+                    "message": "Email already registered",
+                    "code": AuthErrorCode.EMAIL_EXISTS,
+                },
             )
 
         # Cifrado de contraseña
@@ -537,5 +588,8 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error creating user: {str(e)}",
+            detail={
+                "message": f"Error creating user: {str(e)}",
+                "code": AuthErrorCode.SERVER_ERROR,
+            },
         )

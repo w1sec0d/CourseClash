@@ -72,6 +72,7 @@ AuthResult = strawberry.union("AuthResult", (AuthSuccess, AuthError))
 @strawberry.type
 class ForgotPasswordSuccess:
     message: str
+    code: str
 
 
 @strawberry.type
@@ -385,12 +386,72 @@ class Mutation:
         return user is not None
 
     @strawberry.mutation
-    async def confirmResetPassword(self, token: str, newPassword: str) -> bool:
-        # In a mock implementation, just validate the token format
-        if not token or not token.startswith("mock-reset-token-"):
-            return False
+    async def updatePassword(
+        self,
+        newPassword: str,
+        code: str,
+        email: str,
+    ) -> bool:
+        """
+        Actualiza la contraseña del usuario.
 
-        return True
+        Args:
+            newPassword (str): Nueva contraseña
+            code (str): Código de verificación
+            email (str): Correo electrónico del usuario
+
+        """
+        try:
+            # Preparar los datos para el microservicio de autenticación
+            auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000")
+            update_password_url = f"{auth_service_url}/auth/update-password"
+            print("Update password URL: ", update_password_url)
+
+            # Utilizar el cliente HTTP para realizar la petición al microservicio
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                # Realizar la petición al microservicio de autenticación
+                response = await client.post(
+                    update_password_url,
+                    json={"email": email, "code": code, "new_password": newPassword},
+                )
+                print("Response: ", response)
+
+                # Log para depuración
+                print(
+                    f"Update password request to {update_password_url} - Status: {response.status_code}"
+                )
+
+                # Si hay un error HTTP, devolver un error
+                if response.status_code != 200:
+                    error_detail = "Error al procesar la solicitud"
+                    error_code = "SERVER_ERROR"
+                    try:
+                        error_data = response.json()
+                        if isinstance(error_data.get("detail"), dict):
+                            error_detail = error_data["detail"].get(
+                                "message", error_detail
+                            )
+                            error_code = error_data["detail"].get("code", error_code)
+                        elif isinstance(error_data.get("detail"), str):
+                            error_detail = error_data["detail"]
+
+                    except Exception as json_error:
+                        print(f"Error parsing response: {str(json_error)}")
+
+                    return ForgotPasswordError(message=error_detail, code=error_code)
+
+                    # Procesar la respuesta exitosa
+                return ForgotPasswordSuccess(
+                    message="Contraseña actualizada correctamente",
+                    code="",
+                )
+
+        except Exception as e:
+            print(f"Error en updatePassword: {str(e)}")
+            return ForgotPasswordError(
+                message="Error al procesar la solicitud de restablecimiento de contraseña",
+                code="SERVER_ERROR",
+            )
 
     @strawberry.mutation
     async def forgotPassword(self, email: str) -> ForgotPasswordResult:
@@ -419,6 +480,7 @@ class Mutation:
                 # Realizar la petición al microservicio de autenticación
                 response = await client.post(recovery_url, json={"email": email})
                 print("Response: ", response)
+                print("Response JSON: ", response.json())
 
                 # Log para depuración
                 print(
@@ -445,9 +507,11 @@ class Mutation:
 
                 # Procesar la respuesta exitosa
                 recovery_data = response.json()
+                print("Recovery data: ", recovery_data)
 
                 return ForgotPasswordSuccess(
-                    message="Si el correo existe en nuestra base de datos, recibirás instrucciones para restablecer tu contraseña"
+                    message="Si el correo existe en nuestra base de datos, recibirás instrucciones para restablecer tu contraseña",
+                    code=recovery_data["code"],
                 )
 
         except Exception as e:

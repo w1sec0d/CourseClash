@@ -7,7 +7,6 @@ import {
   clearAuthToken,
   getAuthHeaders,
 } from './graphql-client';
-import { log } from 'console';
 
 export type User = {
   id: string;
@@ -20,25 +19,53 @@ export type User = {
   updatedAt?: string;
 };
 
-export type AuthResponse = {
-  user: User;
-  token: string;
-  refreshToken?: string;
-  expiresAt?: string;
-  __typename?: string; // Para manejar la unión de tipos
-};
-
-// Custom error class for auth errors
 export class AuthError extends Error {
   constructor(
     message: string,
-    public code: string = 'UNKNOWN_ERROR',
+    public code: AuthErrorCode = 'UNKNOWN_ERROR',
     public isServerError: boolean = false
   ) {
     super(message);
     this.name = 'AuthError';
   }
 }
+
+export type AuthErrorCode =
+  | 'UNKNOWN_ERROR'
+  | 'USER_NOT_FOUND'
+  | 'INVALID_CREDENTIALS'
+  | 'SERVER_ERROR'
+  | 'INVALID_CODE'
+  | 'EMAIL_EXISTS'
+  | 'INVALID_TOKEN'
+  | 'TOKEN_EXPIRED';
+
+export type AuthResponse = {
+  user: User;
+  token: string;
+  refreshToken?: string;
+  expiresAt?: string;
+  __typename?: string;
+};
+
+export type PasswordResetResponse = {
+  message: string;
+  code?: string;
+  __typename: 'ForgotPasswordSuccess' | 'ForgotPasswordError';
+};
+
+export type AuthContextType = {
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<AuthResponse>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<PasswordResetResponse>;
+  updatePassword: (
+    newPassword: string,
+    code: string
+  ) => Promise<PasswordResetResponse>;
+};
 
 export type LoginResult = AuthResponse | AuthError;
 
@@ -358,6 +385,7 @@ export function useForgotPassword() {
             __typename
             ... on ForgotPasswordSuccess {
               message
+              code
             }
             ... on ForgotPasswordError {
               message
@@ -405,7 +433,7 @@ export function useForgotPassword() {
       }
 
       setLoading(false);
-      return data.forgotPassword;
+      return data.forgotPassword as PasswordResetResponse;
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to request password reset';
@@ -421,5 +449,74 @@ export function useForgotPassword() {
     }
   }, []);
 
-  return { requestPasswordReset, loading, error };
+  const updatePassword = useCallback(
+    async (newPassword: string, code: string) => {
+      setLoading(true);
+      setError(null);
+
+      console.log('🔑 Updating password:', {
+        timestamp: new Date().toISOString(),
+      });
+
+      try {
+        const updatePasswordMutation = `
+        mutation UpdatePassword($password: String!, $code: String!) {
+          updatePassword(password: $password, code: $code) {
+            __typename
+            ... on UpdatePasswordSuccess {
+              message
+            }
+            ... on UpdatePasswordError {
+              message
+              code
+            }
+          }
+        }
+      `;
+
+        console.log('📤 Sending password update request to API Gateway');
+        const data = await fetchGraphQL({
+          query: updatePasswordMutation,
+          variables: { password: newPassword, code },
+        });
+
+        console.log('📥 Received password update response:', {
+          type: data.updatePassword.__typename,
+          success: data.updatePassword.__typename === 'UpdatePasswordSuccess',
+          timestamp: new Date().toISOString(),
+        });
+
+        if (data.updatePassword.__typename === 'UpdatePasswordError') {
+          console.log('Error details:', {
+            code: data.updatePassword.code,
+            message: data.updatePassword.message,
+          });
+
+          throw new AuthError(
+            data.updatePassword.message || 'Error al actualizar la contraseña',
+            data.updatePassword.code,
+            true
+          );
+        }
+
+        setLoading(false);
+        return data.updatePassword as PasswordResetResponse;
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to update password';
+        console.error('❌ Password update error:', errorMessage);
+        setError(errorMessage);
+        setLoading(false);
+
+        // Re-throw the error with proper typing
+        if (err instanceof AuthError) {
+          throw err;
+        }
+        throw new AuthError(errorMessage, 'SERVER_ERROR', true);
+      }
+    },
+    []
+  );
+
+  return { requestPasswordReset, updatePassword, loading, error };
 }

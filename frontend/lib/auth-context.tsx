@@ -39,6 +39,7 @@ type AuthContextType = {
     role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
   }) => Promise<AuthResponse>;
   resetPassword: (email: string) => Promise<AuthResponse>;
+  updatePassword: (newPassword: string, code: string) => Promise<AuthResponse>;
   logout: () => Promise<boolean>; // Función para cerrar sesión
 };
 
@@ -50,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { user, loading: userLoading, fetchCurrentUser } = useCurrentUser();
   const { login, loading: loginLoading } = useLogin();
-  const { requestPasswordReset, loading, error } = useForgotPassword();
+  const { requestPasswordReset, updatePassword } = useForgotPassword();
   const { register, loading: registerLoading } = useRegister();
   const { logout } = useLogout();
 
@@ -117,6 +118,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [requestPasswordReset]
   );
 
+  const handleUpdatePassword = useCallback(
+    async (newPassword: string, code: string) => {
+      try {
+        const result = await updatePassword(newPassword, code);
+        return result;
+      } catch (error) {
+        console.error('Error updating password:', error);
+        throw error;
+      }
+    },
+    [updatePassword]
+  );
+
   // Actualiza el estado de autenticación cuando cambia el usuario
   useEffect(() => {
     setIsAuthenticated(!!user);
@@ -150,6 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     register: handleRegister,
     logout: handleLogout,
     resetPassword: handleResetPassword,
+    updatePassword: handleUpdatePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
