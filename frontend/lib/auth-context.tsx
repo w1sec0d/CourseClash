@@ -5,24 +5,41 @@
 // en toda la aplicación, permitiendo a los componentes acceder fácilmente al usuario actual
 // y a las funciones de autenticación.
 
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
-import { User, AuthResponse, useCurrentUser, useLogin, useLogout, useRegister } from './auth-hooks';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  ReactNode,
+} from 'react';
+import {
+  User,
+  AuthResponse,
+  useCurrentUser,
+  useLogin,
+  useLogout,
+  useRegister,
+  useForgotPassword,
+} from './auth-hooks';
 import { getAuthToken } from './graphql-client';
 
 // Tipo que define la estructura del contexto de autenticación
 type AuthContextType = {
-  user: User | null;                // Usuario actual o null si no está autenticado
-  isLoading: boolean;              // Indica si hay operaciones de autenticación en curso
-  isAuthenticated: boolean;        // Indica si el usuario está autenticado
+  user: User | null; // Usuario actual o null si no está autenticado
+  isLoading: boolean; // Indica si hay operaciones de autenticación en curso
+  isAuthenticated: boolean; // Indica si el usuario está autenticado
   login: (email: string, password: string) => Promise<AuthResponse>; // Función para iniciar sesión
-  register: (userData: {          // Función para registrar un nuevo usuario
+  register: (userData: {
+    // Función para registrar un nuevo usuario
     username: string;
     email: string;
     password: string;
     name?: string;
     role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
   }) => Promise<AuthResponse>;
-  logout: () => Promise<boolean>;  // Función para cerrar sesión
+  resetPassword: (email: string) => Promise<AuthResponse>;
+  logout: () => Promise<boolean>; // Función para cerrar sesión
 };
 
 // Creación del contexto de autenticación con valor inicial undefined
@@ -33,31 +50,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { user, loading: userLoading, fetchCurrentUser } = useCurrentUser();
   const { login, loading: loginLoading } = useLogin();
+  const { requestPasswordReset, loading, error } = useForgotPassword();
   const { register, loading: registerLoading } = useRegister();
   const { logout } = useLogout();
-  
+
   const isLoading = userLoading || loginLoading || registerLoading;
 
   // Define all handler functions with useCallback before useEffect hooks
   // Envuelve la función de login para obtener automáticamente el usuario después del inicio de sesión
-  const handleLogin = useCallback(async (email: string, password: string) => {
-    const result = await login(email, password);
-    await fetchCurrentUser();
-    return result;
-  }, [login, fetchCurrentUser]);
+  const handleLogin = useCallback(
+    async (email: string, password: string) => {
+      const result = await login(email, password);
+      await fetchCurrentUser();
+      return result;
+    },
+    [login, fetchCurrentUser]
+  );
 
   // Envuelve la función de registro para obtener automáticamente el usuario después del registro
-  const handleRegister = useCallback(async (userData: {
-    username: string;
-    email: string;
-    password: string;
-    name?: string;
-    role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
-  }) => {
-    const result = await register(userData);
-    await fetchCurrentUser();
-    return result;
-  }, [register, fetchCurrentUser]);
+  const handleRegister = useCallback(
+    async (userData: {
+      username: string;
+      email: string;
+      password: string;
+      name?: string;
+      role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
+    }) => {
+      const result = await register(userData);
+      await fetchCurrentUser();
+      return result;
+    },
+    [register, fetchCurrentUser]
+  );
 
   // Envuelve la función de cierre de sesión para limpiar el estado del usuario
   const handleLogout = useCallback(async () => {
@@ -69,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check if there's a token in localStorage
     const token = getAuthToken();
-    
+
     if (token) {
       // If token exists, fetch the current user
       fetchCurrentUser().then((userData) => {
@@ -80,15 +104,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchCurrentUser]);
 
+  const handleResetPassword = useCallback(
+    async (email: string) => {
+      try {
+        const result = await requestPasswordReset(email);
+        return result;
+      } catch (error) {
+        console.error('Error requesting password reset:', error);
+        throw error;
+      }
+    },
+    [requestPasswordReset]
+  );
+
   // Actualiza el estado de autenticación cuando cambia el usuario
   useEffect(() => {
     setIsAuthenticated(!!user);
   }, [user]);
-  
+
   // Set up a timer to refresh the token before it expires
   useEffect(() => {
     if (!isAuthenticated) return;
-    
+
     // Set a timer to refresh the token 5 minutes before it expires
     const tokenRefreshInterval = setInterval(async () => {
       try {
@@ -101,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         handleLogout();
       }
     }, 25 * 60 * 1000); // Every 25 minutes (assuming tokens expire after 30 minutes)
-    
+
     return () => clearInterval(tokenRefreshInterval);
   }, [isAuthenticated, fetchCurrentUser, handleLogout]);
 
@@ -112,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login: handleLogin,
     register: handleRegister,
     logout: handleLogout,
+    resetPassword: handleResetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -120,11 +158,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 // Hook personalizado para acceder al contexto de autenticación desde cualquier componente
 export function useAuth() {
   const context = useContext(AuthContext);
-  
+
   // Verifica que el hook se esté utilizando dentro de un AuthProvider
   if (context === undefined) {
     throw new Error('useAuth debe ser utilizado dentro de un AuthProvider');
   }
-  
+
   return context;
 }

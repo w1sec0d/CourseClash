@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '@/lib/form-schemas';
 import Swal from 'sweetalert2';
+import { AuthError } from '@/lib/auth-hooks';
 
 interface LoginFormValues {
   email: string;
@@ -31,7 +32,7 @@ export default function Login() {
     },
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, resetPassword } = useAuth();
   const router = useRouter();
 
   const handleForgotPassword = async () => {
@@ -60,22 +61,46 @@ export default function Login() {
     if (isConfirmed && email) {
       console.log('📧 Password reset requested for:', email);
       try {
-        // Here you would make an API call to request password reset
-        // For now, just show a success message
+        const result = await resetPassword(email);
+        console.log('resultForgot', result);
         Swal.fire({
           icon: 'success',
           title: '¡Solicitud enviada!',
           text: `Hemos enviado un correo a ${email} con instrucciones para restablecer tu contraseña.`,
           confirmButtonColor: '#10b981',
         });
-      } catch (error) {
-        console.error('Error requesting password reset:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo más tarde.',
-          confirmButtonColor: '#10b981',
-        });
+      } catch (error: unknown) {
+        if (error instanceof AuthError) {
+          if (error.code === 'USER_NOT_FOUND') {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'El correo electrónico no está registrado en nuestra plataforma. Por favor, verifica tu correo electrónico o regístrate.',
+              confirmButtonColor: '#10b981',
+            });
+          } else if (error.isServerError) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error del servidor',
+              text: 'Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo más tarde.',
+              confirmButtonColor: '#10b981',
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: error.message,
+              confirmButtonColor: '#10b981',
+            });
+          }
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Ocurrió un error inesperado. Por favor intenta de nuevo más tarde.',
+            confirmButtonColor: '#10b981',
+          });
+        }
       }
     }
   };

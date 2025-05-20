@@ -69,6 +69,23 @@ class AuthError:
 AuthResult = strawberry.union("AuthResult", (AuthSuccess, AuthError))
 
 
+@strawberry.type
+class ForgotPasswordSuccess:
+    message: str
+
+
+@strawberry.type
+class ForgotPasswordError:
+    message: str
+    code: str
+
+
+# Unión de tipos para la respuesta de forgot password
+ForgotPasswordResult = strawberry.union(
+    "ForgotPasswordResult", (ForgotPasswordSuccess, ForgotPasswordError)
+)
+
+
 # Eliminamos las clases de entrada ya que usaremos argumentos directos
 
 
@@ -179,14 +196,13 @@ class Mutation:
                 # Realizar la petición al microservicio de autenticación
                 # Nota: el microservicio espera 'username' como el correo y 'password'
                 response = await client.post(
-                    login_url,
-                    json={"username": email, "password": password}
+                    login_url, json={"username": email, "password": password}
                 )
                 print("Response: ", response)
-                
+
                 # Log para depuración
                 print(f"Login request to {login_url} - Status: {response.status_code}")
-                
+
                 # Si hay un error HTTP, devolver un error de autenticación
                 if response.status_code != 200:
                     error_detail = "Credenciales inválidas"
@@ -196,18 +212,15 @@ class Mutation:
                             error_detail = error_data["detail"]
                     except Exception as json_error:
                         print(f"Error parsing response: {str(json_error)}")
-                    
-                    return AuthError(
-                        message=error_detail,
-                        code="AUTHENTICATION_ERROR"
-                    )
-                
+
+                    return AuthError(message=error_detail, code="AUTHENTICATION_ERROR")
+
                 # Procesar la respuesta exitosa
                 auth_data = response.json()
-                
+
                 # Mapear la respuesta del microservicio al formato GraphQL
                 user_data = auth_data.get("user", {})
-                
+
                 return AuthSuccess(
                     user=User(
                         id=str(user_data.get("id", "")),
@@ -378,3 +391,68 @@ class Mutation:
             return False
 
         return True
+
+    @strawberry.mutation
+    async def forgotPassword(self, email: str) -> ForgotPasswordResult:
+        """
+        Inicia el proceso de restablecimiento de contraseña.
+
+        Args:
+            email (str): Correo electrónico del usuario
+
+        Returns:
+            Union[ForgotPasswordSuccess, ForgotPasswordError]:
+                - ForgotPasswordSuccess: Si el proceso se inició correctamente
+                - ForgotPasswordError: Si hay un error en el proceso
+
+        Nota: En una implementación real, se enviaría un correo con un enlace
+        para restablecer la contraseña.
+        """
+        try:
+            # Preparar los datos para el microservicio de autenticación
+            auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000")
+            recovery_url = f"{auth_service_url}/auth/recovery"
+            print("Recovery URL: ", recovery_url)
+
+            # Utilizar el cliente HTTP para realizar la petición al microservicio
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                # Realizar la petición al microservicio de autenticación
+                response = await client.post(recovery_url, json={"email": email})
+                print("Response: ", response)
+
+                # Log para depuración
+                print(
+                    f"Recovery request to {recovery_url} - Status: {response.status_code}"
+                )
+
+                # Si hay un error HTTP, devolver un error
+                if response.status_code != 200:
+                    error_detail = "Error al procesar la solicitud"
+                    error_code = "SERVER_ERROR"
+                    try:
+                        error_data = response.json()
+                        if isinstance(error_data.get("detail"), dict):
+                            error_detail = error_data["detail"].get(
+                                "message", error_detail
+                            )
+                            error_code = error_data["detail"].get("code", error_code)
+                        elif isinstance(error_data.get("detail"), str):
+                            error_detail = error_data["detail"]
+                    except Exception as json_error:
+                        print(f"Error parsing response: {str(json_error)}")
+
+                    return ForgotPasswordError(message=error_detail, code=error_code)
+
+                # Procesar la respuesta exitosa
+                recovery_data = response.json()
+
+                return ForgotPasswordSuccess(
+                    message="Si el correo existe en nuestra base de datos, recibirás instrucciones para restablecer tu contraseña"
+                )
+
+        except Exception as e:
+            print(f"Error en forgotPassword: {str(e)}")
+            return ForgotPasswordError(
+                message="Error al procesar la solicitud de restablecimiento de contraseña",
+                code="SERVER_ERROR",
+            )

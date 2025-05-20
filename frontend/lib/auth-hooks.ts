@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   fetchGraphQL,
   setAuthToken,
   clearAuthToken,
   getAuthHeaders,
 } from './graphql-client';
+import { log } from 'console';
 
 export type User = {
   id: string;
@@ -27,11 +28,17 @@ export type AuthResponse = {
   __typename?: string; // Para manejar la unión de tipos
 };
 
-export type AuthError = {
-  message: string;
-  code: string;
-  __typename: 'AuthError';
-};
+// Custom error class for auth errors
+export class AuthError extends Error {
+  constructor(
+    message: string,
+    public code: string = 'UNKNOWN_ERROR',
+    public isServerError: boolean = false
+  ) {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
 
 export type LoginResult = AuthResponse | AuthError;
 
@@ -323,5 +330,96 @@ export function useCurrentUser() {
     }
   }, []);
 
+  // Fetch user on mount
+  useEffect(() => {
+    fetchCurrentUser();
+  }, [fetchCurrentUser]);
+
   return { user, loading, error, fetchCurrentUser };
+}
+
+export function useForgotPassword() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const requestPasswordReset = useCallback(async (email: string) => {
+    setLoading(true);
+    setError(null);
+
+    console.log('🔑 Password reset request:', {
+      email,
+      timestamp: new Date().toISOString(),
+    });
+
+    try {
+      const forgotPasswordMutation = `
+        mutation ForgotPassword($email: String!) {
+          forgotPassword(email: $email) {
+            __typename
+            ... on ForgotPasswordSuccess {
+              message
+            }
+            ... on ForgotPasswordError {
+              message
+              code
+            }
+          }
+        }
+      `;
+
+      console.log('📤 Sending password reset request to API Gateway');
+      const data = await fetchGraphQL({
+        query: forgotPasswordMutation,
+        variables: { email },
+      });
+
+      console.log('📥 Received password reset response:', {
+        type: data.forgotPassword.__typename,
+        success: data.forgotPassword.__typename === 'ForgotPasswordSuccess',
+        timestamp: new Date().toISOString(),
+      });
+
+      if (data.forgotPassword.__typename === 'ForgotPasswordError') {
+        console.log('Error details:', {
+          code: data.forgotPassword.code,
+          message: data.forgotPassword.message,
+        });
+
+        // Map error codes to specific error types
+        switch (data.forgotPassword.code) {
+          case 'USER_NOT_FOUND':
+            throw new AuthError('Email not registered', 'USER_NOT_FOUND');
+          case 'SERVER_ERROR':
+            throw new AuthError(
+              data.forgotPassword.message || 'Error del servidor',
+              'SERVER_ERROR',
+              true
+            );
+          default:
+            throw new AuthError(
+              data.forgotPassword.message || 'Error al procesar la solicitud',
+              data.forgotPassword.code,
+              true
+            );
+        }
+      }
+
+      setLoading(false);
+      return data.forgotPassword;
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to request password reset';
+      console.error('❌ Password reset request error:', errorMessage);
+      setError(errorMessage);
+      setLoading(false);
+
+      // Re-throw the error with proper typing
+      if (err instanceof AuthError) {
+        throw err;
+      }
+      throw new AuthError(errorMessage, 'SERVER_ERROR', true);
+    }
+  }, []);
+
+  return { requestPasswordReset, loading, error };
 }
