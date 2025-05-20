@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Servicio de Autenticación y Usuarios
@@ -38,16 +38,30 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
   # Servicio de Duelos
-  duel_service:
+  duel-service:
     build:
       context: ./duel_service
       dockerfile: Dockerfile
+    container_name: courseclash-duel-service
     ports:
-      - '8002:8002'
+      - "8080:8080"
+    restart: unless-stopped
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/duel_db
-    depends_on:
-      - mongo
+      - GIN_MODE=release
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/swagger/index.html",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     networks:
       - courseclash-network
 
