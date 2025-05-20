@@ -146,7 +146,7 @@ export default function Curso() {
                       <div className="text-slate-100 text-sm mb-1">Progreso</div>
                       <div className="items-center flex">
                         <div className="w-32 bg-gray-600 rounded-full h-2.5 mr-2">
-                          <div style={{ width: '65%' }} className="bg-purple-600 h-2.5 rounded-full"></div>
+                          <div style={{ width: '65%' }} className="bg-yellow-600 h-2.5 rounded-full"></div>
                         </div>
                         <span className="text-xl font-bold text-white">65%</span>
                       </div>
@@ -155,7 +155,7 @@ export default function Curso() {
                       <div className="text-slate-100 text-sm mb-1">Nivel</div>
                       <div className="items-center flex">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" id="Windframe_byfzgzcjg">
-                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                  <path strokeLinecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                               </svg>
                         <span className="text-xl font-bold text-white">Intermedio</span>
                       </div>
@@ -195,7 +195,7 @@ export default function Curso() {
                       ] as const}
                       activeTab={activeTab} 
                       onTabChange={(tabId) => setActiveTab(tabId)}
-                      tabColor="purple"
+                      tabColor="yellow"
                       text="gray-50" />
                   </div>
                 </div>
