@@ -69,6 +69,14 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
           detalle1={''}
           detalle2={''}
           color1="text-emerald-600"
+          customContent={
+            <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
+              <div 
+                className="h-2.5 rounded-full bg-emerald-600" 
+                style={{ width: `${sampleEstadisticas.progreso}%` }}
+              ></div>
+            </div>
+          }
         />
         <EstadisticaCard
           icon={
@@ -78,11 +86,25 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
             </svg>
           }
           label="Puntos acumulados"
-          valor1={sampleEstadisticas.puntos}
+          valor1={<span className="text-amber-600 font-bold">{sampleEstadisticas.puntos}</span>}
           valor2={''}
-          detalle1={`Faltan ${sampleEstadisticas.puntosParaSiguienteNivel} puntos para nivel ${sampleEstadisticas.siguienteNivel}`}
+          detalle1={`Nivel ${sampleEstadisticas.nivelActual}`}
           detalle2={''}
           color1="text-amber-600"
+          customContent={
+            <div className="mt-2">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Progreso al nivel {sampleEstadisticas.siguienteNivel}</span>
+                <span>{sampleEstadisticas.puntosParaSiguienteNivel} pts restantes</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                <div 
+                  className="h-1.5 rounded-full bg-amber-600" 
+                  style={{ width: `${(sampleEstadisticas.puntos / (sampleEstadisticas.puntos + sampleEstadisticas.puntosParaSiguienteNivel)) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          }
         />
         <EstadisticaCard
           icon={
@@ -113,15 +135,7 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
           color2="text-red-600"
         />
       </div>
-      {/* Botón para ver historial de duelos */}
-      <div className="flex justify-end mb-6">
-        <button
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
-          onClick={() => setShowHistorial(true)}
-        >
-          Ver historial completo
-        </button>
-      </div>
+
       {/* Modal de historial */}
       <HistorialModal
         open={showHistorial}
@@ -212,7 +226,10 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
             ))}
           </div>
           <div className="mt-4 text-center">
-            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition">
+            <button 
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+              onClick={() => setShowHistorial(true)}
+            >
               Ver historial completo
             </button>
           </div>

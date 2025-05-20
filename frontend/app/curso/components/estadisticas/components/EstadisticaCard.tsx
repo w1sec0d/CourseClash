@@ -9,9 +9,10 @@ interface EstadisticaCardProps {
   detalle2: string;
   color1?: string;
   color2?: string;
+  customContent?: React.ReactNode;
 }
 
-const EstadisticaCard: React.FC<EstadisticaCardProps> = ({ icon, label, valor1, valor2, detalle1, detalle2, color1 = '', color2 = '' }) => (
+const EstadisticaCard: React.FC<EstadisticaCardProps> = ({ icon, label, valor1, valor2, detalle1, detalle2, color1 = '', color2 = '', customContent }) => (
   <div className="bg-white rounded-lg shadow-md p-4">
     <div className="flex items-center">
       <div className={`p-2 rounded-lg mr-3 ${color1 ? color1 : 'bg-gray-100'}`}>{icon}</div>
@@ -23,8 +24,19 @@ const EstadisticaCard: React.FC<EstadisticaCardProps> = ({ icon, label, valor1, 
       </div>
     </div>
     <div className="mt-2 text-xs text-gray-500">
-      <span className={color1}>{detalle1}</span> | <span className={`${color2} ml-1`}>{detalle2}</span>
+      {detalle1 && detalle2 ? (
+        <>
+          <span className={color1}>{detalle1}</span> | <span className={`${color2} ml-1`}>{detalle2}</span>
+        </>
+      ) : (
+        <span className={color1}>{detalle1}</span>
+      )}
     </div>
+    {customContent && (
+      <div className="mt-2">
+        {customContent}
+      </div>
+    )}
   </div>
 );
 
