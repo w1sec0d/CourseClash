@@ -9,12 +9,16 @@ interface TabNavigationProps<TabId> {
   tabs: Tab<TabId>[];
   activeTab: TabId;
   onTabChange: (tabId: TabId) => void;
+  tabColor?: string;
+  text?: string;
 }
 
 const TabNavigation = <TabId extends string>({
   tabs,
   activeTab,
-  onTabChange
+  onTabChange,
+  tabColor = 'emerald',
+  text = 'gray-500'
 }: TabNavigationProps<TabId>) => {
   return (
     <div className="border-b border-gray-200 mb-6">
@@ -25,8 +29,8 @@ const TabNavigation = <TabId extends string>({
             onClick={() => onTabChange(tab.id)}
             className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === tab.id
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? `border-${tabColor}-500 text-${tabColor}-600`
+                : `border-transparent text-${text} hover:text-${text}`
             }`}
           >
             {tab.label}
