@@ -16,8 +16,8 @@ mock_users = [
     {
         "id": 1,
         "username": "admin",
-        "email": "admin@courseclash.com",
-        "password": bcrypt.hashpw("admin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),  # contraseña: admin123
+        "email": "admin@gmail.com",
+        "password": bcrypt.hashpw("password123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),  # contraseña: password123
         "full_name": "Administrador",
         "is_active": True,
         "is_superuser": True,
@@ -26,8 +26,8 @@ mock_users = [
     {
         "id": 2,
         "username": "profesor",
-        "email": "profesor@courseclash.com",
-        "password": bcrypt.hashpw("prof123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),  # contraseña: prof123
+        "email": "profesor@gmail.com",
+        "password": bcrypt.hashpw("password123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),  # contraseña: password123
         "full_name": "Profesor Ejemplo",
         "is_active": True,
         "is_superuser": False,
@@ -36,8 +36,8 @@ mock_users = [
     {
         "id": 3,
         "username": "estudiante",
-        "email": "estudiante@courseclash.com",
-        "password": bcrypt.hashpw("estu123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),  # contraseña: estu123
+        "email": "estudiante@gmail.com",
+        "password": bcrypt.hashpw("password123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),  # contraseña: password123
         "full_name": "Estudiante Ejemplo",
         "is_active": True,
         "is_superuser": False,

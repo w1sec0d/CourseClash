@@ -53,6 +53,9 @@ setup_middlewares(app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        #localhost in general
+        "http://localhost",
+        "http://127.0.0.1",
         "http://localhost:3000",  # React dev server
         "http://127.0.0.1:3000",  # React dev server alternative
         "http://localhost:8001",   # Auth User Service
@@ -69,7 +72,7 @@ app.add_middleware(
 
 # Endpoint de GraphQL
 graphql_app = GraphQLRouter(schema)
-app.include_router(graphql_app, prefix="/graphql")
+app.include_router(graphql_app, prefix="/api/graphql")
 
 # Incluir routers REST de cada servicio
 app.include_router(auth.router, prefix="/api", tags=["auth"])

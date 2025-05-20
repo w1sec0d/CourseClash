@@ -170,9 +170,10 @@ class Mutation:
                 )
 
             # Preparar los datos para el microservicio de autenticación
-            auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8001")
+            auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000")
             login_url = f"{auth_service_url}/auth/login"
-            
+            print("Login URL: ", login_url)
+
             # Utilizar el cliente HTTP para realizar la petición al microservicio
             async with httpx.AsyncClient(timeout=10.0) as client:
                 # Realizar la petición al microservicio de autenticación
@@ -181,6 +182,7 @@ class Mutation:
                     login_url,
                     json={"username": email, "password": password}
                 )
+                print("Response: ", response)
                 
                 # Log para depuración
                 print(f"Login request to {login_url} - Status: {response.status_code}")

@@ -18,7 +18,8 @@ export async function fetchGraphQL({
     // Endpoint del API Gateway
     const apiGatewayUrl =
       process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8080';
-    const endpoint = `${apiGatewayUrl}/graphql`;
+    const endpoint = `${apiGatewayUrl}/api/graphql`;
+    console.log('Endpoint:', endpoint);
 
     // Start request timing for performance monitoring
     const requestStartTime = performance.now();
