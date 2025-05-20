@@ -17,6 +17,8 @@ from ..db import get_db
 
 from ..core import security
 from ..services import auth_service
+from ..utils.config import USE_MOCK_DATA
+from ..utils.mock_db import update_password_mock, get_user_by_id_mock
 
 #servicio de verificación de correo
 from ..services.auth_service import verify_email, send_email
@@ -72,26 +74,41 @@ def login(form_data: Login, db: Session = Depends(get_db)):
 
 @router.get('/me')
 def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
+    # Si estamos usando datos simulados
+    if USE_MOCK_DATA:
+        user_obj = get_user_by_id_mock(user['id'])
+        if not user_obj:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='User not found'
+            )
+        return user_obj
 
-    db: Session = next(get_db())
-    query = text(""" SELECT * FROM users where id = :id""")
-    result = db.execute(query, {'id': user['id']}).fetchone()
-    if not result: 
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='User not found'
+    # Si estamos usando la base de datos real
+    try:
+        db: Session = next(get_db())
+        query = text(""" SELECT * FROM users where id = :id""")
+        result = db.execute(query, {'id': user['id']}).fetchone()
+        if not result: 
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='User not found'
+            )
+        user_obj = User(
+            id=result[0],
+            username=result[1],
+            email=result[2],
+            full_name=result[4],
+            is_active=result[5],
+            is_superuser=result[6],
+            created_at=str(result[7])
         )
-    user = User(
-        id=result[0],
-        username=result[1],
-        email=result[2],
-        full_name=result[4],
-        is_active=result[5],
-        is_superuser=result[6],
-        created_at=str(result[7])
-    )
-
-    return user
+        return user_obj
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f'Error fetching user data: {e}'
+        )
 
 # Ruta para refrescar el token
 # Input: token de refresco 
@@ -185,16 +202,28 @@ async def recovery_password(email: Email, db: Session = Depends(get_db)):
 @router.post('/update')
 def update_password(data: UpdatePassword, token : Annotated[dict, Depends(decode_token)], db: Session = Depends(get_db)):
     try: 
+        # Generar la contraseña hasheada
         hashed_password = security.hash_password(data.password)
-        query = text(""" UPDATE users SET hashed_password = :password WHERE email = :email""")
-
-        db.execute(query, {'password': hashed_password, 'email': token['email']})
-
         
+        # Si estamos usando datos simulados
+        if USE_MOCK_DATA:
+            result = update_password_mock(token['email'], hashed_password)
+            if not result['success']:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=result.get('error', 'Error updating password')
+                )
+            return result
+        
+        # Si estamos usando la base de datos real
+        query = text(""" UPDATE users SET hashed_password = :password WHERE email = :email""")
+        db.execute(query, {'password': hashed_password, 'email': token['email']})
         db.commit()
 
         return {'success': True, 'message': 'User updated successfully'}
 
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,

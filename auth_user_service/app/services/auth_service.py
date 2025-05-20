@@ -4,6 +4,8 @@ from sqlalchemy import text
 from ..db import get_db
 from ..models.user import UserInterno
 from fastapi_mail import FastMail, MessageSchema
+from ..utils.config import USE_MOCK_DATA
+from ..utils.mock_db import verify_email_mock, get_user_by_email_mock, update_password_mock
 
 from ..config import conf
 
@@ -30,6 +32,11 @@ def transform_user(user: tuple) -> UserInterno:
 # Input: email
 # Output: True si el correo se encuentra registrado, False si no
 def verify_email(email: str) -> bool: 
+    # Si está configurado para usar datos simulados
+    if USE_MOCK_DATA:
+        return verify_email_mock(email)
+    
+    # Si no, usa la base de datos real
     try: 
         db: Session = next(get_db())
         query = text(""" SELECT * FROM users WHERE email = :email""")
@@ -52,7 +59,12 @@ def verify_email(email: str) -> bool:
 # Output: un objeto de tipo UserInterno
 # Ejemplo de objeto: UserInterno(id=1, username='username', email='email', password='hashed_password', full_name='full_name', is_active=True, is_superuser=False, created_at='2023-10-01 12:00:00')
 def get_user_by_email(email: str) -> UserInterno:
+    # Si está configurado para usar datos simulados
+    if USE_MOCK_DATA:
+        return get_user_by_email_mock(email)
     
+    # Si no, usa la base de datos real
+    try:
         db: Session = next(get_db())
         query = text(""" SELECT * FROM users WHERE email = :email""")
         user = db.execute(query, {'email': email})
@@ -63,6 +75,8 @@ def get_user_by_email(email: str) -> UserInterno:
         
         user = transform_user(result)
         return {'success': True, 'user': user}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
 
     
 # Servicio para enviar un correo de recuperación de contraseña
