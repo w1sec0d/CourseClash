@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import DuelCard from '../DuelCard';
-import DuelStatusFilter from '../DuelStatusFilter';
-import CreateDuelModal from '../CreateDuelModal';
+import DuelCard from './DuelCard';
+import DuelStatusFilter from './DuelStatusFilter';
+import CreateDuelModal from './CreateDuelModal';
 
 interface Duelo {
   id: number;
@@ -89,8 +89,7 @@ const DuelosTab: React.FC<DuelosTabProps> = ({ duelos = [] }) => {
     setShowCreateDuel(false);
     setSelectedTopic('');
     setSearchQuery('');
-    // Mostrar notificación o feedback al usuario
-    alert('Invitación de duelo enviada con éxito');
+
   };
   // Estado para filtro de duelos
   const [activeStatus, setActiveStatus] = useState('todos');

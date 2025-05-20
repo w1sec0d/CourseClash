@@ -1,6 +1,6 @@
 import React from 'react';
-import Post from '../../components/Post';
-import CreatePostForm from '../../components/CreatePostForm';
+import Post from './Post';
+import CreatePostForm from './CreatePostForm';
 
 interface AnuncioPost {
   id: number;

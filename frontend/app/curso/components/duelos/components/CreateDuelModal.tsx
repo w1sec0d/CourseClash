@@ -1,4 +1,5 @@
 import React from 'react';
+import Swal from 'sweetalert2';
 import MemberInviteItem from './MemberInviteItem';
 
 interface Member {
@@ -33,6 +34,17 @@ const CreateDuelModal: React.FC<CreateDuelModalProps> = ({
   setSearchQuery
 }) => {
   if (!open) return null;
+
+  const handleInvite = (memberId: number) => {
+    onInvite(memberId);
+    Swal.fire({
+      icon: 'success',
+      title: 'Invitación enviada',
+      text: 'La invitación de duelo fue enviada con éxito',
+      confirmButtonColor: '#059669',
+      confirmButtonText: 'OK'
+    });
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -91,7 +103,7 @@ const CreateDuelModal: React.FC<CreateDuelModalProps> = ({
                   <MemberInviteItem
                     key={member.id}
                     member={member}
-                    onInvite={onInvite}
+                    onInvite={handleInvite}
                     disabled={!selectedTopic}
                   />
                 ))

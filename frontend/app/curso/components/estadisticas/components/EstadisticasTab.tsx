@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
+import EstadisticaCard from './EstadisticaCard';
+import HistorialModal from './HistorialModal';
 
 interface Estadisticas {
   progreso: number;
@@ -39,91 +41,94 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
     ]
   };
 
+  // Estado para el modal de historial
+  const [showHistorial, setShowHistorial] = useState(false);
+  const historialDuelos = [
+    { fecha: '2025-05-10', descripcion: 'Victoria contra María González en Álgebra Lineal' },
+    { fecha: '2025-05-08', descripcion: 'Derrota contra Carlos Rodríguez en Cálculo Diferencial' },
+    { fecha: '2025-05-05', descripcion: 'Victoria contra Ana Martínez en Geometría Analítica' },
+    { fecha: '2025-05-01', descripcion: 'Victoria contra Juan Pérez en Probabilidad' },
+  ];
+
   return (
     <div>
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Tu progreso y estadísticas</h2>
       </div>
-      
       {/* Tarjetas de estadísticas generales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="flex items-center">
-            <div className="bg-emerald-100 p-2 rounded-lg mr-3">
-              <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Progreso del curso</p>
-              <p className="text-lg font-bold text-gray-800">{sampleEstadisticas.progreso}%</p>
-            </div>
-          </div>
-          <div className="mt-3 w-full bg-gray-200 rounded-full h-2.5">
-            <div className="bg-emerald-600 h-2.5 rounded-full" style={{ width: `${sampleEstadisticas.progreso}%` }}></div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="flex items-center">
-            <div className="bg-amber-100 p-2 rounded-lg mr-3">
-              <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Puntos acumulados</p>
-              <p className="text-lg font-bold text-gray-800">{sampleEstadisticas.puntos}</p>
-            </div>
-          </div>
-          <div className="mt-2 text-xs text-gray-500">
-            <span>Faltan {sampleEstadisticas.puntosParaSiguienteNivel} puntos para nivel {sampleEstadisticas.siguienteNivel}</span>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="flex items-center">
-            <div className="bg-blue-100 p-2 rounded-lg mr-3">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Tareas</p>
-              <p className="text-lg font-bold text-gray-800">
-                <span className="text-green-600">{sampleEstadisticas.tareasCompletadas}</span> / 
-                <span className="text-yellow-600">{sampleEstadisticas.tareasPendientes}</span>
-              </p>
-            </div>
-          </div>
-          <div className="mt-2 text-xs text-gray-500">
-            <span className="text-green-600">{sampleEstadisticas.tareasCompletadas} completadas</span> | 
-            <span className="text-yellow-600 ml-1">{sampleEstadisticas.tareasPendientes} pendientes</span>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="flex items-center">
-            <div className="bg-purple-100 p-2 rounded-lg mr-3">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Duelos académicos</p>
-              <p className="text-lg font-bold text-gray-800">
-                <span className="text-green-600">{sampleEstadisticas.duelosGanados}</span> / 
-                <span className="text-red-600">{sampleEstadisticas.duelosPerdidos}</span>
-              </p>
-            </div>
-          </div>
-          <div className="mt-2 text-xs text-gray-500">
-            <span className="text-green-600">{sampleEstadisticas.duelosGanados} victorias</span> | 
-            <span className="text-red-600 ml-1">{sampleEstadisticas.duelosPerdidos} derrotas</span>
-          </div>
-        </div>
+        <EstadisticaCard
+          icon={
+            <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          }
+          label="Progreso del curso"
+          valor1={<>{sampleEstadisticas.progreso}%</>}
+          valor2={<></>}
+          detalle1={''}
+          detalle2={''}
+          color1="text-emerald-600"
+        />
+        <EstadisticaCard
+          icon={
+            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+            </svg>
+          }
+          label="Puntos acumulados"
+          valor1={sampleEstadisticas.puntos}
+          valor2={''}
+          detalle1={`Faltan ${sampleEstadisticas.puntosParaSiguienteNivel} puntos para nivel ${sampleEstadisticas.siguienteNivel}`}
+          detalle2={''}
+          color1="text-amber-600"
+        />
+        <EstadisticaCard
+          icon={
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+          }
+          label="Tareas"
+          valor1={sampleEstadisticas.tareasCompletadas}
+          valor2={sampleEstadisticas.tareasPendientes}
+          detalle1={`${sampleEstadisticas.tareasCompletadas} completadas`}
+          detalle2={`${sampleEstadisticas.tareasPendientes} pendientes`}
+          color1="text-green-600"
+          color2="text-yellow-600"
+        />
+        <EstadisticaCard
+          icon={
+            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          }
+          label="Duelos académicos"
+          valor1={sampleEstadisticas.duelosGanados}
+          valor2={sampleEstadisticas.duelosPerdidos}
+          detalle1={`${sampleEstadisticas.duelosGanados} victorias`}
+          detalle2={`${sampleEstadisticas.duelosPerdidos} derrotas`}
+          color1="text-green-600"
+          color2="text-red-600"
+        />
       </div>
+      {/* Botón para ver historial de duelos */}
+      <div className="flex justify-end mb-6">
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+          onClick={() => setShowHistorial(true)}
+        >
+          Ver historial completo
+        </button>
+      </div>
+      {/* Modal de historial */}
+      <HistorialModal
+        open={showHistorial}
+        onClose={() => setShowHistorial(false)}
+        historial={historialDuelos}
+        titulo="Historial de duelos"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Gráfico de nivel y experiencia */}
