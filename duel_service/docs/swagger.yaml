@@ -1,0 +1,164 @@
+definitions:
+  models.AcceptDuelRequest:
+    properties:
+      duel_id:
+        example: player123_vs_player456
+        type: string
+    required:
+    - duel_id
+    type: object
+  models.AcceptDuelResponse:
+    properties:
+      duel_id:
+        example: player123_vs_player456
+        type: string
+      message:
+        example: Duel accepted successfully
+        type: string
+    type: object
+  models.ErrorResponseDuelAlreadyRequested:
+    properties:
+      error_code:
+        example: duel_already_requested
+        type: string
+      message:
+        example: A duel between these players has already been requested
+        type: string
+    type: object
+  models.ErrorResponseDuelNotFound:
+    properties:
+      error_code:
+        example: duel_not_found
+        type: string
+      message:
+        example: No duel found with the provided ID
+        type: string
+    type: object
+  models.ErrorResponseInvalidRequest:
+    properties:
+      error_code:
+        example: invalid_request
+        type: string
+      message:
+        example: The request body is missing required fields or is malformed
+        type: string
+    type: object
+  models.RequestDuelRequest:
+    properties:
+      opponent_id:
+        example: player456
+        type: string
+      requester_id:
+        example: player123
+        type: string
+    required:
+    - opponent_id
+    - requester_id
+    type: object
+  models.RequestDuelResponse:
+    properties:
+      duel_id:
+        example: player123_vs_player456
+        type: string
+      message:
+        example: Duel successfully requested
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/duels/accept:
+    post:
+      consumes:
+      - application/json
+      description: Permite que el oponente acepte un duelo existente
+      parameters:
+      - description: ID del duelo
+        in: body
+        name: accept
+        required: true
+        schema:
+          $ref: '#/definitions/models.AcceptDuelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duelo aceptado exitosamente
+          schema:
+            $ref: '#/definitions/models.AcceptDuelResponse'
+        "400":
+          description: Solicitud inválida o malformada
+          schema:
+            $ref: '#/definitions/models.ErrorResponseInvalidRequest'
+        "404":
+          description: No se encontró el duelo con el ID proporcionado
+          schema:
+            $ref: '#/definitions/models.ErrorResponseDuelNotFound'
+      summary: Acepta un duelo
+      tags:
+      - duelos
+  /api/duels/request:
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo duelo entre dos jugadores
+      parameters:
+      - description: Datos del duelo
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RequestDuelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duelo solicitado exitosamente
+          schema:
+            $ref: '#/definitions/models.RequestDuelResponse'
+        "400":
+          description: Solicitud inválida o malformada
+          schema:
+            $ref: '#/definitions/models.ErrorResponseInvalidRequest'
+        "409":
+          description: Ya existe un duelo entre estos jugadores
+          schema:
+            $ref: '#/definitions/models.ErrorResponseDuelAlreadyRequested'
+      summary: Solicita un duelo
+      tags:
+      - duelos
+  /ws/duels/{duel_id}/{player_id}:
+    get:
+      description: Establece una conexión WebSocket para un jugador en un duelo. Permite
+        la comunicación en tiempo real durante el duelo.
+      parameters:
+      - description: ID del duelo
+        in: path
+        name: duel_id
+        required: true
+        type: string
+      - description: ID del jugador
+        in: path
+        name: player_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Conexión WebSocket establecida para comunicación en tiempo
+            real durante el duelo
+          schema:
+            type: string
+        "401":
+          description: Jugador no autorizado para este duelo
+          schema:
+            type: string
+        "404":
+          description: Duelo no encontrado
+          schema:
+            type: string
+      summary: Conexión WebSocket para duelo
+      tags:
+      - duelos
+swagger: "2.0"
