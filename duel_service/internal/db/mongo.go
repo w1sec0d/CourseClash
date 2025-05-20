@@ -1,16 +1,17 @@
 package db
 
 import (
-    "context"
-    "fmt"
-    "log"
-    "os"
-    "time"
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"time"
 
-    "go.mongodb.org/mongo-driver/mongo"
-    "go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+//Usada para que otros paquetes puedan interactuar con la base de datos
 var MongoClient *mongo.Client
 
 func InitMongo() {
@@ -19,6 +20,7 @@ func InitMongo() {
         log.Fatal("MONGODB_URI no está definido en el entorno")
     }
 
+    //TImeOut de 10 segundos para la conexión
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 

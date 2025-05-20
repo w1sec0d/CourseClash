@@ -31,7 +31,7 @@ COPY --from=builder /app/docs ./docs
 ENV GIN_MODE=release
 
 # Exponer el puerto 
-EXPOSE 8080
+EXPOSE 8002
 
 # Ejecutar la aplicación
 CMD ["./duel_service"]

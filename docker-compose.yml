@@ -44,7 +44,7 @@ services:
       dockerfile: Dockerfile
     container_name: courseclash-duel-service
     ports:
-      - "8080:8080"
+      - "8002:8002"
     restart: unless-stopped
     environment:
       - GIN_MODE=release
