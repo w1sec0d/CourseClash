@@ -38,7 +38,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
   activeTab,
   onTabChange,
   tabs,
-  tabColor = 'yellow',
+  tabColor = 'indigo',
   textColor = 'gray-50'
 }) => {
   return (

@@ -27,21 +27,21 @@ const SidebarImportantFiles: React.FC<SidebarImportantFilesProps> = ({ files }) 
         )}
         <button 
           onClick={toggleExpand}
-          className="p-1 rounded-full hover:bg-emerald-700 transition-colors"
+          className="p-2 rounded-full hover:bg-emerald-700 transition-all duration-300 ease-in-out transform hover:scale-110"
           aria-label={isExpanded ? "Contraer panel" : "Expandir panel"}
         >
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
-            className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-0' : 'rotate-180'}`} 
+            className={`h-6 w-6 transition-all duration-300 ease-in-out ${isExpanded ? 'rotate-0' : 'rotate-180'} stroke-white`} 
             fill="none" 
             viewBox="0 0 24 24" 
-            stroke="currentColor"
+            strokeWidth={2}
           >
             <path 
               strokeLinecap="round" 
               strokeLinejoin="round" 
               strokeWidth={2} 
-              d={isExpanded ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} 
+              d="M4 6h16M4 12h16M4 18h16" 
             />
           </svg>
         </button>

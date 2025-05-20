@@ -8,6 +8,7 @@ import Post from './components/Post';
 import CreatePostForm from './components/CreatePostForm';
 import SidebarImportantFiles from './components/SidebarImportantFiles';
 import CourseHeader from './components/CourseHeader';
+import { AnunciosTab, MaterialesTab, TareasTab, DuelosTab, RankingTab, EstadisticasTab, LogrosTab } from './components/tabs';
 
 export default function Curso() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -109,7 +110,7 @@ export default function Curso() {
     },
   ]);
 
-  type TabId = 'Anuncios' | 'Materiales' | 'Tareas' | 'Duelos' | 'Ranking' | 'Estadísticas';
+  type TabId = 'Anuncios' | 'Materiales' | 'Tareas' | 'Duelos' | 'Ranking' | 'Estadísticas' | 'Logros';
   const [activeTab, setActiveTab] = useState<TabId>('Anuncios');
 
   return (
@@ -141,26 +142,23 @@ export default function Curso() {
                 { id: 'Tareas', label: 'Tareas' },
                 { id: 'Duelos', label: 'Duelos' },
                 { id: 'Ranking', label: 'Ranking' },
-                { id: 'Estadísticas', label: 'Estadísticas' }
+                { id: 'Estadísticas', label: 'Estadísticas' },
+                { id: 'Logros', label: 'Logros' }
               ]}
               tabColor="yellow"
               textColor="gray-50"
             />
             <SidebarImportantFiles files={importantFiles} />
-            <CreatePostForm />
-            <div className='space-y-6'>
-              {posts.map((post) => (
-                <Post
-                  key={post.id}
-                  author={post.author.name}
-                  authorRole={post.author.role}
-                  timeAgo={post.timeAgo}
-                  content={post.content}
-                  likes={post.likes}
-                  comments={post.comments}
-                  badge={post.author.role === 'Docente' ? { text: 'Docente', color: 'emerald' } : undefined}
-                />
-              ))}
+            
+            {/* Contenido dinámico según la pestaña seleccionada */}
+            <div className="mt-6">
+              {activeTab === 'Anuncios' && <AnunciosTab posts={posts} />}
+              {activeTab === 'Materiales' && <MaterialesTab materials={[]} />}
+              {activeTab === 'Tareas' && <TareasTab tareas={[]} />}
+              {activeTab === 'Duelos' && <DuelosTab duelos={[]} />}
+              {activeTab === 'Ranking' && <RankingTab usuarios={[]} />}
+              {activeTab === 'Estadísticas' && <EstadisticasTab />}
+              {activeTab === 'Logros' && <LogrosTab />}
             </div>
           </div>
         </div>
