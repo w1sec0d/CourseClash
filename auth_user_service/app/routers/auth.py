@@ -6,7 +6,13 @@ import bcrypt
 from datetime import datetime
 
 # Importación de funciones para codificación y decodificación del token
-from ..core.security import encode_token, decode_token, generate_verification_code
+from ..core.security import (
+    encode_token,
+    decode_token,
+    generate_verification_code,
+    verify_password,
+    hash_password,
+)
 
 # Importación de modelos
 from ..models.user import User, UserCreate, UserInterno
@@ -18,7 +24,7 @@ from ..db import get_db
 # Importación de servicios
 from ..services import auth_service
 from ..utils.config import USE_MOCK_DATA
-from ..utils import security
+from ..utils import mock_db
 from ..utils.mock_db import (
     verify_email_mock,
     get_user_by_email_mock,
@@ -76,6 +82,16 @@ mock_users = [
         "is_active": True,
         "is_superuser": False,
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    },
+    {
+        "id": 4,
+        "username": "estudiante2",
+        "email": "cadavid4003@gmail.com",
+        "password": bcrypt.hashpw(
+            "password123".encode("utf-8"), bcrypt.gensalt()
+        ).decode(
+            "utf-8"
+        ),  # contraseña: password123
     },
 ]
 
@@ -194,7 +210,7 @@ def login(form_data: Login, db: Session = Depends(get_db)):
             )
 
         # Verificar contraseña
-        if not security.verify_password(form_data.password, user_data["user"].password):
+        if not verify_password(form_data.password, user_data["user"].password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
             )
@@ -398,7 +414,7 @@ def update_password(
             )
 
         # Generar la contraseña hasheada
-        hashed_password = security.hash_password(data.password)
+        hashed_password = hash_password(data.password)
 
         # Si estamos usando datos simulados
         if USE_MOCK_DATA:
@@ -478,7 +494,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
             )
 
         # Cifrado de contraseña
-        password_hash = security.hash_password(user.password)
+        password_hash = hash_password(user.password)
 
         query = text(
             """
