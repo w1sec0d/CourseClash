@@ -25,6 +25,25 @@ interface CourseHeaderProps {
   textColor?: string;
 }
 
+  /**
+   * Renders the header of a course page, including the course title, banner, ranking, progress, semester, and metrics.
+   * Also includes a tab navigation for the course content.
+   * @param title The title of the course.
+   * @param bannerImage The URL of the course banner image.
+   * @param ranking The ranking of the course.
+   * @param progress The progress of the course.
+   * @param semester The semester of the course.
+   * @param shields The number of shields earned in the course.
+   * @param totalShields The total number of shields available in the course.
+   * @param coins The number of coins earned in the course.
+   * @param power The power level of the course.
+   * @param activeTab The ID of the currently active tab.
+   * @param onTabChange A function to call when the active tab changes.
+   * @param tabs The list of tabs to render.
+   * @param tabColor The color of the tabs. Defaults to 'indigo'.
+   * @param textColor The color of the text in the tabs. Defaults to 'gray-50'.
+   * @returns A JSX element representing the course header.
+   */
 const CourseHeader: React.FC<CourseHeaderProps> = ({
   title,
   bannerImage,

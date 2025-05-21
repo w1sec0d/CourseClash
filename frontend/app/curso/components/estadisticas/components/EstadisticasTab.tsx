@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import EstadisticaCard from './EstadisticaCard';
 import HistorialModal from './HistorialModal';
 
@@ -56,85 +57,7 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Tu progreso y estadísticas</h2>
       </div>
       {/* Tarjetas de estadísticas generales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <EstadisticaCard
-          icon={
-            <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          }
-          label="Progreso del curso"
-          valor1={<>{sampleEstadisticas.progreso}%</>}
-          valor2={<></>}
-          detalle1={''}
-          detalle2={''}
-          color1="text-emerald-600"
-          customContent={
-            <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
-              <div 
-                className="h-2.5 rounded-full bg-emerald-600" 
-                style={{ width: `${sampleEstadisticas.progreso}%` }}
-              ></div>
-            </div>
-          }
-        />
-        <EstadisticaCard
-          icon={
-            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-            </svg>
-          }
-          label="Puntos acumulados"
-          valor1={<span className="text-amber-600 font-bold">{sampleEstadisticas.puntos}</span>}
-          valor2={''}
-          detalle1={`Nivel ${sampleEstadisticas.nivelActual}`}
-          detalle2={''}
-          color1="text-amber-600"
-          customContent={
-            <div className="mt-2">
-              <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>Progreso al nivel {sampleEstadisticas.siguienteNivel}</span>
-                <span>{sampleEstadisticas.puntosParaSiguienteNivel} pts restantes</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-1.5">
-                <div 
-                  className="h-1.5 rounded-full bg-amber-600" 
-                  style={{ width: `${(sampleEstadisticas.puntos / (sampleEstadisticas.puntos + sampleEstadisticas.puntosParaSiguienteNivel)) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          }
-        />
-        <EstadisticaCard
-          icon={
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-          }
-          label="Tareas"
-          valor1={sampleEstadisticas.tareasCompletadas}
-          valor2={sampleEstadisticas.tareasPendientes}
-          detalle1={`${sampleEstadisticas.tareasCompletadas} completadas`}
-          detalle2={`${sampleEstadisticas.tareasPendientes} pendientes`}
-          color1="text-green-600"
-          color2="text-yellow-600"
-        />
-        <EstadisticaCard
-          icon={
-            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          }
-          label="Duelos académicos"
-          valor1={sampleEstadisticas.duelosGanados}
-          valor2={sampleEstadisticas.duelosPerdidos}
-          detalle1={`${sampleEstadisticas.duelosGanados} victorias`}
-          detalle2={`${sampleEstadisticas.duelosPerdidos} derrotas`}
-          color1="text-green-600"
-          color2="text-red-600"
-        />
-      </div>
+      
 
       {/* Modal de historial */}
       <HistorialModal
@@ -144,9 +67,13 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
         titulo="Historial de duelos"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
         {/* Gráfico de nivel y experiencia */}
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white rounded-lg shadow-md p-4 row-span-2">
           <h3 className="text-md font-semibold text-gray-800 mb-4">Nivel y experiencia</h3>
           <div className="flex items-center justify-center mb-4">
             <div className="relative">
@@ -196,10 +123,62 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
               <p className="text-sm font-medium text-gray-800">{sampleEstadisticas.asistencia}%</p>
             </div>
           </div>
-        </div>
+        </motion.div>
         
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6 mb-5 w-full">
+          <EstadisticaCard
+            icon={
+              <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            }
+            label="Progreso del curso"
+            valor1={sampleEstadisticas.progreso}
+            valor2={100}
+            detalle1={`${sampleEstadisticas.progreso}% completado`}
+            detalle2={''}
+            color1="text-emerald-600"
+          />
+          <EstadisticaCard
+            icon={
+              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+            }
+            label="Tareas"
+            valor1={sampleEstadisticas.tareasCompletadas}
+            valor2={sampleEstadisticas.tareasPendientes}
+            detalle1={`${sampleEstadisticas.tareasCompletadas} completadas`}
+            detalle2={`${sampleEstadisticas.tareasPendientes} pendientes`}
+            color1="text-blue-500"
+            color2="text-amber-500"
+          />
+          <EstadisticaCard
+            icon={
+              <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            }
+            label="Duelos académicos"
+            valor1={sampleEstadisticas.duelosGanados}
+            valor2={sampleEstadisticas.duelosPerdidos}
+            detalle1={`${sampleEstadisticas.duelosGanados} victorias`}
+            detalle2={`${sampleEstadisticas.duelosPerdidos} derrotas`}
+            color1="text-emerald-500"
+            color2="text-red-500"
+          />
+        </motion.div>
+
         {/* Últimas evaluaciones */}
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="bg-white rounded-lg shadow-md p-4 col-span-2">
           <h3 className="text-md font-semibold text-gray-800 mb-4">Últimas evaluaciones</h3>
           <div className="space-y-3">
             {sampleEstadisticas.ultimasNotas.map((evaluacion, index) => (
@@ -233,7 +212,7 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
               Ver historial completo
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
