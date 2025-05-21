@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import CourseNavbar from './components/CourseNavbar';
 import Sidebar from './components/Sidebar';
 import SidebarOverlay from './components/SidebarOverlay';
-import SidebarImportantFiles from './components/SidebarImportantFiles';
 import CourseHeader from './components/CourseHeader';
 import { AnunciosTab, MaterialesTab, TareasTab, DuelosTab, RankingTab, EstadisticasTab, LogrosTab } from './components/tabs';
 
@@ -146,7 +145,6 @@ export default function Curso() {
               tabColor="yellow"
               textColor="gray-50"
             />
-            <SidebarImportantFiles files={importantFiles} />
             
             {/* Contenido dinámico según la pestaña seleccionada */}
             <div className="mt-6">

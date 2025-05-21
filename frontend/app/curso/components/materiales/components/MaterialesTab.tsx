@@ -1,4 +1,7 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import MaterialesDestacadosCarousel from './MaterialesDestacadosCarousel';
 
 interface Material {
   id: number;
@@ -8,6 +11,7 @@ interface Material {
   downloadUrl: string;
   fileSize: string;
   icon: React.ReactNode;
+  isImportant?: boolean;
 }
 
 interface MaterialesTabProps {
@@ -19,9 +23,51 @@ const MaterialesTab: React.FC<MaterialesTabProps> = ({ materials = [] }) => {
   const sampleMaterials: Material[] = materials.length > 0 ? materials : [
     {
       id: 1,
+      title: 'Guía de Estudio para Examen Final',
+      type: 'PDF',
+      date: '10/05/2025',
+      downloadUrl: '#',
+      fileSize: '2.4 MB',
+      isImportant: true,
+      icon: (
+        <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd"></path>
+        </svg>
+      )
+    },
+    {
+      id: 2,
+      title: 'Formulario Unidad 3 - Integrales',
+      type: 'DOCX',
+      date: '15/05/2025',
+      downloadUrl: '#',
+      fileSize: '1.8 MB',
+      isImportant: true,
+      icon: (
+        <svg className="w-8 h-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd"></path>
+        </svg>
+      )
+    },
+    {
+      id: 3,
+      title: 'Ejercicios Resueltos - Unidad 2',
+      type: 'PDF',
+      date: '05/05/2025',
+      downloadUrl: '#',
+      fileSize: '3.2 MB',
+      isImportant: true,
+      icon: (
+        <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd"></path>
+        </svg>
+      )
+    },
+    {
+      id: 4,
       title: 'Presentación Introducción a Funciones',
       type: 'PDF',
-      date: '10/03/2023',
+      date: '01/04/2025',
       downloadUrl: '#',
       fileSize: '2.4 MB',
       icon: (
@@ -31,23 +77,10 @@ const MaterialesTab: React.FC<MaterialesTabProps> = ({ materials = [] }) => {
       )
     },
     {
-      id: 2,
-      title: 'Ejercicios Resueltos',
-      type: 'DOCX',
-      date: '15/03/2023',
-      downloadUrl: '#',
-      fileSize: '1.8 MB',
-      icon: (
-        <svg className="w-8 h-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd"></path>
-        </svg>
-      )
-    },
-    {
-      id: 3,
+      id: 5,
       title: 'Video Tutorial - Derivadas',
       type: 'MP4',
-      date: '20/03/2023',
+      date: '20/03/2025',
       downloadUrl: '#',
       fileSize: '45.6 MB',
       icon: (
@@ -58,18 +91,30 @@ const MaterialesTab: React.FC<MaterialesTabProps> = ({ materials = [] }) => {
     }
   ];
 
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Filtrar materiales basados en la búsqueda
+  const filteredMaterials = sampleMaterials.filter(material =>
+    material.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div>
+      {/* Carrusel de materiales destacados */}
+      <MaterialesDestacadosCarousel materials={sampleMaterials} />
+      
       <div className="mb-6">
         <input
           type="text"
           placeholder="Buscar materiales..."
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sampleMaterials.map((material) => (
+        {filteredMaterials.map((material) => (
           <div key={material.id} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
             <div className="flex items-start">
               <div className="flex-shrink-0 mr-4">
