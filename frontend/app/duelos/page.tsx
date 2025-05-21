@@ -290,6 +290,7 @@ export default function Duelos() {
       ) : (
         <QuizScreen
           wsConnection={wsConnection}
+          playerId={formData.playerId}
           opponentId={
             formData.playerId === 'user_001' ? 'user_002' : 'user_001'
           }

@@ -35,11 +35,13 @@ interface DuelResultsData {
 
 interface QuizScreenProps {
   wsConnection: WebSocket | null;
+  playerId: string;
   opponentId: string;
 }
 
 export default function QuizScreen({
   wsConnection,
+  playerId,
   opponentId,
 }: QuizScreenProps) {
   const [currentQuestion, setCurrentQuestion] = useState<QuestionData | null>(
@@ -115,7 +117,7 @@ export default function QuizScreen({
       <div className='min-h-screen'>
         <DuelResults
           results={duelResults}
-          playerId={opponentId === 'user_001' ? 'user_002' : 'user_001'}
+          playerId={playerId}
           opponentId={opponentId}
         />
       </div>

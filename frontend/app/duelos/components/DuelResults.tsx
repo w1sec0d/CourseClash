@@ -30,6 +30,11 @@ export function DuelResults({
 }: DuelResultsProps) {
   const isWinner = results.winner_id === playerId;
   const isPlayer1 = playerId === results.player1_id;
+  console.log('playerId', playerId);
+  console.log('results.player1_id', results.player1_id);
+  console.log('opponentId', opponentId);
+  console.log('isWinner', isWinner);
+  console.log('isPlayer1', isPlayer1);
 
   const playerScore = isPlayer1 ? results.player1_score : results.player2_score;
   const opponentScore = isPlayer1
