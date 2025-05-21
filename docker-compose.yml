@@ -27,7 +27,7 @@ services:
     build:
       context: ./course_service
     ports:
-      - "8001:8001"
+      - '8001:8001'
     environment:
       - DATABASE_URL=mysql+pymysql://root:password@mysql:3306/courseClash
       - JWT_SECRET=your_jwt_secret_key
@@ -46,12 +46,11 @@ services:
       dockerfile: Dockerfile
     container_name: courseclash-duel-service
     ports:
-      - "8002:8002"
+      - '8002:8002'
     restart: unless-stopped
-    env_file:
-      - ./duel_service/duel_service.env
     environment:
       - GIN_MODE=release
+      - MONGODB_URI=mongodb://mongo:27017/duels_db
     depends_on:
       - mongo
     networks:
@@ -59,12 +58,12 @@ services:
     healthcheck:
       test:
         [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:8002/swagger/index.html",
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:8002/swagger/index.html',
         ]
       interval: 30s
       timeout: 10s
@@ -76,7 +75,7 @@ services:
     build:
       context: ./api_gateway
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       - AUTH_SERVICE_URL=http://auth_user_service:8000
       - COURSE_SERVICE_URL=http://course_service:8001
@@ -98,7 +97,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - API_URL=http://api_gateway:8080
@@ -109,23 +108,23 @@ services:
     healthcheck:
       test:
         [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000",
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://0.0.0.0:3000',
         ]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   # Base de datos MySQL (para auth_user_service y course_service)
   mysql:
     image: mysql:8.0
     ports:
-      - "3306:3306"
+      - '3306:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=courseClash
@@ -136,13 +135,12 @@ services:
       - courseclash-network
     command: --default-authentication-plugin=mysql_native_password
 
-
   # Base de datos Mongo (para Duelos)
   mongo:
     image: mongo:latest
     container_name: courseclash-mongo
     ports:
-      - "27018:27017"
+      - '27018:27017'
     volumes:
       - mongo_data:/data/db
       - ./mongo_service/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
@@ -151,7 +149,7 @@ services:
 
 volumes:
   mysql_data:
-#   mongo_data:
+  mongo_data:
 
 networks:
   courseclash-network:
