@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Tarea {
   id: number;
@@ -58,42 +58,77 @@ const TareasTab: React.FC<TareasTabProps> = ({ tareas = [] }) => {
     }
   };
 
+  const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    hover: { scale: 1.02 }
+  };
+
   return (
     <div>
       <motion.div 
         className="mb-6 flex items-center justify-between"
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
       >
         <h2 className="text-xl font-semibold text-gray-800">Tareas asignadas</h2>
         <div className="space-x-2">
-          <button className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-medium hover:bg-emerald-200 transition">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filter === 'all' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            onClick={() => setFilter('all')}
+          >
             Todas
-          </button>
-          <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filter === 'pending' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            onClick={() => setFilter('pending')}
+          >
             Pendientes
-          </button>
-          <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filter === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            onClick={() => setFilter('completed')}
+          >
             Completadas
-          </button>
+          </motion.button>
         </div>
       </motion.div>
-      
+      <hr className="border-t-2 border-gray-300 my-6" />
       <motion.div 
         className="space-y-4"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, delay: 0.1 }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
       >
-        {sampleTareas.map((tarea) => (
-          <motion.div 
-            key={tarea.id} 
-            className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+        <AnimatePresence mode="wait">
+          {sampleTareas.map((tarea, index) => (
+            <motion.div 
+              key={tarea.id} 
+              className="bg-white p-4 rounded-lg shadow-md"
+              variants={itemVariants}
+              whileHover="hover"
+              transition={{ duration: 0.2, delay: index * 0.05 }}
+              layout
+            >
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-semibold text-lg text-gray-800">{tarea.title}</h3>
@@ -119,26 +154,39 @@ const TareasTab: React.FC<TareasTabProps> = ({ tareas = [] }) => {
                 {getStatusBadge(tarea.status)}
                 
                 {tarea.status === 'pendiente' && (
-                  <button className="mt-3 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition">
+                  <motion.button 
+                    className="mt-3 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
                     Entregar
-                  </button>
+                  </motion.button>
                 )}
                 
                 {tarea.status === 'entregada' && (
-                  <button className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                  <motion.button 
+                    className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
                     Ver entrega
-                  </button>
+                  </motion.button>
                 )}
                 
                 {tarea.status === 'calificada' && (
-                  <button className="mt-3 px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition">
+                  <motion.button 
+                    className="mt-3 px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
                     Ver comentarios
-                  </button>
+                  </motion.button>
                 )}
               </div>
             </div>
           </motion.div>
         ))}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

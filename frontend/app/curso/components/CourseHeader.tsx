@@ -62,7 +62,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
 }) => {
   return (
     <div>
-      <div className="bg-green-500 rounded-t-lg mb-6 overflow-hidden">
+      <div className="bg-green-500 rounded-t-lg mb-6 overflow-hidden shadow-lg">
         <div className="h-32 sm:h-40 bg-gradient-to-r from-blue-600 to-purple-600 relative">
           <img 
             alt="Banner del curso" 
