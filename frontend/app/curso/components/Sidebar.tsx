@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
         <div className='space-y-2'>
-          <a
+          <Link
             href='/inicio'
             className='items-center px-4 py-2 rounded-lg bg-emerald-100 text-emerald-800 flex
             space-x-3'
@@ -55,8 +56,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               ></path>
             </svg>
             <span className='font-medium'>Inicio</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href='/mis-cursos'
             className='items-center px-4 py-2 rounded-lg flex space-x-3 hover:bg-emerald-50
             transition'
@@ -76,8 +77,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               ></path>
             </svg>
             <span className='font-medium'>Mis Cursos</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href='/perfil'
             className='items-center px-4 py-2 rounded-lg flex space-x-3 hover:bg-emerald-50
             transition'
@@ -97,8 +98,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               ></path>
             </svg>
             <span className='font-medium'>Mi Perfil</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href='/logros'
             className='items-center px-4 py-2 rounded-lg flex space-x-3 hover:bg-emerald-50
             transition'
@@ -118,8 +119,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               ></path>
             </svg>
             <span className='font-medium'>Logros</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href='/tienda'
             className='items-center px-4 py-2 rounded-lg flex space-x-3 hover:bg-emerald-50
             transition'
@@ -139,8 +140,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               ></path>
             </svg>
             <span className='font-medium'>Tienda de Bonos</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href='/duelos'
             className='items-center px-4 py-2 rounded-lg flex space-x-3 hover:bg-emerald-50
             transition'
@@ -160,45 +161,45 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               ></path>
             </svg>
             <span className='font-medium'>Duelos Académicos</span>
-          </a>
+          </Link>
         </div>
         <hr className='my-5 border-gray-200' />
         <div className='space-y-1'>
           <p className='text-sm font-semibold text-gray-500 px-4 mb-2'>
             Mis Cursos
           </p>
-          <a
+          <Link
             href='/curso/matematicas'
             className='items-center px-4 py-2 rounded-lg bg-emerald-50 text-emerald-700 flex
             space-x-3 hover:bg-emerald-100 transition'
           >
             <div className='h-2 w-2 rounded-full bg-emerald-500'></div>
             <span>Matemáticas Avanzadas</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href='/curso/programacion'
             className='items-center px-4 py-2 rounded-lg flex space-x-3 hover:bg-emerald-50
             transition'
           >
             <div className='h-2 w-2 rounded-full bg-blue-500'></div>
             <span>Programación Web</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href='/curso/fisica'
             className='items-center px-4 py-2 rounded-lg flex space-x-3 hover:bg-emerald-50
             transition'
           >
             <div className='h-2 w-2 rounded-full bg-purple-500'></div>
             <span>Física Cuántica</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href='/curso/literatura'
             className='items-center px-4 py-2 rounded-lg flex space-x-3 hover:bg-emerald-50
             transition'
           >
             <div className='h-2 w-2 rounded-full bg-yellow-500'></div>
             <span>Literatura Universal</span>
-          </a>
+          </Link>
         </div>
       </div>
     </div>

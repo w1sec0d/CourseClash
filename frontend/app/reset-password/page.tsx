@@ -9,17 +9,26 @@ import { z } from 'zod';
 import Swal from 'sweetalert2';
 
 // Schema for password reset validation
-const resetPasswordSchema = z.object({
-  password: z.string()
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .regex(/[a-z]/, 'La contraseña debe contener al menos una letra minúscula')
-    .regex(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula')
-    .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: 'Las contraseñas no coinciden',
-  path: ['confirmPassword'],
-});
+const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, 'La contraseña debe tener al menos 8 caracteres')
+      .regex(
+        /[a-z]/,
+        'La contraseña debe contener al menos una letra minúscula'
+      )
+      .regex(
+        /[A-Z]/,
+        'La contraseña debe contener al menos una letra mayúscula'
+      )
+      .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Las contraseñas no coinciden',
+    path: ['confirmPassword'],
+  });
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
@@ -47,12 +56,10 @@ export default function ResetPassword() {
     try {
       // Here you would make an API call to update the password
       // For now just log and show a success message
-      console.log('🔑 Password reset with token:', token);
-      console.log('💾 New password set (masked):', '*'.repeat(data.password.length));
-      
+
       // Simulate API call with a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Show success message
       Swal.fire({
         icon: 'success',
@@ -63,7 +70,7 @@ export default function ResetPassword() {
         // Redirect to login page
         router.push('/login');
       });
-      
+
       // Reset form
       reset();
     } catch (error) {
@@ -84,12 +91,14 @@ export default function ResetPassword() {
     return (
       <div className='mx-auto my-12 container bg-white rounded-xl shadow-2xl max-w-2xl overflow-hidden p-8 text-center'>
         <div className='text-red-500 text-5xl mb-6'>⚠️</div>
-        <h1 className='text-2xl font-bold text-emerald-700 mb-4'>Enlace inválido</h1>
+        <h1 className='text-2xl font-bold text-emerald-700 mb-4'>
+          Enlace inválido
+        </h1>
         <p className='text-gray-600 mb-6'>
           El enlace para restablecer la contraseña es inválido o ha expirado.
         </p>
-        <Link 
-          href='/login' 
+        <Link
+          href='/login'
           className='inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg'
         >
           Volver al inicio de sesión
@@ -247,7 +256,9 @@ export default function ResetPassword() {
               justify-center py-3 px-4 rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600'
               disabled={isLoading}
             >
-              {isLoading ? 'Actualizando contraseña...' : 'Actualizar contraseña'}
+              {isLoading
+                ? 'Actualizando contraseña...'
+                : 'Actualizar contraseña'}
             </button>
           </div>
           <div className='text-center mt-4'>
