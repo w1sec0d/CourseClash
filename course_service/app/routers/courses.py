@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 @router.get("/{id}")
-def get_courses(id_user: int, db: Session = Depends(get_db)): 
+def get_courses_user(id: int, db: Session = Depends(get_db)): 
     try:
 
         query = text("""
@@ -24,7 +24,7 @@ def get_courses(id_user: int, db: Session = Depends(get_db)):
             WHERE cp.user_id = :user_id
         """)
 
-        data = db.execute(query, {'user_id': id_user}).mappings().all()
+        data = db.execute(query, {'user_id': id}).mappings().all()
 
         if not data:
             raise HTTPException(
@@ -41,6 +41,33 @@ def get_courses(id_user: int, db: Session = Depends(get_db)):
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f'Error en el servidor {e}'
         )
+
+@router.get("/")
+def courses(db: Session = Depends(get_db)):
+    try: 
+        query = text("""
+                        SELECT 
+                            c.id, 
+                            c.title, 
+                            c.description, 
+                            c.creator_id, 
+                            c.created_at, 
+                            c.is_active, 
+                            u.id AS creator_id, 
+                            u.full_name AS creator_name
+                        FROM courses c
+                        JOIN users u ON c.creator_id = u.id;
+                    """)
+        data = db.execute(query).mappings().all()
+        data_courses = [course for course in data]
+        return data_courses
+
+    except Exception as e: 
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f'Error en el servidor {e}')
+    
+
 # @router.post("/", response_model=schemas.Course, status_code=status.HTTP_201_CREATED)
 # def create_course(course: schemas.CourseCreate, db: Session = Depends(get_db)):
 #     db_course = models.Course(
