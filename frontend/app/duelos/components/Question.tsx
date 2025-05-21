@@ -11,6 +11,7 @@ interface QuestionProps {
   // points: number;
   question: string;
   options: Option[];
+  onAnswerSelect: (answer: string) => void;
 }
 
 export function Question({
@@ -19,12 +20,14 @@ export function Question({
   // points,
   question,
   options,
+  onAnswerSelect,
 }: QuestionProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 
-  const handleAnswerSelect = (letter: string) => {
+  const handleAnswerSelect = (letter: string, text: string) => {
     if (selectedAnswer === null) {
       setSelectedAnswer(letter);
+      onAnswerSelect(text);
     }
   };
 
@@ -46,7 +49,7 @@ export function Question({
           <button
             key={option.letter}
             type='button'
-            onClick={() => handleAnswerSelect(option.letter)}
+            onClick={() => handleAnswerSelect(option.letter, option.text)}
             disabled={selectedAnswer !== null}
             className={`answer-option border-2 p-4 transition-all duration-200 transform
               bg-white text-gray-700 rounded-lg text-left
