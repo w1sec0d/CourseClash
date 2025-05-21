@@ -10,15 +10,96 @@ db.duels.insertOne({
   completed_at: null,
 });
 
-db.duel_questions.insertOne({
-  duel_id: ObjectId("000000000000000000000010"),
-  course_id: 123,
-  question: "¿Cuál es la capital de Francia?",
-  correct_answer: "París",
-  options: ["Madrid", "París", "Londres", "Roma"],
-});
+// Insertar varias preguntas generales para el curso 123
+db.questions.insertMany([
+  {
+    course_id: 123,
+    question: "¿Cuál es la capital de Francia?",
+    answer: "París",
+    options: ["Madrid", "París", "Londres", "Roma"],
+    duration: 30,
+  },
+  {
+    course_id: 123,
+    question: "¿Quién pintó La Mona Lisa?",
+    answer: "Leonardo da Vinci",
+    options: [
+      "Pablo Picasso",
+      "Vincent van Gogh",
+      "Leonardo da Vinci",
+      "Miguel Ángel",
+    ],
+    duration: 30,
+  },
+  {
+    course_id: 123,
+    question: "¿Cuál es el planeta más grande del sistema solar?",
+    answer: "Júpiter",
+    options: ["Tierra", "Júpiter", "Saturno", "Marte"],
+    duration: 30,
+  },
+  {
+    course_id: 123,
+    question: "¿En qué año comenzó la Segunda Guerra Mundial?",
+    answer: "1939",
+    options: ["1914", "1939", "1945", "1918"],
+    duration: 30,
+  },
+  {
+    course_id: 123,
+    question: "¿Cuál es el elemento químico más abundante en el universo?",
+    answer: "Hidrógeno",
+    options: ["Oxígeno", "Carbono", "Hidrógeno", "Helio"],
+    duration: 30,
+  },
+  {
+    course_id: 123,
+    question: "¿Cuál es el océano más grande del mundo?",
+    answer: "Océano Pacífico",
+    options: [
+      "Océano Atlántico",
+      "Océano Índico",
+      "Océano Pacífico",
+      "Océano Ártico",
+    ],
+    duration: 30,
+  },
+  {
+    course_id: 123,
+    question: "¿Cuál es el hueso más largo del cuerpo humano?",
+    answer: "Fémur",
+    options: ["Húmero", "Fémur", "Tibia", "Columna vertebral"],
+    duration: 30,
+  },
+  {
+    course_id: 123,
+    question: "¿Quién escribió 'Don Quijote de la Mancha'?",
+    answer: "Miguel de Cervantes",
+    options: [
+      "Federico García Lorca",
+      "Gabriel García Márquez",
+      "Miguel de Cervantes",
+      "Pablo Neruda",
+    ],
+    duration: 30,
+  },
+  {
+    course_id: 123,
+    question: "¿Cuál es el país más poblado del mundo?",
+    answer: "India",
+    options: ["China", "India", "Estados Unidos", "Indonesia"],
+    duration: 30,
+  },
+  {
+    course_id: 123,
+    question: "¿Cuál es la montaña más alta del mundo?",
+    answer: "Monte Everest",
+    options: ["Monte Everest", "K2", "Monte Aconcagua", "Monte Kilimanjaro"],
+    duration: 30,
+  },
+]);
 
-db.duel_answers.insertOne({
+/* db.duel_answers.insertOne({
   duel_id: ObjectId("000000000000000000000010"),
   question_id: ObjectId("000000000000000000000011"),
   user_id: ObjectId("000000000000000000000001"),
@@ -26,7 +107,7 @@ db.duel_answers.insertOne({
   answer: "París",
   is_correct: true,
   answer_time: 12,
-});
+}); */
 
 // Insertar perfiles de usuario de ejemplo con diferentes rangos y ELO
 db.players.insertMany([

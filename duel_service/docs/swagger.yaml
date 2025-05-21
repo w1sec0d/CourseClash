@@ -17,6 +17,12 @@ definitions:
         example: Duel accepted
         type: string
     type: object
+  models.ErrorResponse:
+    properties:
+      error:
+        example: Error interno del servidor
+        type: string
+    type: object
   models.ErrorResponseDuelAlreadyRequested:
     properties:
       error_code:
@@ -42,6 +48,15 @@ definitions:
         type: string
       message:
         example: The request body is missing required fields or is malformed
+        type: string
+    type: object
+  models.PlayerData:
+    properties:
+      elo:
+        type: integer
+      player_id:
+        type: string
+      rank:
         type: string
     type: object
   models.RequestDuelRequest:
@@ -132,6 +147,29 @@ paths:
       summary: Solicita un duelo
       tags:
       - duelos
+  /api/players/{player_id}:
+    get:
+      description: Obtiene los datos de un jugador por su ID, incluyendo ELO y rango
+      parameters:
+      - description: ID del jugador
+        in: path
+        name: player_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Información del jugador
+          schema:
+            $ref: '#/definitions/models.PlayerData'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Obtiene información de un jugador
+      tags:
+      - jugadores
   /ws/duels/{duel_id}/{player_id}:
     get:
       description: Establece una conexión WebSocket para un jugador en un duelo. Permite

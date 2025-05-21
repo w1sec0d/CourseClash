@@ -39,10 +39,11 @@ type PlayerData struct {
 
 // Question representa una pregunta del duelo.
 type Question struct {
-	ID       string
-	Text     string
-	Answer   string
-	Duration int
+	ID       string   `json:"id"`
+	Text     string   `json:"text"`
+	Answer   string   `json:"answer"`
+	Options  []string `json:"options"`
+	Duration int      `json:"duration"`
 }
 
 // DuelConnection almacena los jugadores de un duelo.

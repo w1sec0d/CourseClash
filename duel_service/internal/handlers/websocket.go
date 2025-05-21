@@ -8,6 +8,7 @@ import (
 	"courseclash/duel-service/internal/duelsync"
 	"courseclash/duel-service/internal/models"
 	"courseclash/duel-service/internal/repositories"
+	"courseclash/duel-service/internal/services"
 
 	"github.com/gorilla/websocket"
 )
@@ -145,10 +146,23 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		
 		// P2 inicia el duelo
 		log.Printf("P2 (%s) iniciando duelo con P1 (%s) para el duelID %s.", p2ToUse.ID, p1ToUse.ID, duelID)
-		questions := []models.Question{
-			{ID: "1", Text: "¿Cuál es la capital de Francia?", Answer: "Paris", Duration: 10},
-			{ID: "2", Text: "¿Cuánto es 2+2?", Answer: "4", Duration: 5},
+		
+		// Obtener preguntas aleatorias de la base de datos para el duelo
+		questionService := services.NewQuestionService()
+		questions, err := questionService.GetQuestionsForDuel(123) // Usar el curso 123 como ejemplo
+		if err != nil {
+			log.Printf("Error al obtener preguntas para el duelo %s: %v. Usando preguntas de respaldo.", duelID, err)
+			// Usar preguntas de respaldo en caso de error
+			questions = []models.Question{
+				{ID: "1", Text: "¿Cuál es la capital de Francia?", Answer: "París", Options: []string{"Madrid", "París", "Londres", "Roma"}, Duration: 30},
+				{ID: "2", Text: "¿Cuánto es 2+2?", Answer: "4", Options: []string{"3", "4", "5", "6"}, Duration: 30},
+				{ID: "3", Text: "¿Quién pintó la Mona Lisa?", Answer: "Leonardo da Vinci", Options: []string{"Pablo Picasso", "Vincent van Gogh", "Leonardo da Vinci", "Miguel Ángel"}, Duration: 30},
+				{ID: "4", Text: "¿Cuál es el planeta más grande del sistema solar?", Answer: "Júpiter", Options: []string{"Tierra", "Júpiter", "Saturno", "Marte"}, Duration: 30},
+				{ID: "5", Text: "¿En qué año comenzó la Segunda Guerra Mundial?", Answer: "1939", Options: []string{"1914", "1939", "1945", "1918"}, Duration: 30},
+			}
 		}
+		
+		log.Printf("Duelo %s: Obtenidas %d preguntas para el duelo", duelID, len(questions))
 		duelsync.StartDuel(p1ToUse, p2ToUse, duelID, questions, HandleDuel)
 		
 	// En caso de que el duelo este lleno

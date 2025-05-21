@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
+	"courseclash/duel-service/internal/constants"
 	"courseclash/duel-service/internal/db"
 	"courseclash/duel-service/internal/models"
-	"courseclash/duel-service/internal/services"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -44,8 +44,8 @@ func (r *PlayerRepository) GetPlayerByID(playerID string) (*models.PlayerData, e
 			// Si el jugador no existe, creamos uno nuevo con valores por defecto
 			player = models.PlayerData{
 				PlayerID: playerID,
-				Elo:      services.DefaultElo,
-				Rank:     string(services.GetRankByElo(services.DefaultElo)),
+				Elo:      constants.DefaultElo,
+				Rank:     constants.GetRankByElo(constants.DefaultElo),
 			}
 			return &player, nil
 		}
