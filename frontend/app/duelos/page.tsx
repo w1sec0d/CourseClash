@@ -1,21 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { REQUEST_DUEL } from '../graphql/mutations/duel';
-import { RequestDuelResponse } from '../types/duel';
+import { REQUEST_DUEL, ACCEPT_DUEL } from '../graphql/mutations/duel';
+import { RequestDuelResponse, AcceptDuelResponse } from '../types/duel';
 import { fetchGraphQL } from '@/lib/graphql-client';
 
 export default function Duelos() {
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(
     null
   );
+  const [acceptResponse, setAcceptResponse] =
+    useState<AcceptDuelResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
   const [wsMessages, setWsMessages] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     duelId: '',
     playerId: '',
+  });
+  const [acceptFormData, setAcceptFormData] = useState({
+    duelId: '',
   });
 
   // Limpiar la conexión WebSocket cuando el componente se desmonte
@@ -52,9 +58,46 @@ export default function Duelos() {
     }
   };
 
+  const handleAcceptDuel = async () => {
+    if (!acceptFormData.duelId) {
+      setError('Por favor, ingresa el ID del duelo');
+      return;
+    }
+
+    setIsAccepting(true);
+    try {
+      const data = await fetchGraphQL({
+        query: ACCEPT_DUEL,
+        variables: {
+          input: {
+            duelId: acceptFormData.duelId,
+          },
+        },
+      });
+
+      setAcceptResponse(data.acceptDuel);
+      setError(null);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Error al aceptar el duelo'
+      );
+      setAcceptResponse(null);
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleAcceptFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setAcceptFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -123,6 +166,46 @@ export default function Duelos() {
       </div>
 
       <div className='mb-8'>
+        <h2 className='text-xl font-semibold mb-4'>Aceptar Duelo</h2>
+        <div className='space-y-4'>
+          <div>
+            <label
+              htmlFor='acceptDuelId'
+              className='block text-sm font-medium text-gray-700'
+            >
+              ID del Duelo
+            </label>
+            <input
+              type='text'
+              id='acceptDuelId'
+              name='duelId'
+              value={acceptFormData.duelId}
+              onChange={handleAcceptFormChange}
+              className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+              placeholder='Ej: user_001_vs_user_002'
+            />
+          </div>
+          <button
+            onClick={handleAcceptDuel}
+            disabled={isAccepting}
+            className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ${
+              isAccepting ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            {isAccepting ? 'Aceptando...' : 'Aceptar Duelo'}
+          </button>
+        </div>
+
+        {acceptResponse && (
+          <div className='mt-4 p-4 bg-green-100 rounded'>
+            <h2 className='font-bold'>Duelo Aceptado:</h2>
+            <p>ID del Duelo: {acceptResponse.duelId}</p>
+            <p>Mensaje: {acceptResponse.message}</p>
+          </div>
+        )}
+      </div>
+
+      <div className='mb-8'>
         <h2 className='text-xl font-semibold mb-4'>Conectar al Duelo</h2>
         <div className='space-y-4'>
           <div>
@@ -161,7 +244,7 @@ export default function Duelos() {
           </div>
           <button
             onClick={handleConnectWebSocket}
-            className='bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded'
+            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
           >
             Conectar al Duelo
           </button>
