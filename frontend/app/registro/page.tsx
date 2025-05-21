@@ -9,6 +9,7 @@ import { registerSchema } from '@/lib/form-schemas';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
+import { AuthError } from '@/lib/auth-hooks';
 
 interface RegisterFormValues {
   firstName: string;
@@ -53,7 +54,7 @@ export default function Register() {
         username: data.email.split('@')[0], // Create username from email
         email: data.email,
         password: data.password,
-        name: fullName,
+        fullName: fullName,
         role:
           data.user_type === 'teacher'
             ? ('TEACHER' as const)
@@ -67,12 +68,21 @@ export default function Register() {
       router.push('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
-      setError('root', {
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al crear la cuenta. Intenta de nuevo.',
-      });
+      if (error instanceof AuthError) {
+        setError('root', {
+          message: error.message,
+          type: error.code,
+        });
+      } else {
+        console.error('Registration error:', error);
+        setError('root', {
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Error al crear la cuenta. Intenta de nuevo.',
+          type: 'UNKNOWN_ERROR',
+        });
+      }
     } finally {
       setIsLoading(false);
     }

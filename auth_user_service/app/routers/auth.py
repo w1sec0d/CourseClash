@@ -4,6 +4,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 import bcrypt
 from datetime import datetime
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Importación de funciones para codificación y decodificación del token
 from ..core.security import (
@@ -225,7 +230,7 @@ def login(form_data: Login, db: Session = Depends(get_db)):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={
-                    "message": "Invalid credentials",
+                    "message": "Correo electrónico o contraseña inválidos",
                     "code": AuthErrorCode.INVALID_CREDENTIALS,
                 },
             )
@@ -235,7 +240,7 @@ def login(form_data: Login, db: Session = Depends(get_db)):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={
-                    "message": "Invalid credentials",
+                    "message": "Correo electrónico o contraseña inválidos",
                     "code": AuthErrorCode.INVALID_CREDENTIALS,
                 },
             )
@@ -252,6 +257,10 @@ def login(form_data: Login, db: Session = Depends(get_db)):
         }
 
         token, token_refresh, exp = encode_token(payload)
+
+        print("🔑 Token:", token)
+        print("🔑 Token refresh:", token_refresh)
+        print("🔑 Exp:", exp)
 
         return {
             "user": user_data["user"],
@@ -280,7 +289,7 @@ def login(form_data: Login, db: Session = Depends(get_db)):
 
 @router.get("/me")
 def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
-    # Si estamos usando datos simulados
+    print("🔑 User!!!:", user)
     if USE_MOCK_DATA:
         user_obj = get_user_by_id_mock(user["id"])
         if not user_obj:
@@ -292,34 +301,42 @@ def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
     try:
         db: Session = next(get_db())
         query = text(""" SELECT * FROM users where id = :id""")
-        result = db.execute(query, {'id': user['id']}).fetchone()
-        if not result: 
+        result = db.execute(query, {"id": user["id"]}).fetchone()
+
+        if not result:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail='User not found'
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
-        user = User(
+
+        print("🔑 Result!!!:", result)
+
+        # Create User object
+        user_obj = User(
             id=result[0],
             username=result[1],
             email=result[2],
             full_name=result[4],
-            is_active=result[5],
-            is_superuser=result[6],
+            is_active=bool(result[5]),
+            is_superuser=bool(result[6]),
             created_at=str(result[7]),
-            avatar_url = result[8],
-            bio = result[9],
-            experience_points = result[10]
+            avatar_url=result[8],
+            bio=result[9],
+            experience_points=result[10],
         )
 
-        return user
+        # Debug print the created user object
+        print("🔑 Created User object:", user_obj)
+
+        return user_obj
     except HTTPException as e:
         raise e
-
     except Exception as e:
+        print("❌ Error creating user:", str(e))  # Add error logging
         raise HTTPException(
-            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f'Error en el servidor {e}'
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error en el servidor {e}",
         )
+
 
 # Ruta para refrescar el token
 # Input: token de refresco
@@ -522,6 +539,7 @@ def update_password(
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     try:
+        logger.info("🔑 Register request:")
         # Verificar si el correo ya está registrado
         if USE_MOCK_DATA:
             # Crear usuario en datos mock
@@ -540,16 +558,29 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
                     detail=result.get("error", "Error al registrar el usuario"),
                 )
 
+            # Generate token for mock user
+            payload = {
+                "id": result["user"]["id"],
+                "email": user.email,
+                "is_superuser": result["user"]["is_superuser"],
+            }
+
+            token, token_refresh, exp = encode_token(payload)
+
             return {
                 "message": "User created successfully",
                 "user": {
                     "username": user.username,
                     "email": user.email,
-                    "full_name": user.full_name,
-                    "is_active": user.is_active,
-                    "is_superuser": user.is_superuser,
-                    "id": result.get("user_id", "1"),  # ID simulado
+                    "fullName": user.full_name,
+                    "avatar": None,
+                    "role": "ADMIN" if result["user"]["is_superuser"] else "STUDENT",
+                    "createdAt": result["user"]["created_at"],
+                    "updatedAt": None,
                 },
+                "token": token,  # Add token
+                "token_refresh": token_refresh,  # Add refresh token
+                "exp": exp,  # Add expiration
             }
 
         # Si no estamos en modo mock, usar la base de datos real
@@ -562,7 +593,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
-                    "message": "Email already registered",
+                    "message": "El correo electrónico ya está registrado",
                     "code": AuthErrorCode.EMAIL_EXISTS,
                 },
             )
@@ -573,24 +604,37 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         query = text(
             """
                     INSERT INTO users (username, email, hashed_password, full_name, is_active, is_superuser) 
-                    VALUES (:username, :email, :password, :full_name, :is_active, :is_superuser)
-                    RETURNING id, created_at
+                    VALUES (:username, :email, :password_hash, :full_name, :is_active, :is_superuser)
                 """
         )
 
-        result = db.execute(
+        db.execute(
             query,
             {
                 "username": user.username,
                 "email": user.email,
-                "password": password_hash,
+                "password_hash": password_hash,
                 "full_name": user.full_name,
-                "is_active": user.is_active,
-                "is_superuser": user.is_superuser,
+                "is_active": 1 if user.is_active else 0,
+                "is_superuser": 1 if user.is_superuser else 0,
             },
-        ).fetchone()
-
+        )
         db.commit()
+
+        # Get the ID of the newly created user
+        get_id_query = text(
+            "SELECT id, created_at, is_active, is_superuser FROM users WHERE email = :email"
+        )
+        result = db.execute(get_id_query, {"email": user.email}).fetchone()
+
+        # Generate token for the new user
+        payload = {
+            "id": result[0],
+            "email": user.email,
+            "is_superuser": bool(result[3]),
+        }
+
+        token, token_refresh, exp = encode_token(payload)
 
         return {
             "message": "User created successfully",
@@ -598,17 +642,22 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
                 "id": str(result[0]) if result else None,
                 "username": user.username,
                 "email": user.email,
-                "full_name": user.full_name,
-                "is_active": user.is_active,
-                "is_superuser": user.is_superuser,
-                "created_at": str(result[1]) if result and len(result) > 1 else None,
+                "fullName": user.full_name,
+                "avatar": None,
+                "role": "ADMIN" if bool(result[3]) else "STUDENT",
+                "createdAt": str(result[1]) if result and len(result) > 1 else None,
+                "updatedAt": None,
             },
+            "token": token,  # Add token
+            "token_refresh": token_refresh,  # Add refresh token
+            "exp": exp,  # Add expiration
         }
 
     except HTTPException as e:
         raise e
     except Exception as e:
         db.rollback()
+        logger.error("Error creating user: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={

@@ -14,7 +14,11 @@ Funcionalidades principales:
 """
 
 from fastapi import Request, HTTPException, status
-from app.utils.mock_db import verify_mock_token
+import httpx
+import os
+
+# Environment variables
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth_user_service:8000")
 
 async def verify_auth_token(request: Request):
     """
@@ -67,17 +71,28 @@ async def verify_auth_token(request: Request):
                 detail="Esquema de autenticación no soportado. Use 'Bearer'"
             )
             
-        # Verificar la validez del token
-        user = verify_mock_token(token)
-        if not user:
+        # Verificar la validez del token con el servicio de autenticación
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{AUTH_SERVICE_URL}/auth/me",
+                    headers={"Authorization": auth_header}
+                )
+                
+                if response.status_code != 200:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Token inválido o expirado"
+                    )
+                
+                # Adjuntar el usuario autenticado al estado de la solicitud
+                request.state.user = response.json()
+        except httpx.RequestError:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token inválido o expirado"
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Error al conectar con el servicio de autenticación"
             )
             
-        # Adjuntar el usuario autenticado al estado de la solicitud
-        # para que esté disponible en los manejadores de ruta
-        request.state.user = user
     except HTTPException:
         # Re-lanzar las excepciones HTTP que ya tienen un formato adecuado
         raise

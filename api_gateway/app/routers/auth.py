@@ -18,16 +18,11 @@ from enum import Enum
 from fastapi import APIRouter, HTTPException, Header, status
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, Dict, Any
+import httpx
+import os
 
-# Importar funciones de base de datos simulada
-from app.utils.mock_db import (
-    get_user_by_email,
-    get_user_by_id,
-    generate_mock_token,
-    add_user,
-    verify_mock_token,
-    get_user_by_username,
-)
+# Environment variables
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth_user_service:8000")
 
 # Configuración del router
 router = APIRouter(
@@ -73,10 +68,14 @@ class UserBase(BaseModel):
     role: UserRole = Field(default=UserRole.STUDENT, example="STUDENT")
 
 
-class UserCreate(UserBase):
-    """Modelo para la creación de usuarios."""
+class UserCreate(BaseModel):
+    """Modelo para la creación de un nuevo usuario."""
 
-    password: str = Field(..., min_length=8, example="contraseñaSegura123")
+    username: str = Field(..., min_length=3, max_length=50, example="usuario123")
+    email: EmailStr = Field(..., example="usuario@example.com")
+    password: str = Field(..., min_length=6, example="password123")
+    full_name: Optional[str] = Field(None, example="Juan Pérez")
+    role: Optional[UserRole] = Field(UserRole.STUDENT, example="STUDENT")
 
 
 class UserResponse(UserBase):
@@ -94,7 +93,7 @@ class LoginRequest(BaseModel):
     """Modelo para la solicitud de inicio de sesión."""
 
     email: EmailStr = Field(..., example="usuario@example.com")
-    password: str = Field(..., example="contraseñaSegura123")
+    password: str = Field(..., example="password123")
 
 
 @router.post(
@@ -137,7 +136,7 @@ class LoginRequest(BaseModel):
 )
 async def login(credentials: LoginRequest):
     """
-    Autentica a un usuario y devuelve tokens de acceso y actualización.
+    Autentica a un usuario y devuelve tokens de acceso.
 
     Args:
         credentials (LoginRequest): Credenciales de inicio de sesión (email y contraseña).
@@ -150,28 +149,31 @@ async def login(credentials: LoginRequest):
             - 400: Si faltan credenciales o son inválidas.
             - 401: Si las credenciales son incorrectas.
     """
-    # Validar que se proporcionaron ambos campos
-    if not credentials.email or not credentials.password:
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{AUTH_SERVICE_URL}/auth/login",
+                json={"username": credentials.email, "password": credentials.password},
+            )
+
+            if response.status_code != 200:
+                error_detail = "Credenciales inválidas"
+                try:
+                    error_data = response.json()
+                    if "detail" in error_data:
+                        error_detail = error_data["detail"]
+                except Exception:
+                    pass
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail=error_detail
+                )
+
+            return response.json()
+    except httpx.RequestError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Se requieren email y contraseña",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Error al conectar con el servicio de autenticación",
         )
-
-    # NOTA: En producción, la contraseña debería estar hasheada usando bcrypt o similar
-    # y comparada con un hash almacenado en la base de datos
-    user = get_user_by_email(credentials.email)
-    if (
-        not user or credentials.password != "password123"
-    ):  # Contraseña hardcodeada solo para desarrollo
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email o contraseña incorrectos",
-        )
-
-    # Generar tokens
-    token_data = generate_mock_token(user["id"])
-
-    return {"user": user, **token_data}
 
 
 @router.post(
@@ -229,38 +231,36 @@ async def register(user_data: UserCreate):
             - 400: Si el usuario ya existe o faltan campos requeridos.
             - 422: Si los datos de entrada no pasan la validación.
     """
-    # Verificar si el usuario ya existe
-    if get_user_by_email(user_data.email) or get_user_by_username(user_data.username):
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{AUTH_SERVICE_URL}/auth/register", json=user_data.dict()
+            )
+
+            if response.status_code != 201:
+                error_detail = "Error al registrar usuario"
+                try:
+                    error_data = response.json()
+                    if "detail" in error_data:
+                        error_detail = error_data["detail"]
+                except Exception:
+                    pass
+                raise HTTPException(
+                    status_code=response.status_code, detail=error_detail
+                )
+
+            return response.json()
+    except httpx.RequestError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El correo electrónico o nombre de usuario ya está en uso",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Error al conectar con el servicio de autenticación",
         )
-
-    # Crear usuario
-    new_user = add_user(
-        username=user_data.username,
-        email=user_data.email,
-        password=user_data.password,  # En producción, esto debería estar hasheado
-        name=user_data.name,
-        role=user_data.role.value if user_data.role else UserRole.STUDENT.value,
-    )
-
-    if not new_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No se pudo crear el usuario",
-        )
-
-    # Generar tokens
-    token_data = generate_mock_token(new_user["id"])
-
-    return {"user": new_user, **token_data}
 
 
 class RefreshTokenRequest(BaseModel):
     """Modelo para la solicitud de renovación de token."""
 
-    refresh_token: str = Field(..., example="mock-refresh-token-12345")
+    refresh_token: str = Field(..., example="refresh-token-12345")
 
 
 @router.post(
@@ -314,34 +314,31 @@ async def refresh_token(token_data: RefreshTokenRequest):
             - 400: Si el token es inválido o tiene un formato incorrecto.
             - 404: Si el usuario asociado al token no existe.
     """
-    refresh_token = token_data.refresh_token
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{AUTH_SERVICE_URL}/auth/refresh",
+                json={"refresh_token": token_data.refresh_token},
+            )
 
-    if not refresh_token or not refresh_token.startswith("mock-refresh-token-"):
+            if response.status_code != 200:
+                error_detail = "Token de actualización inválido"
+                try:
+                    error_data = response.json()
+                    if "detail" in error_data:
+                        error_detail = error_data["detail"]
+                except Exception:
+                    pass
+                raise HTTPException(
+                    status_code=response.status_code, detail=error_detail
+                )
+
+            return response.json()
+    except httpx.RequestError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Token de actualización inválido",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Error al conectar con el servicio de autenticación",
         )
-
-    # Extraer ID de usuario del token
-    parts = refresh_token.split("-")
-    if len(parts) < 4:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Formato de token de actualización inválido",
-        )
-
-    user_id = parts[3]
-    user = get_user_by_id(user_id)
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado"
-        )
-
-    # Generar nuevos tokens
-    token_data = generate_mock_token(user["id"])
-
-    return {"user": user, **token_data}
 
 
 @router.post(
@@ -378,11 +375,30 @@ async def logout(authorization: Optional[str] = Header(None)):
     Returns:
         dict: Confirmación de cierre de sesión.
     """
-    # En una implementación real, aquí se invalidarían los tokens
-    # token = authorization.split(" ")[1] if authorization else None
-    # invalidate_token(token)
+    if not authorization:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No se proporcionó token de autenticación",
+        )
 
-    return {"success": True, "message": "Sesión cerrada exitosamente"}
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{AUTH_SERVICE_URL}/auth/logout",
+                headers={"Authorization": authorization},
+            )
+
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code, detail="Error al cerrar sesión"
+                )
+
+            return response.json()
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Error al conectar con el servicio de autenticación",
+        )
 
 
 @router.get(
@@ -442,23 +458,20 @@ async def get_current_user(
         )
 
     try:
-        scheme, token = authorization.split()
-        if scheme.lower() != "bearer":
-            raise ValueError("Esquema de autenticación inválido")
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Formato de autorización inválido. Se espera 'Bearer <token>'",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"{AUTH_SERVICE_URL}/auth/me", headers={"Authorization": authorization}
+            )
 
-    # Verificar token
-    user = verify_mock_token(token)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token inválido o expirado",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail="Error al obtener información del usuario",
+                )
 
-    return user
+            return response.json()
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Error al conectar con el servicio de autenticación",
+        )
