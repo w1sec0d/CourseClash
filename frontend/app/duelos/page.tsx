@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { REQUEST_DUEL, ACCEPT_DUEL } from '../graphql/mutations/duel';
 import { RequestDuelResponse, AcceptDuelResponse } from '../types/duel';
 import { fetchGraphQL } from '@/lib/graphql-client';
+import QuizScreen from './components/quizScreen';
 
 export default function Duelos() {
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(
@@ -293,7 +294,7 @@ export default function Duelos() {
               type='text'
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder='Escribe un mensaje...'
               className='flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
             />
@@ -313,6 +314,7 @@ export default function Duelos() {
           <p>{error}</p>
         </div>
       )}
+      <QuizScreen />
     </div>
   );
 }
