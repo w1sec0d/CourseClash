@@ -105,6 +105,10 @@ mock_users = [
         ).decode(
             "utf-8"
         ),  # contraseña: password123
+        "full_name": "Estudiante Ejemplo",
+        "is_active": True,
+        "is_superuser": False,
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     },
 ]
 
