@@ -53,17 +53,17 @@ setup_middlewares(app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        #localhost in general
+        # localhost in general
         "http://localhost",
         "http://127.0.0.1",
         "http://localhost:3000",  # React dev server
         "http://127.0.0.1:3000",  # React dev server alternative
-        "http://localhost:8001",   # Auth User Service
-        "http://127.0.0.1:8001"    # Auth User Service alternative
-        "http://localhost:8002",   # Duel Service
-        "http://127.0.0.1:8002"    # Duel Service alternative
-        "http://localhost:8003",   # Course Service
-        "http://127.0.0.1:8003"    # Course Service alternative
+        "http://localhost:8001",  # Auth User Service
+        "http://127.0.0.1:8001"  # Auth User Service alternative
+        "http://localhost:8002",  # Duel Service
+        "http://127.0.0.1:8002"  # Duel Service alternative
+        "http://localhost:8003",  # Course Service
+        "http://127.0.0.1:8003",  # Course Service alternative
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
