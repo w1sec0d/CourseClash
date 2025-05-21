@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Question } from './Question';
 import { DuelHeader } from './DuelHeader';
+import { DuelResults } from './DuelResults';
 // import { PowerUps } from './PowerUps';
 // import { StreakAlert } from './StreakAlert';
 
@@ -11,17 +12,34 @@ interface QuestionData {
   options: string[];
 }
 
+interface DuelResultsData {
+  is_draw: boolean;
+  player1_id: string;
+  player2_id: string;
+  player1_elo: {
+    change: number;
+    current: number;
+    previous: number;
+  };
+  player1_rank: string;
+  player1_score: number;
+  player2_elo: {
+    change: number;
+    current: number;
+    previous: number;
+  };
+  player2_rank: string;
+  player2_score: number;
+  winner_id: string;
+}
+
 interface QuizScreenProps {
   wsConnection: WebSocket | null;
-  duelId: string;
-  playerId: string;
   opponentId: string;
 }
 
 export default function QuizScreen({
   wsConnection,
-  duelId,
-  playerId,
   opponentId,
 }: QuizScreenProps) {
   const [currentQuestion, setCurrentQuestion] = useState<QuestionData | null>(
@@ -32,6 +50,7 @@ export default function QuizScreen({
   const [opponentProgress, setOpponentProgress] = useState(0);
   const [totalQuestions] = useState(5);
   const [error, setError] = useState<string | null>(null);
+  const [duelResults, setDuelResults] = useState<DuelResultsData | null>(null);
 
   useEffect(() => {
     if (!wsConnection) return;
@@ -49,6 +68,11 @@ export default function QuizScreen({
           setError(null);
         } else if (data.type === 'opponent_progress') {
           setOpponentProgress(data.progress);
+        } else if (data.type === 'duel_end') {
+          console.log('Duel end message received:', data);
+          setDuelResults(data.data);
+          console.log('Duel results state set to:', data.data);
+          // Keep the connection open
         } else if (data.type === 'error') {
           setError(data.message);
         }
@@ -59,7 +83,10 @@ export default function QuizScreen({
     };
 
     wsConnection.addEventListener('message', handleMessage);
-    return () => wsConnection.removeEventListener('message', handleMessage);
+    return () => {
+      console.log('Cleaning up WebSocket connection');
+      wsConnection.removeEventListener('message', handleMessage);
+    };
   }, [wsConnection]);
 
   const handleAnswerSelect = (selectedOption: string) => {
@@ -81,6 +108,19 @@ export default function QuizScreen({
       setError('Error al enviar la respuesta');
     }
   };
+
+  if (duelResults) {
+    console.log('Rendering duel results:', duelResults);
+    return (
+      <div className='min-h-screen'>
+        <DuelResults
+          results={duelResults}
+          playerId={opponentId === 'user_001' ? 'user_002' : 'user_001'}
+          opponentId={opponentId}
+        />
+      </div>
+    );
+  }
 
   if (isWaiting) {
     return (

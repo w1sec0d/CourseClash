@@ -132,7 +132,10 @@ export default function Duelos() {
     };
 
     ws.onclose = () => {
-      setShowQuiz(false);
+      // Only hide quiz if there's an error or if we're not showing results
+      if (error) {
+        setShowQuiz(false);
+      }
     };
 
     setWsConnection(ws);
@@ -287,8 +290,6 @@ export default function Duelos() {
       ) : (
         <QuizScreen
           wsConnection={wsConnection}
-          duelId={formData.duelId}
-          playerId={formData.playerId}
           opponentId={
             formData.playerId === 'user_001' ? 'user_002' : 'user_001'
           }
