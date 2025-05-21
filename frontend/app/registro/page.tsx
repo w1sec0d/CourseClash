@@ -47,27 +47,31 @@ export default function Register() {
     try {
       // Create full name from first and last name
       const fullName = `${data.firstName} ${data.lastName}`.trim();
-      
+
       // Map form data to user registration data
       const userData = {
         username: data.email.split('@')[0], // Create username from email
         email: data.email,
         password: data.password,
         name: fullName,
-        role: data.user_type === 'teacher' ? 'TEACHER' as const : 'STUDENT' as const,
+        role:
+          data.user_type === 'teacher'
+            ? ('TEACHER' as const)
+            : ('STUDENT' as const),
       };
 
       const result = await registerUser(userData);
-      console.log('Registration successful:', result);
-      
+      console.log('✅ Registration successful:', result);
+
       // Redirect to dashboard after successful registration
       router.push('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
       setError('root', {
-        message: error instanceof Error 
-          ? error.message 
-          : 'Error al crear la cuenta. Intenta de nuevo.'
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error al crear la cuenta. Intenta de nuevo.',
       });
     } finally {
       setIsLoading(false);
@@ -360,10 +364,10 @@ export default function Register() {
               </label>
             </div>
             <div>
-              <Button 
-                type='submit' 
-                variant='primary' 
-                className='w-full' 
+              <Button
+                type='submit'
+                variant='primary'
+                className='w-full'
                 disabled={isLoading}
               >
                 {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}

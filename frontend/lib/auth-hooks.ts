@@ -41,7 +41,7 @@ export type AuthErrorCode =
   | 'TOKEN_EXPIRED';
 
 export type AuthResponse = {
-  code: any;
+  code: string;
   user: User;
   token: string;
   refreshToken?: string;
@@ -84,11 +84,6 @@ export function useLogin() {
     setLoading(true);
     setError(null);
 
-    console.log('🔐 Login attempt:', {
-      email,
-      timestamp: new Date().toISOString(),
-    });
-
     try {
       const loginMutation = `
       mutation Login($email: String!, $password: String!) {
@@ -130,7 +125,12 @@ export function useLogin() {
       });
 
       if (data.login.__typename === 'AuthError') {
-        throw new Error(data.login.message || 'Error de autenticación');
+        const error = new AuthError(
+          data.login.message || 'Error de autenticación',
+          data.login.code as AuthErrorCode,
+          true
+        );
+        throw error;
       }
 
       const authResponse = data.login as AuthResponse;
@@ -143,7 +143,11 @@ export function useLogin() {
       return authResponse;
     } catch (err: unknown) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Failed to login';
+        err instanceof AuthError
+          ? err.message
+          : err instanceof Error
+          ? err.message
+          : 'Failed to login';
       console.error('❌ Login error:', errorMessage);
       setError(errorMessage);
       setLoading(false);
@@ -337,6 +341,9 @@ export function useCurrentUser() {
         query: meQuery,
         headers: getAuthHeaders(),
       });
+
+      console.log('me data', data);
+      console.log(getAuthHeaders());
 
       if (data.me) {
         console.log('📥 User session found:', {

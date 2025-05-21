@@ -62,7 +62,6 @@ export default function Login() {
       console.log('📧 Password reset requested for:', email);
       try {
         const result = await resetPassword(email);
-        console.log('resultForgot', result);
 
         // Mostrar el código de verificación en modo desarrollo
         if (process.env.NODE_ENV === 'development') {
@@ -181,7 +180,6 @@ export default function Login() {
     try {
       // Call the login function from auth context
       const result = await login(data.email, data.password);
-      console.log('✅ Login successful:', result);
 
       // Redirect to dashboard after successful login
       router.push('/dashboard');
