@@ -15,41 +15,47 @@ from typing import List, Optional
 from datetime import datetime
 import httpx
 
-# Importamos los resolvers de autenticación
+# Importamos los resolvers
 from app.graphql.resolvers.auth import Query as AuthQuery, Mutation as AuthMutation
+from app.graphql.resolvers.courses import (
+    Query as CourseQuery,
+    Mutation as CourseMutation,
+)
+from app.graphql.resolvers.duels import Query as DuelQuery, Mutation as DuelMutation
 
 
 # Definición de la Query raíz
-# Hereda de AuthQuery, que contiene las consultas de autenticación
 @strawberry.type
-class Query(AuthQuery):
+class Query(AuthQuery, CourseQuery, DuelQuery):
     """
     Punto de entrada para todas las consultas (queries) GraphQL.
 
-    Aquí se combinan las queries de todos los módulos.
-    Por ahora solo incluye las queries de autenticación.
+    Combina las queries de todos los módulos:
+    - Autenticación
+    - Cursos
+    - Duelos
     """
 
     pass
 
 
 # Definición de la Mutation raíz
-# Hereda de AuthMutation, que contiene las mutaciones de autenticación
 @strawberry.type
-class Mutation(AuthMutation):
+class Mutation(AuthMutation, CourseMutation, DuelMutation):
     """
     Punto de entrada para todas las mutaciones GraphQL.
 
-    Aquí se combinan las mutaciones de todos los módulos.
-    Por ahora solo incluye las mutaciones de autenticación.
+    Combina las mutaciones de todos los módulos:
+    - Autenticación
+    - Cursos
+    - Duelos
     """
 
     pass
 
 
 # Creación del esquema GraphQL
-# Combina las definiciones de Query y Mutation
 schema = strawberry.Schema(
-    query=Query,  # Especifica la Query raíz
-    mutation=Mutation,  # Especifica la Mutation raíz
+    query=Query,
+    mutation=Mutation,
 )
