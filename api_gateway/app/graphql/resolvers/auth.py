@@ -18,6 +18,7 @@ import strawberry
 from typing import List, Optional
 from datetime import datetime
 import os
+import httpx
 from enum import Enum, auto
 
 # Importar funciones de la base de datos simulada para autenticación
@@ -66,6 +67,42 @@ class AuthError:
 
 # Unión de tipos para la respuesta de autenticación
 AuthResult = strawberry.union("AuthResult", (AuthSuccess, AuthError))
+
+
+@strawberry.type
+class ForgotPasswordSuccess:
+    message: str
+    code: str
+    token: str
+
+
+@strawberry.type
+class ForgotPasswordError:
+    message: str
+    code: str
+
+
+# Unión de tipos para la respuesta de forgot password
+ForgotPasswordResult = strawberry.union(
+    "ForgotPasswordResult", (ForgotPasswordSuccess, ForgotPasswordError)
+)
+
+
+@strawberry.type
+class UpdatePasswordSuccess:
+    message: str
+
+
+@strawberry.type
+class UpdatePasswordError:
+    message: str
+    code: str
+
+
+# Union type for update password response
+UpdatePasswordResult = strawberry.union(
+    "UpdatePasswordResult", (UpdatePasswordSuccess, UpdatePasswordError)
+)
 
 
 # Eliminamos las clases de entrada ya que usaremos argumentos directos
@@ -148,7 +185,8 @@ class Mutation:
         Inicia sesión de un usuario con email y contraseña.
 
         Args:
-            input (LoginInput): Objeto con email y contraseña del usuario
+            email (str): Correo electrónico del usuario
+            password (str): Contraseña del usuario
 
         Returns:
             Union[AuthSuccess, AuthError]:
@@ -167,55 +205,63 @@ class Mutation:
                     message="Correo y contraseña son requeridos", code="INVALID_INPUT"
                 )
 
-            # Obtener usuario por email
-            user_data = get_user_by_email(email)
+            # Preparar los datos para el microservicio de autenticación
+            auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000")
+            login_url = f"{auth_service_url}/auth/login"
+            print("Login URL: ", login_url)
 
-            # Verificar si el usuario existe
-            if not user_data:
-                return AuthError(
-                    message="Correo o contraseña inválidos", code="INVALID_CREDENTIALS"
+            # Utilizar el cliente HTTP para realizar la petición al microservicio
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                # Realizar la petición al microservicio de autenticación
+                # Nota: el microservicio espera 'username' como el correo y 'password'
+                response = await client.post(
+                    login_url, json={"username": email, "password": password}
                 )
+                print("Response: ", response)
 
-            # En una aplicación real, aquí se verificaría la contraseña hasheada
-            # Esto es solo un ejemplo con una contraseña fija
-            if password != "password123":
-                return AuthError(
-                    message="Correo o contraseña inválidos", code="INVALID_CREDENTIALS"
+                # Log para depuración
+                print(f"Login request to {login_url} - Status: {response.status_code}")
+
+                # Si hay un error HTTP, devolver un error de autenticación
+                if response.status_code != 200:
+                    error_detail = "Credenciales inválidas"
+                    try:
+                        error_data = response.json()
+                        if "detail" in error_data:
+                            error_detail = error_data["detail"]
+                    except Exception as json_error:
+                        print(f"Error parsing response: {str(json_error)}")
+
+                    return AuthError(message=error_detail, code="AUTHENTICATION_ERROR")
+
+                # Procesar la respuesta exitosa
+                auth_data = response.json()
+
+                # Mapear la respuesta del microservicio al formato GraphQL
+                user_data = auth_data.get("user", {})
+
+                return AuthSuccess(
+                    user=User(
+                        id=str(user_data.get("id", "")),
+                        username=user_data.get("username", ""),
+                        email=user_data.get("email", ""),
+                        name=user_data.get("full_name"),
+                        # El microservicio no devuelve avatar, usamos None
+                        avatar=None,
+                        # Convertir is_superuser a ADMIN o mantener STUDENT como default
+                        role="ADMIN" if user_data.get("is_superuser") else "STUDENT",
+                        createdAt=user_data.get("created_at", ""),
+                        # El microservicio no devuelve updated_at, usamos None
+                        updatedAt=None,
+                    ),
+                    token=auth_data.get("token", ""),
+                    refreshToken=auth_data.get("token_refresh", ""),
+                    expiresAt=auth_data.get("exp", ""),
                 )
-
-            # Verificar si la cuenta está activa (ejemplo de validación adicional)
-            if user_data.get("status") == "LOCKED":
-                return AuthError(
-                    message="Correo o contraseña inválidos", code="INVALID_CREDENTIALS"
-                )
-
-            # Generar token de autenticación
-            token_data = generate_mock_token(user_data["id"])
-
-            if not token_data:
-                return AuthError(
-                    message="Error al generar el token de autenticación",
-                    code="TOKEN_GENERATION_ERROR",
-                )
-
-            return AuthSuccess(
-                user=User(
-                    id=user_data["id"],
-                    username=user_data["username"],
-                    email=user_data["email"],
-                    name=user_data.get("name"),
-                    avatar=user_data.get("avatar"),
-                    role=user_data["role"],
-                    createdAt=user_data["createdAt"],
-                    updatedAt=user_data.get("updatedAt"),
-                ),
-                token=token_data["token"],
-                refreshToken=token_data["refreshToken"],
-                expiresAt=token_data["expiresAt"],
-            )
 
         except Exception as e:
             # En producción, se debería registrar este error en un sistema de monitoreo
+            print(f"Login error: {str(e)}")
             return AuthError(
                 message="Error inesperado al iniciar sesión", code="SERVER_ERROR"
             )
@@ -358,9 +404,176 @@ class Mutation:
         return user is not None
 
     @strawberry.mutation
-    async def confirmResetPassword(self, token: str, newPassword: str) -> bool:
-        # In a mock implementation, just validate the token format
-        if not token or not token.startswith("mock-reset-token-"):
-            return False
+    async def updatePassword(
+        self,
+        newPassword: str,
+        code: str,
+        email: str,
+        info,
+    ) -> UpdatePasswordResult:
+        try:
+            auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000")
+            update_password_url = f"{auth_service_url}/auth/update-password"
 
-        return True
+            # Get the token from the Authorization header
+            auth_header = info.context["request"].headers.get("authorization")
+            if not auth_header:
+                print("❌ No authorization header found")
+                return UpdatePasswordError(
+                    message="No authorization token provided", code="INVALID_TOKEN"
+                )
+
+            # Extract the token from the Bearer header
+            try:
+                scheme, token = auth_header.split()
+                if scheme.lower() != "bearer":
+                    print("❌ Invalid authorization scheme:", scheme)
+                    return UpdatePasswordError(
+                        message="Invalid authorization scheme", code="INVALID_TOKEN"
+                    )
+            except ValueError as e:
+                print("❌ Error parsing authorization header:", str(e))
+                return UpdatePasswordError(
+                    message="Invalid authorization header format", code="INVALID_TOKEN"
+                )
+
+            print(
+                "🔑 Request details:",
+                {
+                    "url": update_password_url,
+                    "email": email,
+                    "code": code,
+                    "token_length": len(token),
+                    "timestamp": datetime.now().isoformat(),
+                },
+            )
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                try:
+                    response = await client.post(
+                        update_password_url,
+                        json={
+                            "email": email,
+                            "code": code,
+                            "password": newPassword,
+                        },
+                        headers={"Authorization": f"Bearer {token}"},
+                    )
+
+                    print(
+                        "📥 Auth service response:",
+                        {
+                            "status_code": response.status_code,
+                            "headers": dict(response.headers),
+                            "timestamp": datetime.now().isoformat(),
+                        },
+                    )
+
+                    if response.status_code != 200:
+                        error_detail = "Error al procesar la solicitud"
+                        error_code = "SERVER_ERROR"
+                        try:
+                            error_data = response.json()
+                            print("❌ Error response data:", error_data)
+                            if isinstance(error_data.get("detail"), dict):
+                                error_detail = error_data["detail"].get(
+                                    "message", error_detail
+                                )
+                                error_code = error_data["detail"].get(
+                                    "code", error_code
+                                )
+                            elif isinstance(error_data.get("detail"), str):
+                                error_detail = error_data["detail"]
+                        except Exception as json_error:
+                            print(f"❌ Error parsing response: {str(json_error)}")
+
+                        return UpdatePasswordError(
+                            message=error_detail, code=error_code
+                        )
+
+                    return UpdatePasswordSuccess(
+                        message="Contraseña actualizada correctamente"
+                    )
+
+                except httpx.RequestError as e:
+                    print(f"❌ Request error: {str(e)}")
+                    return UpdatePasswordError(
+                        message=f"Error connecting to auth service: {str(e)}",
+                        code="SERVER_ERROR",
+                    )
+
+        except Exception as e:
+            print(f"❌ Unexpected error in updatePassword: {str(e)}")
+            return UpdatePasswordError(
+                message="Error al procesar la solicitud de restablecimiento de contraseña",
+                code="SERVER_ERROR",
+            )
+
+    @strawberry.mutation
+    async def forgotPassword(self, email: str) -> ForgotPasswordResult:
+        """
+        Inicia el proceso de restablecimiento de contraseña.
+
+        Args:
+            email (str): Correo electrónico del usuario
+
+        Returns:
+            Union[ForgotPasswordSuccess, ForgotPasswordError]:
+                - ForgotPasswordSuccess: Si el proceso se inició correctamente
+                - ForgotPasswordError: Si hay un error en el proceso
+
+        Nota: En una implementación real, se enviaría un correo con un enlace
+        para restablecer la contraseña.
+        """
+        try:
+            # Preparar los datos para el microservicio de autenticación
+            auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000")
+            recovery_url = f"{auth_service_url}/auth/recovery"
+            print("Recovery URL: ", recovery_url)
+
+            # Utilizar el cliente HTTP para realizar la petición al microservicio
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                # Realizar la petición al microservicio de autenticación
+                response = await client.post(recovery_url, json={"email": email})
+                print("Response: ", response)
+                print("Response JSON: ", response.json())
+
+                # Log para depuración
+                print(
+                    f"Recovery request to {recovery_url} - Status: {response.status_code}"
+                )
+
+                # Si hay un error HTTP, devolver un error
+                if response.status_code != 200:
+                    error_detail = "Error al procesar la solicitud"
+                    error_code = "SERVER_ERROR"
+                    try:
+                        error_data = response.json()
+                        if isinstance(error_data.get("detail"), dict):
+                            error_detail = error_data["detail"].get(
+                                "message", error_detail
+                            )
+                            error_code = error_data["detail"].get("code", error_code)
+                        elif isinstance(error_data.get("detail"), str):
+                            error_detail = error_data["detail"]
+                    except Exception as json_error:
+                        print(f"Error parsing response: {str(json_error)}")
+
+                    return ForgotPasswordError(message=error_detail, code=error_code)
+
+                # Procesar la respuesta exitosa
+                recovery_data = response.json()
+                print("Recovery data: ", recovery_data)
+
+                return ForgotPasswordSuccess(
+                    message="Si el correo existe en nuestra base de datos, recibirás instrucciones para restablecer tu contraseña",
+                    code=recovery_data["code"],
+                    token=recovery_data["token"],
+                )
+
+        except Exception as e:
+            print(f"Error en forgotPassword: {str(e)}")
+            return ForgotPasswordError(
+                message="Error al procesar la solicitud de restablecimiento de contraseña",
+                code="SERVER_ERROR",
+            )

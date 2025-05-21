@@ -10,6 +10,10 @@ class User(BaseModel):
     is_active: bool
     is_superuser: bool
     created_at: str
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
+    experience_points: int  
+
 
 # Modelo de usuario de la base de datos con contraseña para gestionar la autenticación
 class UserInterno(BaseModel):
@@ -37,5 +41,8 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     is_active: bool = True
     is_superuser: bool = False
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
+    experience_points: int
 
 

@@ -6,19 +6,23 @@ services:
     build:
       context: ./auth_user_service
     ports:
-      - "8000:8000"
+      - "8001:8001"
     environment:
-      - DATABASE_URL=mysql://root:password@mysql:3306/auth_db
-      - JWT_SECRET=your_jwt_secret_key
-      - JWT_ALGORITHM=HS256
-      - JWT_EXPIRATION=3600
+      - DATABASE_URL=mysql+pymysql://root:password@mysql:3306/courseClash
+      - SECRET=Arquisoft
+      - ALGORITM=HS256
+      - MAIL_USERNAME=courseclasheducation@gmail.com
+      - MAIL_PASSWORD=omhdrobuncjwjmoh
+      - MAIL_FROM=courseclasheducation@gmail.com
+      - MAIL_PORT=587
+      - MAIL_SERVER=smtp.gmail.com
     volumes:
       - ./auth_user_service:/app
-    depends_on:
-      - mysql
+    # depends_on:
+    #   - mysql
     networks:
       - courseclash-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
   # Servicio de Cursos
   course_service:
@@ -27,7 +31,7 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - DATABASE_URL=mysql://root:password@mysql:3306/course_db
+      - DATABASE_URL=mysql+pymysql://root:password@mysql:3306/courseClash
       - JWT_SECRET=your_jwt_secret_key
     volumes:
       - ./course_service:/app
@@ -119,6 +123,7 @@ services:
       retries: 3
       start_period: 40s
 
+
   # Base de datos MySQL (para auth_user_service y course_service)
   mysql:
     image: mysql:8.0
@@ -126,13 +131,14 @@ services:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=auth_db
+      - MYSQL_DATABASE=courseClash
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./init-scripts/mysql:/docker-entrypoint-initdb.d
+      - ./mysql:/docker-entrypoint-initdb.d
     networks:
       - courseclash-network
     command: --default-authentication-plugin=mysql_native_password
+
 
   # Base de datos Mongo (para Duelos)
   mongo:
@@ -146,9 +152,9 @@ services:
     networks:
       - courseclash-network
 
-volumes:
-  mysql_data:
-  mongo_data:
+# volumes:
+#   mysql_data:
+#   mongo_data:
 
 networks:
   courseclash-network:

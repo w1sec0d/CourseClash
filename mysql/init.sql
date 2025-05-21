@@ -1,7 +1,7 @@
-CREATE DATABASE IF NOT EXISTS courseclash_db;
+
 
 -- Usar la base de datos courseclash_db
-USE courseclash_db;
+-- USE courseclash_db;
 
 -- Tablas de autenticación y usuarios
 CREATE TABLE IF NOT EXISTS users (
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     avatar_url VARCHAR(255),
     bio TEXT,
-    experience_points INT DEFAULT 0,
+    experience_points INT DEFAULT 0
 );
 
 -- Tablas de cursos
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS notifications(
 	message TEXT NOT NULL,
 	link_url VARCHAR(255),
 	is_read BOOLEAN DEFAULT FALSE,
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTRAMP,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -133,3 +133,4 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 	is_active BOOLEAN DEFAULT TRUE,
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
