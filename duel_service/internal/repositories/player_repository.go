@@ -22,7 +22,7 @@ type PlayerRepository struct {
 
 // NewPlayerRepository crea una nueva instancia del repositorio de jugadores
 func NewPlayerRepository() *PlayerRepository {
-	collection := db.MongoClient.Database("courseclash").Collection("players")
+	collection := db.MongoClient.Database("duels_db").Collection("user_profiles")
 	return &PlayerRepository{
 		collection: collection,
 	}
