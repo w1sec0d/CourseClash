@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"courseclash/duel-service/internal/duelsync"
@@ -16,6 +17,29 @@ import (
 // WsHandler gestiona la conexión WebSocket de un jugador para un duelo.
 // Se encarga de la lógica de conexión y sincronización entre los dos jugadores de un duelo.
 func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID string) {
+	// Validar que el jugador sea parte del duelo
+	// El formato del duelID es "requesterID_vs_opponentID"
+	validPlayer := false
+	
+	// Extraer los IDs de los jugadores del duelID
+	parts := strings.Split(duelID, "_vs_")
+	if len(parts) == 2 {
+		requesterID := parts[0]
+		opponentID := parts[1]
+		
+		// Verificar si el playerID corresponde a alguno de los jugadores del duelo
+		if playerID == requesterID || playerID == opponentID {
+			validPlayer = true
+		}
+	}
+	
+	// Si el jugador no es parte del duelo, rechazar la conexión
+	if !validPlayer {
+		log.Printf("Jugador %s intentó conectarse al duelo %s pero no es parte de él", playerID, duelID)
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("No estás autorizado para conectarte a este duelo"))
+		return
+	}
 	// Eleva o actualiza el estado de la conexión HTTP del jugador a WebSocket
 	conn, err := duelsync.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
