@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/gorilla/websocket"
+	"sync"
 )
 
 // Player representa a un jugador en el duelo.
@@ -12,6 +13,21 @@ type Player struct {
 	Rank  string // El rango actual del jugador, persistente
 	Conn  *websocket.Conn
 	Done  chan struct{}
+	Mu    sync.Mutex // Mutex para proteger las escrituras a la conexión WebSocket
+}
+
+// SafeWriteJSON envía un mensaje JSON de manera segura usando el mutex
+func (p *Player) SafeWriteJSON(v interface{}) error {
+	p.Mu.Lock()
+	defer p.Mu.Unlock()
+	return p.Conn.WriteJSON(v)
+}
+
+// SafeWriteMessage envía un mensaje de texto de manera segura usando el mutex
+func (p *Player) SafeWriteMessage(messageType int, data []byte) error {
+	p.Mu.Lock()
+	defer p.Mu.Unlock()
+	return p.Conn.WriteMessage(messageType, data)
 }
 
 // PlayerData representa los datos de un jugador almacenados en MongoDB

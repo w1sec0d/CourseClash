@@ -36,10 +36,10 @@ func StartDuel(player1, player2 *models.Player, duelID string, questions []model
 	if player1 == nil || player2 == nil {
 		log.Printf("Error en startDuel para el duelo %s: uno o ambos jugadores son nil. P1: %v, P2: %v", duelID, player1, player2)
 		if p1c := player1; p1c != nil && p1c.Conn != nil {
-			p1c.Conn.WriteMessage(websocket.TextMessage, []byte("Error al iniciar el duelo: oponente no encontrado o inválido."))
+			p1c.SafeWriteMessage(websocket.TextMessage, []byte("Error al iniciar el duelo: oponente no encontrado o inválido."))
 		}
 		if p2c := player2; p2c != nil && p2c.Conn != nil {
-			p2c.Conn.WriteMessage(websocket.TextMessage, []byte("Error al iniciar el duelo: oponente no encontrado o inválido."))
+			p2c.SafeWriteMessage(websocket.TextMessage, []byte("Error al iniciar el duelo: oponente no encontrado o inválido."))
 		}
 		if player1 != nil && player1.Done != nil { close(player1.Done) }
 		if player2 != nil && player2.Done != nil { close(player2.Done) }
@@ -47,11 +47,11 @@ func StartDuel(player1, player2 *models.Player, duelID string, questions []model
 	}
 	if player1.Conn == nil || player2.Conn == nil {
 		log.Printf("Error en startDuel para el duelo %s: uno o ambos jugadores tienen conexión nil. P1 conn: %v, P2 conn: %v", duelID, player1.Conn, player2.Conn)
-		if player1.Conn == nil && player2.Conn != nil {
-			player2.Conn.WriteMessage(websocket.TextMessage, []byte("Error: El oponente se desconectó antes de iniciar el duelo."))
+		if player2.Conn != nil && player1.Conn == nil {
+			player2.SafeWriteMessage(websocket.TextMessage, []byte("Error: El oponente se desconectó antes de iniciar el duelo."))
 		}
 		if player2.Conn == nil && player1.Conn != nil {
-			player1.Conn.WriteMessage(websocket.TextMessage, []byte("Error: El oponente se desconectó antes de iniciar el duelo."))
+			player1.SafeWriteMessage(websocket.TextMessage, []byte("Error: El oponente se desconectó antes de iniciar el duelo."))
 		}
 		if player1.Done != nil { close(player1.Done) }
 		if player2.Done != nil { close(player2.Done) }

@@ -112,7 +112,8 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		log.Printf("Jugador %s (P1) conectado al duelo %s. Esperando al oponente...", playerID, duelID)
 		<-syncChannel
 		log.Printf("Jugador %s (P1) notificado por P2 para el duelo %s.", playerID, duelID)
-		if err := conn.WriteMessage(websocket.TextMessage, []byte("¡Oponente conectado! El duelo comenzará pronto.")); err != nil {
+		// Ahora la conexión ya está asignada a un Player, usamos el método seguro
+		if err := player.SafeWriteMessage(websocket.TextMessage, []byte("¡Oponente conectado! El duelo comenzará pronto.")); err != nil {
 			log.Printf("Error al enviar mensaje 'Oponente conectado' a P1 %s: %v", playerID, err)
 			// No retornar necesariamente, P1 aún debe esperar en player.Done
 		}
@@ -132,7 +133,8 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		p1ToUse := playersConnected.Player1
 		p2ToUse := playersConnected.Player2
 		log.Printf("Jugador %s (P2) conectado al duelo %s. Notificando a P1 (%s) e iniciando duelo.", playerID, duelID, p1ToUse.ID)
-		if err := conn.WriteMessage(websocket.TextMessage, []byte("¡Duelo listo!")); err != nil {
+		// Ahora la conexión ya está asignada a un Player, usamos el método seguro
+		if err := player.SafeWriteMessage(websocket.TextMessage, []byte("¡Duelo listo!")); err != nil {
 			log.Printf("Error al enviar mensaje 'Duelo listo' a P2 %s: %v", playerID, err)
 			// No retornar, aún necesitamos notificar a P1 e iniciar el duelo.
 		}

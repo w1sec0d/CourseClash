@@ -64,9 +64,9 @@ func broadcastQuestion(player1, player2 *models.Player, question models.Question
 		"type": "question",
 		"data": question,
 	}
-	// Envio sincronizado de preguntas
-	player1.Conn.WriteJSON(message)
-	player2.Conn.WriteJSON(message)
+	// Envio sincronizado de preguntas usando los métodos seguros
+	player1.SafeWriteJSON(message)
+	player2.SafeWriteJSON(message)
 }
 
 // Esta función permite recibir un mapa con la clave answer, que representa la respuesta de los jugadores
@@ -175,12 +175,12 @@ func endDuel(player1 *models.Player, player2 *models.Player) {
 	}
 
 	if player1.Conn != nil {
-		if err := player1.Conn.WriteJSON(finalMessage); err != nil {
+		if err := player1.SafeWriteJSON(finalMessage); err != nil {
 			log.Printf("Error al enviar mensaje final a jugador %s: %v", player1.ID, err)
 		}
 	}
 	if player2.Conn != nil {
-		if err := player2.Conn.WriteJSON(finalMessage); err != nil {
+		if err := player2.SafeWriteJSON(finalMessage); err != nil {
 			log.Printf("Error al enviar mensaje final a jugador %s: %v", player2.ID, err)
 		}
 	}
