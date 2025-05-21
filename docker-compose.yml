@@ -69,7 +69,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    command: air -c .air.toml
 
   # API Gateway
   api_gateway:
