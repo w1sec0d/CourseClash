@@ -207,8 +207,26 @@ class Mutation:
                 auth_data = response.json()
                 user_data = auth_data.get("user", {})
 
+                # Create a new dictionary with only the fields we need for the GraphQL User type
+                graphql_user_data = {
+                    "id": str(user_data.get("id")),  # Ensure id is a string
+                    "username": user_data.get("username"),
+                    "email": user_data.get("email"),
+                    "fullName": user_data.get(
+                        "full_name"
+                    ),  # Convert full_name to fullName
+                    "avatar": user_data.get(
+                        "avatar_url"
+                    ),  # Convert avatar_url to avatar
+                    "role": user_data.get(
+                        "role", "STUDENT"
+                    ),  # Default to STUDENT if not specified
+                    "createdAt": user_data.get("created_at"),
+                    "updatedAt": user_data.get("updated_at"),
+                }
+
                 return AuthSuccess(
-                    user=User(**user_data),
+                    user=User(**graphql_user_data),
                     token=auth_data.get("access_token", ""),
                     refreshToken=auth_data.get("refresh_token", ""),
                     expiresAt=auth_data.get("expires_at", ""),
