@@ -179,7 +179,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       // Call the login function from auth context
-      const result = await login(data.email, data.password);
+      await login(data.email, data.password);
 
       // Redirect to dashboard after successful login
       router.push('/dashboard');
@@ -191,6 +191,7 @@ export default function Login() {
           type: error.code,
         });
       } else {
+        console.log({ error });
         setError('root', {
           message: 'Error al iniciar sesión. Por favor, intenta de nuevo.',
           type: 'UNKNOWN_ERROR',

@@ -12,7 +12,7 @@ export type User = {
   id: string;
   username: string;
   email: string;
-  name?: string;
+  fullName?: string;
   avatar?: string;
   role: 'STUDENT' | 'TEACHER' | 'ADMIN';
   createdAt: string;
@@ -20,13 +20,17 @@ export type User = {
 };
 
 export class AuthError extends Error {
+  public isServerError: boolean;
+
   constructor(
     message: string,
     public code: AuthErrorCode = 'UNKNOWN_ERROR',
-    public isServerError: boolean = false
+    isServerError?: boolean
   ) {
     super(message);
     this.name = 'AuthError';
+    Object.setPrototypeOf(this, AuthError.prototype);
+    this.isServerError = isServerError ?? false;
   }
 }
 
@@ -86,123 +90,15 @@ export function useLogin() {
 
     try {
       const loginMutation = `
-      mutation Login($email: String!, $password: String!) {
-        login(email: $email, password: $password) {
-          __typename
-          ... on AuthSuccess {
-            user {
-              id
-              username
-              email
-              name
-              avatar
-              role
-              createdAt
-              updatedAt
-            }
-            token
-            refreshToken
-            expiresAt
-          }
-          ... on AuthError {
-            message
-            code
-          }
-        }
-      }
-    `;
-
-      console.log('📤 Sending login request to API Gateway');
-      const data = await fetchGraphQL({
-        query: loginMutation,
-        variables: { email, password },
-      });
-
-      console.log('📥 Received login response:', {
-        type: data.login.__typename,
-        success: data.login.__typename === 'AuthSuccess',
-        timestamp: new Date().toISOString(),
-      });
-
-      if (data.login.__typename === 'AuthError') {
-        const error = new AuthError(
-          data.login.message || 'Error de autenticación',
-          data.login.code as AuthErrorCode,
-          true
-        );
-        throw error;
-      }
-
-      const authResponse = data.login as AuthResponse;
-
-      // Store the token
-      setAuthToken(authResponse.token);
-      console.log('🔑 Auth token stored successfully');
-
-      setLoading(false);
-      return authResponse;
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof AuthError
-          ? err.message
-          : err instanceof Error
-          ? err.message
-          : 'Failed to login';
-      console.error('❌ Login error:', errorMessage);
-      setError(errorMessage);
-      setLoading(false);
-      throw err;
-    }
-  }, []);
-
-  return { login, loading, error };
-}
-
-export function useRegister() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const register = useCallback(
-    async (userData: {
-      username: string;
-      email: string;
-      password: string;
-      name?: string;
-      role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
-    }) => {
-      setLoading(true);
-      setError(null);
-
-      console.log('📝 Register attempt:', {
-        username: userData.username,
-        email: userData.email,
-        role: userData.role,
-        timestamp: new Date().toISOString(),
-      });
-
-      try {
-        const registerMutation = `
-        mutation Register(
-          $username: String!
-          $email: String!
-          $password: String!
-          $name: String
-          $role: UserRole
-        ) {
-          register(
-            username: $username
-            email: $email
-            password: $password
-            name: $name
-            role: $role
-          ) {
+        mutation Login($email: String!, $password: String!) {
+          login(email: $email, password: $password) {
             __typename
             ... on AuthSuccess {
               user {
                 id
                 username
                 email
-                name
+                fullName  
                 avatar
                 role
                 createdAt
@@ -220,6 +116,120 @@ export function useRegister() {
         }
       `;
 
+      console.log('📤 Sending login request to API Gateway');
+      const data = await fetchGraphQL({
+        query: loginMutation,
+        variables: { email, password },
+      });
+      console.log('🔑 Login response:', data);
+
+      console.log('📥 Received login response:', {
+        type: data.login.__typename,
+        success: data.login.__typename === 'AuthSuccess',
+        timestamp: new Date().toISOString(),
+      });
+
+      if (data.login.__typename === 'AuthError') {
+        throw new AuthError(
+          data.login.message || 'Error de autenticación',
+          data.login.code as AuthErrorCode,
+          true
+        );
+      }
+
+      const authResponse = data.login as AuthResponse;
+      console.log('🔑 Auth token', data.login);
+      setAuthToken(authResponse.token);
+      console.log('🔑 Auth token stored successfully');
+
+      setLoading(false);
+      return authResponse;
+    } catch (err: unknown) {
+      console.error('❌ Login error:', err);
+      setLoading(false);
+
+      if (err instanceof AuthError) {
+        setError(err.message);
+        throw err;
+      }
+
+      // Si el error no es una instancia de AuthError, crear una nueva instancia
+      const error = new AuthError(
+        err instanceof Error ? err.message : 'Error de autenticación',
+        'UNKNOWN_ERROR',
+        true
+      );
+      setError(error.message);
+      throw error;
+    }
+  }, []);
+
+  return { login, loading, error };
+}
+
+export function useRegister() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const register = useCallback(
+    async (userData: {
+      username: string;
+      email: string;
+      password: string;
+      fullName?: string;
+      role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
+    }) => {
+      setLoading(true);
+      setError(null);
+
+      console.log('📝 Register attempt:', {
+        username: userData.username,
+        email: userData.email,
+        fullName: userData.fullName,
+        role: userData.role,
+        timestamp: new Date().toISOString(),
+      });
+
+      try {
+        const registerMutation = `
+          mutation Register(
+            $username: String!
+            $email: String!
+            $password: String!
+            $fullName: String
+            $role: UserRole
+          ) {
+            register(
+              username: $username
+              email: $email
+              password: $password
+              fullName: $fullName
+              role: $role
+            ) {
+              __typename
+              ... on AuthSuccess {
+                user {
+                  id
+                  username
+                  email
+                  fullName
+                  avatar
+                  role
+                  createdAt
+                  updatedAt
+                }
+                token
+                refreshToken
+                expiresAt
+              }
+              ... on AuthError {
+                message
+                code
+              }
+            }
+          }
+        `;
+
         console.log('📤 Sending register request to API Gateway');
         const data = await fetchGraphQL({
           query: registerMutation,
@@ -233,8 +243,22 @@ export function useRegister() {
         });
 
         if (data.register.__typename === 'AuthError') {
-          throw new Error(
-            data.register.message || 'Error al registrar el usuario'
+          console.log('📥 AuthError received:', {
+            message: data.register.message,
+            code: data.register.code,
+            type: data.register.__typename,
+          });
+
+          // Asegurarnos de que el error tenga el formato correcto
+          const errorMessage =
+            typeof data.register.message === 'string'
+              ? data.register.message
+              : JSON.stringify(data.register.message);
+
+          throw new AuthError(
+            errorMessage,
+            data.register.code as AuthErrorCode,
+            true
           );
         }
 
@@ -247,12 +271,22 @@ export function useRegister() {
         setLoading(false);
         return authResponse;
       } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to register';
-        console.error('❌ Registration error:', errorMessage);
-        setError(errorMessage);
+        console.error('Registration error:', err);
         setLoading(false);
-        throw err;
+
+        if (err instanceof AuthError) {
+          setError(err.message);
+          throw err;
+        }
+
+        // Si el error no es una instancia de AuthError, crear una nueva instancia
+        const error = new AuthError(
+          err instanceof Error ? err.message : 'Error al registrar el usuario',
+          'UNKNOWN_ERROR',
+          true
+        );
+        setError(error.message);
+        throw error;
       }
     },
     []
@@ -273,10 +307,10 @@ export function useLogout() {
 
     try {
       const logoutMutation = `
-        mutation Logout {
-          logout
-        }
-      `;
+          mutation Logout {
+            logout
+          }
+        `;
 
       console.log('📤 Sending logout request to API Gateway');
       // Call the API with authentication headers
@@ -318,37 +352,40 @@ export function useCurrentUser() {
     setError(null);
 
     console.log('👤 Fetching current user session');
+    const headers = getAuthHeaders();
+    console.log('🔑 Headers being sent:', headers);
 
     try {
       const meQuery = `
-        query Me {
-          me {
-            id
-            username
-            email
-            name
-            avatar
-            role
-            createdAt
-            updatedAt
+          query Me {
+            me {
+              id
+              username
+              email
+              fullName
+              avatar
+              role
+              createdAt
+              updatedAt
+            }
           }
-        }
-      `;
+        `;
 
       console.log('📤 Sending user session request to API Gateway');
-      // Call the API with authentication headers
       const data = await fetchGraphQL({
         query: meQuery,
-        headers: getAuthHeaders(),
+        headers: headers,
       });
 
+      console.log('📥 Raw response:', data);
       console.log('me data', data);
-      console.log(getAuthHeaders());
+      console.log('Auth headers:', headers);
 
       if (data.me) {
         console.log('📥 User session found:', {
           id: data.me.id,
           username: data.me.username,
+          fullName: data.me.fullName,
           role: data.me.role,
           timestamp: new Date().toISOString(),
         });
@@ -394,21 +431,21 @@ export function useForgotPassword() {
 
     try {
       const forgotPasswordMutation = `
-        mutation ForgotPassword($email: String!) {
-          forgotPassword(email: $email) {
-            __typename
-            ... on ForgotPasswordSuccess {
-              message
-              code
-              token
-            }
-            ... on ForgotPasswordError {
-              message
-              code
+          mutation ForgotPassword($email: String!) {
+            forgotPassword(email: $email) {
+              __typename
+              ... on ForgotPasswordSuccess {
+                message
+                code
+                token
+              }
+              ... on ForgotPasswordError {
+                message
+                code
+              }
             }
           }
-        }
-      `;
+        `;
 
       console.log('📤 Sending password reset request to API Gateway');
       const data = await fetchGraphQL({
@@ -479,19 +516,19 @@ export function useForgotPassword() {
 
       try {
         const updatePasswordMutation = `
-        mutation UpdatePassword($newPassword: String!, $code: String!, $email: String!) {
-          updatePassword(newPassword: $newPassword, code: $code, email: $email) {
-            __typename
-            ... on UpdatePasswordSuccess {
-              message
-            }
-            ... on UpdatePasswordError {
-              message
-              code
+          mutation UpdatePassword($newPassword: String!, $code: String!, $email: String!) {
+            updatePassword(newPassword: $newPassword, code: $code, email: $email) {
+              __typename
+              ... on UpdatePasswordSuccess {
+                message
+              }
+              ... on UpdatePasswordError {
+                message
+                code
+              }
             }
           }
-        }
-      `;
+        `;
 
         console.log('📤 Sending password update request to API Gateway');
         const data = await fetchGraphQL({

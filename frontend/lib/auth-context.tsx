@@ -23,6 +23,7 @@ import {
   useForgotPassword,
   PasswordResetResponse,
   UpdatePasswordResponse,
+  AuthError,
 } from './auth-hooks';
 import { getAuthToken } from './graphql-client';
 
@@ -84,9 +85,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name?: string;
       role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
     }) => {
-      const result = await register(userData);
-      await fetchCurrentUser();
-      return result;
+      try {
+        const result = await register(userData);
+        await fetchCurrentUser();
+        return result;
+      } catch (error) {
+        console.error('Auth context register error:', {
+          error,
+          isAuthError: error instanceof AuthError,
+          errorType: error?.constructor?.name,
+          errorMessage:
+            error instanceof Error ? error.message : 'Unknown error',
+        });
+
+        // Si ya es un AuthError, lo re-lanzamos
+        if (error instanceof AuthError) {
+          throw error;
+        }
+
+        // Si no es un AuthError, lo transformamos
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : typeof error === 'string'
+            ? error
+            : JSON.stringify(error);
+
+        throw new AuthError(errorMessage, 'UNKNOWN_ERROR', true);
+      }
     },
     [register, fetchCurrentUser]
   );
