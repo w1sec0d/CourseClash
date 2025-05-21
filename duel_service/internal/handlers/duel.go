@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"courseclash/duel-service/internal/duelsync"
 	"courseclash/duel-service/internal/models"
 	"courseclash/duel-service/internal/repositories"
 	"courseclash/duel-service/internal/services"
@@ -17,7 +18,7 @@ import (
 4. Finalmente se registra el resultado final con las puntuaciones de ambos jugadores y sus rangos actualizados en un JSON
 */
 
-func HandleDuel(player1 *models.Player, player2 *models.Player, questions []models.Question) {
+func HandleDuel(player1 *models.Player, player2 *models.Player, questions []models.Question, duelID string) {
 	// Asegurarse de que los canales Done se cierren al final de HandleDuel,
 	// independientemente de cómo termine la función (normalmente o por pánico).
 	defer func() {
@@ -50,7 +51,7 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 	}
 
 	// Enviar resultados finales
-	endDuel(player1, player2)
+	endDuel(player1, player2, duelID)
 	log.Printf("Duelo finalizado entre %s y %s. Puntuaciones finales: P1: %d, P2: %d", player1.ID, player2.ID, player1.Score, player2.Score)
 	// Los canales Done se cerrarán mediante la instrucción defer
 }
@@ -97,7 +98,7 @@ func calculateScore(player *models.Player, question models.Question, answer stri
 }
 
 // endDuel envía los resultados finales del duelo a ambos jugadores.
-func endDuel(player1 *models.Player, player2 *models.Player) {
+func endDuel(player1 *models.Player, player2 *models.Player, duelID string) {
 	var winnerID string
 	isDraw := false
 
@@ -188,4 +189,8 @@ func endDuel(player1 *models.Player, player2 *models.Player) {
 	log.Printf("Duelo finalizado. P1 (%s): %d, P2 (%s): %d. Ganador: %s, Empate: %t | ELOs: P1: %d→%d, P2: %d→%d | Rangos: P1: %s, P2: %s",
 		player1.ID, player1.Score, player2.ID, player2.Score, winnerID, isDraw, 
 		oldElo1, player1.Elo, oldElo2, player2.Elo, player1.Rank, player2.Rank)
+	
+	// Limpiar los recursos del duelo usando el duelID pasado como parámetro
+	duelsync.CleanupDuel(duelID)
+	log.Printf("Recursos del duelo %s liberados en endDuel", duelID)
 }

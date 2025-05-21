@@ -30,9 +30,46 @@ var (
 	Mu              sync.Mutex                      
 )
 
+// CleanupDuel limpia los recursos asociados a un duelo terminado
+func CleanupDuel(duelID string) {
+	Mu.Lock()
+	defer Mu.Unlock()
+	
+	// Eliminar las conexiones del duelo
+	delete(DuelConnections, duelID)
+	
+	// Eliminar el canal de sincronización
+	if syncChan, exists := DuelSyncChans[duelID]; exists {
+		// Verificar si el canal ya está cerrado antes de intentar cerrarlo
+		select {
+		case <-syncChan:
+			// El canal ya está cerrado, no hacer nada
+		default:
+			// Intentar cerrar el canal si aún está abierto
+			close(syncChan)
+		}
+		delete(DuelSyncChans, duelID)
+	}
+	
+	// Eliminar cualquier solicitud de duelo pendiente
+	if requestChan, exists := DuelRequests[duelID]; exists {
+		// Verificar si el canal ya está cerrado antes de intentar cerrarlo
+		select {
+		case <-requestChan:
+			// El canal ya está cerrado, no hacer nada
+		default:
+			// Intentar cerrar el canal si aún está abierto
+			close(requestChan)
+		}
+		delete(DuelRequests, duelID)
+	}
+	
+	log.Printf("Recursos del duelo %s liberados correctamente", duelID)
+}
+
 // StartDuel inicia el duelo entre dos jugadores.
 // Ahora solo coordina, la llamada a HandleDuel debe hacerse desde handlers/ws.go
-func StartDuel(player1, player2 *models.Player, duelID string, questions []models.Question, handleDuelFunc func(*models.Player, *models.Player, []models.Question)) {
+func StartDuel(player1, player2 *models.Player, duelID string, questions []models.Question, handleDuelFunc func(*models.Player, *models.Player, []models.Question, string)) {
 	if player1 == nil || player2 == nil {
 		log.Printf("Error en startDuel para el duelo %s: uno o ambos jugadores son nil. P1: %v, P2: %v", duelID, player1, player2)
 		if p1c := player1; p1c != nil && p1c.Conn != nil {
@@ -58,6 +95,6 @@ func StartDuel(player1, player2 *models.Player, duelID string, questions []model
 		return
 	}
 	log.Printf("Iniciando duelo %s entre %s y %s", duelID, player1.ID, player2.ID)
-	go handleDuelFunc(player1, player2, questions)
+	go handleDuelFunc(player1, player2, questions, duelID)
 	log.Printf("Goroutine HandleDuel iniciada para el duelo %s entre %s y %s", duelID, player1.ID, player2.ID)
 }
