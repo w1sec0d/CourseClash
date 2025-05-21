@@ -270,20 +270,18 @@ export function useRegister() {
 
         setLoading(false);
         return authResponse;
-      } catch (error) {
-        console.error('Registration error:', error);
+      } catch (err: unknown) {
+        console.error('Registration error:', err);
         setLoading(false);
 
-        if (error instanceof AuthError) {
-          setError(error.message);
-          throw error;
+        if (err instanceof AuthError) {
+          setError(err.message);
+          throw err;
         }
 
         // Si el error no es una instancia de AuthError, crear una nueva instancia
         const error = new AuthError(
-          error instanceof Error
-            ? error.message
-            : 'Error al registrar el usuario',
+          err instanceof Error ? err.message : 'Error al registrar el usuario',
           'UNKNOWN_ERROR',
           true
         );
