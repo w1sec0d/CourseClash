@@ -18,23 +18,21 @@
 
 import uvicorn
 from fastapi import FastAPI
+from .routers.courses import router as courses_router
 
 
 # Importacion de la base de datos
 from .db import get_db
 
 
-# Creación del microservicio de autenticación
+# Creación del microservicio de cursos
 app = FastAPI(
-    title="CourseClash Auth Service", 
-    description="API for CourseClash authentication and user management"
+    title="CourseClash course service", 
+    description="API for course management of courseClash"
     )
 
-
-
-
 # Rutas de servicios de los cursos
-
+app.include_router(courses_router)
 
 # Punto de entrada del microservicio
 if __name__ == "__main__":

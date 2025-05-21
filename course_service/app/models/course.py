@@ -2,6 +2,7 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 
 from .database import Base
+from pydantic import BaseModel
 
 class Course(Base):
     __tablename__ = "courses"
@@ -15,3 +16,5 @@ class Course(Base):
     # Relationships
     users = relationship("User", secondary=user_course, back_populates="courses")
     activities = relationship("Activity", back_populates="course")
+
+
