@@ -3,10 +3,12 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"courseclash/duel-service/internal/duelsync"
 	"courseclash/duel-service/internal/models"
+	"courseclash/duel-service/internal/repositories"
 	"courseclash/duel-service/internal/services"
 
 	"github.com/gorilla/websocket"
@@ -15,6 +17,29 @@ import (
 // WsHandler gestiona la conexión WebSocket de un jugador para un duelo.
 // Se encarga de la lógica de conexión y sincronización entre los dos jugadores de un duelo.
 func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID string) {
+	// Validar que el jugador sea parte del duelo
+	// El formato del duelID es "requesterID_vs_opponentID"
+	validPlayer := false
+	
+	// Extraer los IDs de los jugadores del duelID
+	parts := strings.Split(duelID, "_vs_")
+	if len(parts) == 2 {
+		requesterID := parts[0]
+		opponentID := parts[1]
+		
+		// Verificar si el playerID corresponde a alguno de los jugadores del duelo
+		if playerID == requesterID || playerID == opponentID {
+			validPlayer = true
+		}
+	}
+	
+	// Si el jugador no es parte del duelo, rechazar la conexión
+	if !validPlayer {
+		log.Printf("Jugador %s intentó conectarse al duelo %s pero no es parte de él", playerID, duelID)
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("No estás autorizado para conectarte a este duelo"))
+		return
+	}
 	// Eleva o actualiza el estado de la conexión HTTP del jugador a WebSocket
 	conn, err := duelsync.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -24,19 +49,19 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 	// Termina la conexión cuando todo se ha ejecutado
 	defer conn.Close()
 
-	// Recibir la información inicial del jugador, incluyendo su ELO
-	var initialData map[string]interface{}
-	if err := conn.ReadJSON(&initialData); err != nil {
-		log.Printf("Error al leer datos iniciales del jugador %s: %v", playerID, err)
-		conn.WriteMessage(websocket.TextMessage, []byte("Error al recibir datos iniciales. Cerrando conexión."))
+	// Crear una instancia del repositorio de jugadores para obtener el elo y el rango
+	playerRepo := repositories.NewPlayerRepository()
+	
+	// Obtener los datos del jugador desde MongoDB
+	playerData, err := playerRepo.GetPlayerByID(playerID)
+	if err != nil {
+		log.Printf("Error al obtener datos del jugador %s desde MongoDB: %v", playerID, err)
+		conn.WriteMessage(websocket.TextMessage, []byte("Error al obtener datos del jugador. Cerrando conexión."))
 		return
 	}
-
-	// Extraer el ELO del jugador, con un valor por defecto si no se proporciona
-	playerElo := services.DefaultElo // ELO inicial por defecto
-	if elo, ok := initialData["elo"].(float64); ok {
-		playerElo = int(elo)
-	}
+	
+	// Usar el ELO obtenido de MongoDB
+	playerElo := playerData.Elo
 
 	// Crear el canal Done para este jugador. Este canal permite reconocder cuando un jugador termino
 	playerDoneChan := make(chan struct{})
@@ -48,12 +73,8 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		Done:  playerDoneChan,
 	}
 
-	// Extraer el rango actual si se proporciona, o calcularlo basado en el ELO
-	if rank, ok := initialData["rank"].(string); ok && rank != "" {
-		player.Rank = rank
-	} else {
-		player.Rank = string(services.GetRankByElo(playerElo))
-	}
+	// Usar el rango obtenido de MongoDB
+	player.Rank = playerData.Rank
 
 	duelsync.Mu.Lock()
 
@@ -116,7 +137,8 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		log.Printf("Jugador %s (P1) conectado al duelo %s. Esperando al oponente...", playerID, duelID)
 		<-syncChannel
 		log.Printf("Jugador %s (P1) notificado por P2 para el duelo %s.", playerID, duelID)
-		if err := conn.WriteMessage(websocket.TextMessage, []byte("¡Oponente conectado! El duelo comenzará pronto.")); err != nil {
+		// Ahora la conexión ya está asignada a un Player, usamos el método seguro
+		if err := player.SafeWriteMessage(websocket.TextMessage, []byte("¡Oponente conectado! El duelo comenzará pronto.")); err != nil {
 			log.Printf("Error al enviar mensaje 'Oponente conectado' a P1 %s: %v", playerID, err)
 			// No retornar necesariamente, P1 aún debe esperar en player.Done
 		}
@@ -136,7 +158,8 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		p1ToUse := playersConnected.Player1
 		p2ToUse := playersConnected.Player2
 		log.Printf("Jugador %s (P2) conectado al duelo %s. Notificando a P1 (%s) e iniciando duelo.", playerID, duelID, p1ToUse.ID)
-		if err := conn.WriteMessage(websocket.TextMessage, []byte("¡Duelo listo!")); err != nil {
+		// Ahora la conexión ya está asignada a un Player, usamos el método seguro
+		if err := player.SafeWriteMessage(websocket.TextMessage, []byte("¡Duelo listo!")); err != nil {
 			log.Printf("Error al enviar mensaje 'Duelo listo' a P2 %s: %v", playerID, err)
 			// No retornar, aún necesitamos notificar a P1 e iniciar el duelo.
 		}
@@ -147,10 +170,23 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		
 		// P2 inicia el duelo
 		log.Printf("P2 (%s) iniciando duelo con P1 (%s) para el duelID %s.", p2ToUse.ID, p1ToUse.ID, duelID)
-		questions := []models.Question{
-			{ID: "1", Text: "¿Cuál es la capital de Francia?", Answer: "Paris", Duration: 10},
-			{ID: "2", Text: "¿Cuánto es 2+2?", Answer: "4", Duration: 5},
+		
+		// Obtener preguntas aleatorias de la base de datos para el duelo
+		questionService := services.NewQuestionService()
+		questions, err := questionService.GetQuestionsForDuel(123) // Usar el curso 123 como ejemplo
+		if err != nil {
+			log.Printf("Error al obtener preguntas para el duelo %s: %v. Usando preguntas de respaldo.", duelID, err)
+			// Usar preguntas de respaldo en caso de error
+			questions = []models.Question{
+				{ID: "1", Text: "¿Cuál es la capital de Francia?", Answer: "París", Options: []string{"Madrid", "París", "Londres", "Roma"}, Duration: 30},
+				{ID: "2", Text: "¿Cuánto es 2+2?", Answer: "4", Options: []string{"3", "4", "5", "6"}, Duration: 30},
+				{ID: "3", Text: "¿Quién pintó la Mona Lisa?", Answer: "Leonardo da Vinci", Options: []string{"Pablo Picasso", "Vincent van Gogh", "Leonardo da Vinci", "Miguel Ángel"}, Duration: 30},
+				{ID: "4", Text: "¿Cuál es el planeta más grande del sistema solar?", Answer: "Júpiter", Options: []string{"Tierra", "Júpiter", "Saturno", "Marte"}, Duration: 30},
+				{ID: "5", Text: "¿En qué año comenzó la Segunda Guerra Mundial?", Answer: "1939", Options: []string{"1914", "1939", "1945", "1918"}, Duration: 30},
+			}
 		}
+		
+		log.Printf("Duelo %s: Obtenidas %d preguntas para el duelo", duelID, len(questions))
 		duelsync.StartDuel(p1ToUse, p2ToUse, duelID, questions, HandleDuel)
 		
 	// En caso de que el duelo este lleno

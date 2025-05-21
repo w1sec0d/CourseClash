@@ -107,6 +107,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/players/{player_id}": {
+            "get": {
+                "description": "Obtiene los datos de un jugador por su ID, incluyendo ELO y rango",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "jugadores"
+                ],
+                "summary": "Obtiene información de un jugador",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del jugador",
+                        "name": "player_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Información del jugador",
+                        "schema": {
+                            "$ref": "#/definitions/models.PlayerData"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/ws/duels/{duel_id}/{player_id}": {
             "get": {
                 "description": "Establece una conexión WebSocket para un jugador en un duelo. Permite la comunicación en tiempo real durante el duelo.",
@@ -178,7 +213,16 @@ const docTemplate = `{
                 },
                 "message": {
                     "type": "string",
-                    "example": "Duel accepted successfully"
+                    "example": "Duel accepted"
+                }
+            }
+        },
+        "models.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Error interno del servidor"
                 }
             }
         },
@@ -221,6 +265,20 @@ const docTemplate = `{
                 }
             }
         },
+        "models.PlayerData": {
+            "type": "object",
+            "properties": {
+                "elo": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "string"
+                },
+                "rank": {
+                    "type": "string"
+                }
+            }
+        },
         "models.RequestDuelRequest": {
             "type": "object",
             "required": [
@@ -256,12 +314,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
-	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Version:          "1.0",
+	Host:             "localhost:8002",
+	BasePath:         "/api",
+	Schemes:          []string{"http"},
+	Title:            "CourseClash Duel Service API",
+	Description:      "API para el servicio de duelos de CourseClash",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

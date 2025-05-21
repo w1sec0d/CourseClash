@@ -1,4 +1,4 @@
--- CREATE DATABASE IF NOT EXISTS courseclash_db;
+
 
 -- Usar la base de datos courseclash_db
 -- USE courseclash_db;

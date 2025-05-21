@@ -29,3 +29,8 @@ type ErrorResponseDuelNotFound struct {
 	ErrorCode string `json:"error_code" example:"duel_not_found"`
 	Message   string `json:"message" example:"No duel found with the provided ID"`
 }
+
+// ErrorResponse representa un error genérico del servidor.
+type ErrorResponse struct {
+	Error string `json:"error" example:"Error interno del servidor"`
+}

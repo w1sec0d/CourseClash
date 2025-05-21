@@ -4,7 +4,9 @@ import (
 	"log"
 	"time"
 
+	"courseclash/duel-service/internal/duelsync"
 	"courseclash/duel-service/internal/models"
+	"courseclash/duel-service/internal/repositories"
 	"courseclash/duel-service/internal/services"
 )
 
@@ -16,7 +18,7 @@ import (
 4. Finalmente se registra el resultado final con las puntuaciones de ambos jugadores y sus rangos actualizados en un JSON
 */
 
-func HandleDuel(player1 *models.Player, player2 *models.Player, questions []models.Question) {
+func HandleDuel(player1 *models.Player, player2 *models.Player, questions []models.Question, duelID string) {
 	// Asegurarse de que los canales Done se cierren al final de HandleDuel,
 	// independientemente de cómo termine la función (normalmente o por pánico).
 	defer func() {
@@ -49,7 +51,7 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 	}
 
 	// Enviar resultados finales
-	endDuel(player1, player2)
+	endDuel(player1, player2, duelID)
 	log.Printf("Duelo finalizado entre %s y %s. Puntuaciones finales: P1: %d, P2: %d", player1.ID, player2.ID, player1.Score, player2.Score)
 	// Los canales Done se cerrarán mediante la instrucción defer
 }
@@ -63,9 +65,9 @@ func broadcastQuestion(player1, player2 *models.Player, question models.Question
 		"type": "question",
 		"data": question,
 	}
-	// Envio sincronizado de preguntas
-	player1.Conn.WriteJSON(message)
-	player2.Conn.WriteJSON(message)
+	// Envio sincronizado de preguntas usando los métodos seguros
+	player1.SafeWriteJSON(message)
+	player2.SafeWriteJSON(message)
 }
 
 // Esta función permite recibir un mapa con la clave answer, que representa la respuesta de los jugadores
@@ -96,7 +98,7 @@ func calculateScore(player *models.Player, question models.Question, answer stri
 }
 
 // endDuel envía los resultados finales del duelo a ambos jugadores.
-func endDuel(player1 *models.Player, player2 *models.Player) {
+func endDuel(player1 *models.Player, player2 *models.Player, duelID string) {
 	var winnerID string
 	isDraw := false
 
@@ -127,6 +129,29 @@ func endDuel(player1 *models.Player, player2 *models.Player) {
 	// Actualizar los rangos de los jugadores
 	player1.Rank = string(newRank1)
 	player2.Rank = string(newRank2)
+	
+	// Guardar los cambios en MongoDB
+	playerRepo := repositories.NewPlayerRepository()
+	
+	// Actualizar jugador 1
+	player1Data := &models.PlayerData{
+		PlayerID: player1.ID,
+		Elo:      player1.Elo,
+		Rank:     player1.Rank,
+	}
+	if err := playerRepo.UpdatePlayer(player1Data); err != nil {
+		log.Printf("Error al actualizar datos del jugador %s en MongoDB: %v", player1.ID, err)
+	}
+	
+	// Actualizar jugador 2
+	player2Data := &models.PlayerData{
+		PlayerID: player2.ID,
+		Elo:      player2.Elo,
+		Rank:     player2.Rank,
+	}
+	if err := playerRepo.UpdatePlayer(player2Data); err != nil {
+		log.Printf("Error al actualizar datos del jugador %s en MongoDB: %v", player2.ID, err)
+	}
 
 	finalMessage := map[string]interface{}{
 		"type": "duel_end",
@@ -151,12 +176,12 @@ func endDuel(player1 *models.Player, player2 *models.Player) {
 	}
 
 	if player1.Conn != nil {
-		if err := player1.Conn.WriteJSON(finalMessage); err != nil {
+		if err := player1.SafeWriteJSON(finalMessage); err != nil {
 			log.Printf("Error al enviar mensaje final a jugador %s: %v", player1.ID, err)
 		}
 	}
 	if player2.Conn != nil {
-		if err := player2.Conn.WriteJSON(finalMessage); err != nil {
+		if err := player2.SafeWriteJSON(finalMessage); err != nil {
 			log.Printf("Error al enviar mensaje final a jugador %s: %v", player2.ID, err)
 		}
 	}
@@ -164,4 +189,8 @@ func endDuel(player1 *models.Player, player2 *models.Player) {
 	log.Printf("Duelo finalizado. P1 (%s): %d, P2 (%s): %d. Ganador: %s, Empate: %t | ELOs: P1: %d→%d, P2: %d→%d | Rangos: P1: %s, P2: %s",
 		player1.ID, player1.Score, player2.ID, player2.Score, winnerID, isDraw, 
 		oldElo1, player1.Elo, oldElo2, player2.Elo, player1.Rank, player2.Rank)
+	
+	// Limpiar los recursos del duelo usando el duelID pasado como parámetro
+	duelsync.CleanupDuel(duelID)
+	log.Printf("Recursos del duelo %s liberados en endDuel", duelID)
 }
