@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import MaterialesDestacadosCarousel from './MaterialesDestacadosCarousel';
 
 interface Material {
@@ -101,9 +102,20 @@ const MaterialesTab: React.FC<MaterialesTabProps> = ({ materials = [] }) => {
   return (
     <div>
       {/* Carrusel de materiales destacados */}
-      <MaterialesDestacadosCarousel materials={sampleMaterials} />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        <MaterialesDestacadosCarousel materials={sampleMaterials} />
+      </motion.div>
       
-      <div className="mb-6">
+      <motion.div 
+        className="mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, delay: 0.1 }}
+      >
         <input
           type="text"
           placeholder="Buscar materiales..."
@@ -111,9 +123,14 @@ const MaterialesTab: React.FC<MaterialesTabProps> = ({ materials = [] }) => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-      </div>
+      </motion.div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, delay: 0.2 }}
+      >
         {filteredMaterials.map((material) => (
           <div key={material.id} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
             <div className="flex items-start">
@@ -144,7 +161,7 @@ const MaterialesTab: React.FC<MaterialesTabProps> = ({ materials = [] }) => {
             </div>
           </div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 };

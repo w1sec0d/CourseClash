@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 interface Tarea {
   id: number;
@@ -59,7 +60,12 @@ const TareasTab: React.FC<TareasTabProps> = ({ tareas = [] }) => {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <motion.div 
+        className="mb-6 flex items-center justify-between"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+      >
         <h2 className="text-xl font-semibold text-gray-800">Tareas asignadas</h2>
         <div className="space-x-2">
           <button className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-medium hover:bg-emerald-200 transition">
@@ -72,11 +78,22 @@ const TareasTab: React.FC<TareasTabProps> = ({ tareas = [] }) => {
             Completadas
           </button>
         </div>
-      </div>
+      </motion.div>
       
-      <div className="space-y-4">
+      <motion.div 
+        className="space-y-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, delay: 0.1 }}
+      >
         {sampleTareas.map((tarea) => (
-          <div key={tarea.id} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+          <motion.div 
+            key={tarea.id} 
+            className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-semibold text-lg text-gray-800">{tarea.title}</h3>
@@ -120,9 +137,9 @@ const TareasTab: React.FC<TareasTabProps> = ({ tareas = [] }) => {
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import DuelCard from './DuelCard';
 import DuelStatusFilter from './DuelStatusFilter';
 import CreateDuelModal from './CreateDuelModal';
@@ -224,7 +225,12 @@ const DuelosTab: React.FC<DuelosTabProps> = ({ duelos = [] }) => {
         />
       )}
 
-      <div className="mb-6 flex items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="mb-6 flex items-center justify-between"
+      >
         <h2 className="text-xl font-semibold text-gray-800">Duelos académicos</h2>
         <button 
           onClick={() => setShowCreateDuel(true)} 
@@ -235,11 +241,22 @@ const DuelosTab: React.FC<DuelosTabProps> = ({ duelos = [] }) => {
           </svg>
           Nuevo duelo
         </button>
-      </div>
+      </motion.div>
 
-      <DuelStatusFilter activeStatus={activeStatus} onChange={setActiveStatus} />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, delay: 0.1 }}
+      >
+        <DuelStatusFilter activeStatus={activeStatus} onChange={setActiveStatus} />
+      </motion.div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, delay: 0.2 }}
+      >
         {sampleDuelos
           .filter((duelo) => {
             if (activeStatus === 'todos') return true;
@@ -249,7 +266,7 @@ const DuelosTab: React.FC<DuelosTabProps> = ({ duelos = [] }) => {
           .map((duelo) => (
             <DuelCard key={duelo.id} duelo={duelo} getStatusBadge={getStatusBadge} getResultBadge={getResultBadge} />
           ))}
-      </div>
+      </motion.div>
       
       <CreateDuelModal
         open={showCreateDuel}

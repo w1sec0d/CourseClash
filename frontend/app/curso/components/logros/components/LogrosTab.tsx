@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import LogroItem from './LogroItem';
 import LogrosProgressBar from './LogrosProgressBar';
 import AchievementUnlockedNotification from '@/components/AchievementUnlockedNotification';
@@ -63,7 +64,12 @@ const LogrosTab: React.FC = () => {
       )}
       
       <div className="p-6 bg-white text-gray-800">
-        <div className="mb-6 flex justify-between items-center">
+        <motion.div 
+          className="mb-6 flex justify-between items-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
           <h2 className="text-xl font-semibold text-gray-800">Logros del curso</h2>
           <button
             onClick={handleTestNotification}
@@ -74,9 +80,14 @@ const LogrosTab: React.FC = () => {
             </svg>
             Probar Notificación de Logro
           </button>
-        </div>
+        </motion.div>
 
-        <div className="max-w-5xl mx-auto">
+        <motion.div 
+          className="max-w-5xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, delay: 0.1 }}
+        >
           {/* Barra de progreso */}
           <LogrosProgressBar 
             totalLogros={getTotalLogros()} 
@@ -84,7 +95,12 @@ const LogrosTab: React.FC = () => {
           />
 
           {/* Filtros */}
-          <div className="mt-8">
+          <motion.div 
+            className="mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: 0.2 }}
+          >
             <LogrosFilter
               activeTab={activeTab}
               onTabChange={setActiveTab}
@@ -93,19 +109,23 @@ const LogrosTab: React.FC = () => {
               compareWith={compareWith}
               onCompareChange={setCompareWith}
             />
-          </div>
+          </motion.div>
 
           {/* Lista de logros */}
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: 0.3 }}
+          >
             {filteredLogros.map((logro) => (
               <LogroItem key={logro.id} {...logro} />
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </>
   );
-
 };
 
 export default LogrosTab;

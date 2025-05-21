@@ -72,7 +72,7 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.2 }}
           className="bg-white rounded-lg shadow-md p-4 row-span-2">
           <h3 className="text-md font-semibold text-gray-800 mb-4">Nivel y experiencia</h3>
           <div className="flex items-center justify-center mb-4">
@@ -128,7 +128,7 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={{ duration: 0.2, delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6 mb-5 w-full">
           <EstadisticaCard
             icon={
