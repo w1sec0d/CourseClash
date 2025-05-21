@@ -593,7 +593,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
-                    "message": "Email already registered",
+                    "message": "El correo electrónico ya está registrado",
                     "code": AuthErrorCode.EMAIL_EXISTS,
                 },
             )

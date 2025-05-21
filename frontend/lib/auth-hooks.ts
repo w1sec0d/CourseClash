@@ -243,8 +243,22 @@ export function useRegister() {
         });
 
         if (data.register.__typename === 'AuthError') {
-          throw new Error(
-            data.register.message || 'Error al registrar el usuario'
+          console.log('📥 AuthError received:', {
+            message: data.register.message,
+            code: data.register.code,
+            type: data.register.__typename,
+          });
+
+          // Asegurarnos de que el error tenga el formato correcto
+          const errorMessage =
+            typeof data.register.message === 'string'
+              ? data.register.message
+              : JSON.stringify(data.register.message);
+
+          throw new AuthError(
+            errorMessage,
+            data.register.code as AuthErrorCode,
+            true
           );
         }
 
@@ -256,13 +270,25 @@ export function useRegister() {
 
         setLoading(false);
         return authResponse;
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to register';
-        console.error('❌ Registration error:', errorMessage);
-        setError(errorMessage);
+      } catch (error) {
+        console.error('Registration error:', error);
         setLoading(false);
-        throw err;
+
+        if (error instanceof AuthError) {
+          setError(error.message);
+          throw error;
+        }
+
+        // Si el error no es una instancia de AuthError, crear una nueva instancia
+        const error = new AuthError(
+          error instanceof Error
+            ? error.message
+            : 'Error al registrar el usuario',
+          'UNKNOWN_ERROR',
+          true
+        );
+        setError(error.message);
+        throw error;
       }
     },
     []
