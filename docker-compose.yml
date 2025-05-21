@@ -79,7 +79,7 @@ services:
     environment:
       - AUTH_SERVICE_URL=http://auth_user_service:8000
       - COURSE_SERVICE_URL=http://course_service:8001
-      - DUEL_SERVICE_URL=http://duel_service:8002
+      - DUEL_SERVICE_URL=http://duel-service:8002
       - JWT_SECRET=your_jwt_secret_key
     volumes:
       - ./api_gateway:/app

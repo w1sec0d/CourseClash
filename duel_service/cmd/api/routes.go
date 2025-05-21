@@ -37,7 +37,8 @@ func requestDuelHandler(c *gin.Context) {
 	}
 	duelsync.DuelRequests[duelID] = make(chan bool)
 	duelsync.Mu.Unlock()
-	c.JSON(http.StatusOK, gin.H{"duel_id": duelID})
+	message := "Duelo solicitado exitosamente"
+	c.JSON(http.StatusOK, gin.H{"duel_id": duelID, "message": message})
 }
 
 // acceptDuelHandler maneja la aceptación de un duelo.
