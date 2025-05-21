@@ -1,3 +1,4 @@
+basePath: /api
 definitions:
   models.AcceptDuelRequest:
     properties:
@@ -13,7 +14,7 @@ definitions:
         example: player123_vs_player456
         type: string
       message:
-        example: Duel accepted successfully
+        example: Duel accepted
         type: string
     type: object
   models.ErrorResponseDuelAlreadyRequested:
@@ -64,8 +65,12 @@ definitions:
         example: Duel successfully requested
         type: string
     type: object
+host: localhost:8002
 info:
   contact: {}
+  description: API para el servicio de duelos de CourseClash
+  title: CourseClash Duel Service API
+  version: "1.0"
 paths:
   /api/duels/accept:
     post:
@@ -161,4 +166,6 @@ paths:
       summary: Conexión WebSocket para duelo
       tags:
       - duelos
+schemes:
+- http
 swagger: "2.0"

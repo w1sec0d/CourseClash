@@ -1,8 +1,16 @@
 {
+    "schemes": [
+        "http"
+    ],
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "API para el servicio de duelos de CourseClash",
+        "title": "CourseClash Duel Service API",
+        "contact": {},
+        "version": "1.0"
     },
+    "host": "localhost:8002",
+    "basePath": "/api",
     "paths": {
         "/api/duels/accept": {
             "post": {
@@ -167,7 +175,7 @@
                 },
                 "message": {
                     "type": "string",
-                    "example": "Duel accepted successfully"
+                    "example": "Duel accepted"
                 }
             }
         },

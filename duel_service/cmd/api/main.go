@@ -1,10 +1,19 @@
+// @title           CourseClash Duel Service API
+// @version         1.0
+// @description     API para el servicio de duelos de CourseClash
+// @host            localhost:8002
+// @BasePath        /api
+// @schemes         http
+
 package main
 
 import (
 	"context"
 	"log"
 
+	_ "courseclash/duel-service/docs"
 	"courseclash/duel-service/internal/db"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"

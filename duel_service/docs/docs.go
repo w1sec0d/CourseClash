@@ -178,7 +178,7 @@ const docTemplate = `{
                 },
                 "message": {
                     "type": "string",
-                    "example": "Duel accepted successfully"
+                    "example": "Duel accepted"
                 }
             }
         },
@@ -256,12 +256,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
-	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Version:          "1.0",
+	Host:             "localhost:8002",
+	BasePath:         "/api",
+	Schemes:          []string{"http"},
+	Title:            "CourseClash Duel Service API",
+	Description:      "API para el servicio de duelos de CourseClash",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

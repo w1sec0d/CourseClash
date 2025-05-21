@@ -1,4 +1,4 @@
-db = db.getSiblingDB('duels_db');
+db = db.getSiblingDB("duels_db");
 
 db.duels.insertOne({
   challenger_id: ObjectId("000000000000000000000001"),
@@ -7,7 +7,7 @@ db.duels.insertOne({
   status: "pending",
   winner_id: null,
   created_at: new Date(),
-  completed_at: null
+  completed_at: null,
 });
 
 db.duel_questions.insertOne({
@@ -15,7 +15,7 @@ db.duel_questions.insertOne({
   course_id: 123,
   question: "¿Cuál es la capital de Francia?",
   correct_answer: "París",
-  options: ["Madrid", "París", "Londres", "Roma"]
+  options: ["Madrid", "París", "Londres", "Roma"],
 });
 
 db.duel_answers.insertOne({
@@ -25,9 +25,9 @@ db.duel_answers.insertOne({
   course_id: 123,
   answer: "París",
   is_correct: true,
-  answer_time: 12
+  answer_time: 12,
 });
 
 db.user_profiles.insertMany([
-  { user_id: ObjectId("000000000000000000000001"), experience: 4500 }
+  { user_id: ObjectId("000000000000000000000001"), experience: 4500 },
 ]);
