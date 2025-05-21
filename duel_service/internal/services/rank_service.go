@@ -77,8 +77,16 @@ func CalculateEloChange(playerElo, opponentElo int, playerWon, isDraw bool) int 
         eloChange = 1
     }
     
+    // Calcular el nuevo ELO
+    newElo := playerElo + eloChange
+    
+    // Asegurar que el ELO nunca baje por debajo de 0
+    if newElo < 0 {
+        newElo = 0
+    }
+    
     // Retornar el nuevo ELO
-    return playerElo + eloChange
+    return newElo
 }
 
 // calculateExpectedScore calcula la probabilidad esperada de victoria basada en la diferencia de ELO
