@@ -23,6 +23,7 @@ export default function Duelos() {
   const [acceptFormData, setAcceptFormData] = useState({
     duelId: '',
   });
+  const [messageInput, setMessageInput] = useState('');
 
   // Limpiar la conexión WebSocket cuando el componente se desmonte
   useEffect(() => {
@@ -138,6 +139,32 @@ export default function Duelos() {
     };
 
     setWsConnection(ws);
+  };
+
+  const handleSendMessage = () => {
+    if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) {
+      setError('No hay conexión WebSocket activa');
+      return;
+    }
+
+    if (!messageInput.trim()) {
+      setError('El mensaje no puede estar vacío');
+      return;
+    }
+
+    try {
+      // Enviamos el mensaje en el formato que espera el backend
+      wsConnection.send(
+        JSON.stringify({
+          answer: messageInput,
+        })
+      );
+      setMessageInput('');
+      setError(null);
+    } catch (err) {
+      setError('Error al enviar el mensaje');
+      console.error('Error sending message:', err);
+    }
   };
 
   return (
@@ -260,6 +287,22 @@ export default function Duelos() {
                 {message}
               </p>
             ))}
+          </div>
+          <div className='mt-4 flex gap-2'>
+            <input
+              type='text'
+              value={messageInput}
+              onChange={(e) => setMessageInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder='Escribe un mensaje...'
+              className='flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            />
+            <button
+              onClick={handleSendMessage}
+              className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+            >
+              Enviar
+            </button>
           </div>
         </div>
       )}
