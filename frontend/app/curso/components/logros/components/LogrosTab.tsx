@@ -71,7 +71,8 @@ const LogrosTab: React.FC = () => {
           transition={{ duration: 0.2 }}
         >
           <h2 className="text-xl font-semibold text-gray-800">Logros del curso</h2>
-          <button
+          {/* Boton de prueba */}
+          {/* <button
             onClick={handleTestNotification}
             className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2"
           >
@@ -79,7 +80,7 @@ const LogrosTab: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28z" />
             </svg>
             Probar Notificación de Logro
-          </button>
+          </button> */}
         </motion.div>
 
         <motion.div 

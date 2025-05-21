@@ -201,14 +201,15 @@ const DuelosTab: React.FC<DuelosTabProps> = ({ duelos = [] }) => {
 
   return (
     <div>
-      <div className="mb-4">
+      {/* Boton de prueba */}
+      {/* <div className="mb-4">
         <button
           onClick={handleTestNotification}
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
         >
           Probar Notificación de Duelo
         </button>
-      </div>
+      </div> */}
 
       {showNotification && (
         <DuelReceivedNotification
