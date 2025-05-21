@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import DuelCard from './DuelCard';
 import DuelStatusFilter from './DuelStatusFilter';
 import CreateDuelModal from './CreateDuelModal';
+import DuelReceivedNotification from './DuelReceivedNotification';
 
 interface Duelo {
   id: number;
@@ -25,6 +26,26 @@ interface DuelosTabProps {
 }
 
 const DuelosTab: React.FC<DuelosTabProps> = ({ duelos = [] }) => {
+  const [showNotification, setShowNotification] = useState(false);
+
+  const handleTestNotification = () => {
+    setShowNotification(true);
+  };
+
+  const handleAcceptDuel = () => {
+    console.log('Duelo aceptado');
+    // Aquí iría la lógica para aceptar el duelo
+  };
+
+  const handleRejectDuel = () => {
+    console.log('Duelo rechazado');
+    // Aquí iría la lógica para rechazar el duelo
+  };
+
+  const handleCloseNotification = () => {
+    setShowNotification(false);
+  };
+
   const [showCreateDuel, setShowCreateDuel] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -179,6 +200,30 @@ const DuelosTab: React.FC<DuelosTabProps> = ({ duelos = [] }) => {
 
   return (
     <div>
+      <div className="mb-4">
+        <button
+          onClick={handleTestNotification}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+        >
+          Probar Notificación de Duelo
+        </button>
+      </div>
+
+      {showNotification && (
+        <DuelReceivedNotification
+          challenger={{
+            name: "María García",
+            avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+            level: 15
+          }}
+          topic="Estructuras de Datos"
+          onAccept={handleAcceptDuel}
+          onReject={handleRejectDuel}
+          onClose={handleCloseNotification}
+          autoCloseTime={30}
+        />
+      )}
+
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-800">Duelos académicos</h2>
         <button 
