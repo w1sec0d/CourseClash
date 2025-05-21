@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react';
 import CourseNavbar from './components/CourseNavbar';
 import Sidebar from './components/Sidebar';
 import SidebarOverlay from './components/SidebarOverlay';
-import Post from './components/Post';
-import CreatePostForm from './components/CreatePostForm';
-import ImportantFilesSection from './components/ImportantFiles';
+import CourseHeader from './components/CourseHeader';
+import { AnunciosTab, MaterialesTab, TareasTab, DuelosTab, RankingTab, EstadisticasTab, LogrosTab } from './components/tabs';
 
 export default function Curso() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -132,6 +131,9 @@ export default function Curso() {
     },
   ]);
 
+  type TabId = 'Anuncios' | 'Materiales' | 'Tareas' | 'Duelos' | 'Ranking' | 'Estadísticas' | 'Logros';
+  const [activeTab, setActiveTab] = useState<TabId>('Anuncios');
+
   return (
     <div>
       <CourseNavbar toggleSidebar={toggleSidebar} />
@@ -141,48 +143,45 @@ export default function Curso() {
         onClose={() => setIsSidebarOpen(false)}
       />
       <section className='pt-16 lg:pl-64'>
-        <div className='mx-auto md:p-6 container p-4'>
+        
+
+
+        <div className='mx-auto md:p-6 container p-4 relative'>
           <div className='mb-6'>
-            <div className='justify-between items-center mb-4 flex'>
-              <h1 className='text-2xl font-bold text-emerald-800'>
-                Matemáticas Avanzadas
-              </h1>
-              <div className='items-center flex space-x-2'>
-                <span className='text-sm text-gray-500'>
-                  Ranking del curso:
-                </span>
-                <div className='items-center bg-amber-100 text-amber-800 px-2 py-1 flex rounded'>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    className='h-4 w-4 mr-1'
-                    fill='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path d='M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z' />
-                  </svg>
-                  <span className='font-medium'>3º Lugar</span>
-                </div>
-              </div>
-            </div>
-            <ImportantFilesSection files={importantFiles} />
-            <CreatePostForm />
-            <div className='space-y-6'>
-              {posts.map((post) => (
-                <Post
-                  key={post.id}
-                  author={post.author.name}
-                  authorRole={post.author.role}
-                  timeAgo={post.timeAgo}
-                  content={post.content}
-                  likes={post.likes}
-                  comments={post.comments}
-                  badge={
-                    post.author.role === 'Docente'
-                      ? { text: 'Docente', color: 'emerald' }
-                      : undefined
-                  }
-                />
-              ))}
+            <CourseHeader
+              title="Matemáticas Avanzadas"
+              bannerImage="https://placehold.co/1200x300/gray/white?text=Matem%C3%A1ticas+Avanzadas"
+              ranking="3º Lugar"
+              progress={65}
+              semester="2023-1"
+              shields={8}
+              totalShields={12}
+              coins={500}
+              power={3}
+              activeTab={activeTab}
+              onTabChange={(tabId) => setActiveTab(tabId as TabId)}
+              tabs={[
+                { id: 'Anuncios', label: 'Anuncios' },
+                { id: 'Materiales', label: 'Materiales' },
+                { id: 'Tareas', label: 'Tareas' },
+                { id: 'Duelos', label: 'Duelos' },
+                { id: 'Ranking', label: 'Ranking' },
+                { id: 'Estadísticas', label: 'Estadísticas' },
+                { id: 'Logros', label: 'Logros' }
+              ]}
+              tabColor="indigo"
+              textColor="gray-50"
+            />
+            
+            {/* Contenido dinámico según la pestaña seleccionada */}
+            <div className="mt-6">
+              {activeTab === 'Anuncios' && <AnunciosTab posts={posts} />}
+              {activeTab === 'Materiales' && <MaterialesTab materials={[]} />}
+              {activeTab === 'Tareas' && <TareasTab tareas={[]} />}
+              {activeTab === 'Duelos' && <DuelosTab duelos={[]} />}
+              {activeTab === 'Ranking' && <RankingTab usuarios={[]} />}
+              {activeTab === 'Estadísticas' && <EstadisticasTab />}
+              {activeTab === 'Logros' && <LogrosTab />}
             </div>
           </div>
         </div>

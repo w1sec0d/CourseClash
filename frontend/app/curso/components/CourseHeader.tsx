@@ -1,30 +1,101 @@
-'use client';
-
 import React from 'react';
+import TabNavigation from '@/components/TabNavigation';
+import CourseStats from './CourseStats';
+import CourseMetrics from './CourseMetrics';
+
+type TabId = string;
 
 interface CourseHeaderProps {
   title: string;
-  ranking?: string;
+  bannerImage: string;
+  ranking: string;
+  progress: number;
+  semester: string;
+  shields: number;
+  totalShields: number;
+  coins: number;
+  power: number;
+  activeTab: string;
+  onTabChange: (tabId: string) => void;
+  tabs: Array<{
+    id: string;
+    label: string;
+  }>;
+  tabColor?: string;
+  textColor?: string;
 }
 
-const CourseHeader: React.FC<CourseHeaderProps> = ({ title, ranking = "3º Lugar" }) => {
+  /**
+   * Renders the header of a course page, including the course title, banner, ranking, progress, semester, and metrics.
+   * Also includes a tab navigation for the course content.
+   * @param title The title of the course.
+   * @param bannerImage The URL of the course banner image.
+   * @param ranking The ranking of the course.
+   * @param progress The progress of the course.
+   * @param semester The semester of the course.
+   * @param shields The number of shields earned in the course.
+   * @param totalShields The total number of shields available in the course.
+   * @param coins The number of coins earned in the course.
+   * @param power The power level of the course.
+   * @param activeTab The ID of the currently active tab.
+   * @param onTabChange A function to call when the active tab changes.
+   * @param tabs The list of tabs to render.
+   * @param tabColor The color of the tabs. Defaults to 'indigo'.
+   * @param textColor The color of the text in the tabs. Defaults to 'gray-50'.
+   * @returns A JSX element representing the course header.
+   */
+const CourseHeader: React.FC<CourseHeaderProps> = ({
+  title,
+  bannerImage,
+  ranking,
+  progress,
+  semester,
+  shields,
+  totalShields,
+  coins,
+  power,
+  activeTab,
+  onTabChange,
+  tabs,
+  tabColor = 'indigo',
+  textColor = 'gray-50'
+}) => {
   return (
-    <div className="justify-between items-center mb-4 flex">
-      <p className="text-2xl font-bold text-emerald-800">{title}</p>
-      <div className="items-center flex space-x-2">
-        <span className="text-sm text-gray-500">Ranking del curso:</span>
-        <div className="items-center bg-amber-100 text-amber-800 px-2 py-1 flex rounded">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 mr-1"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"></path>
-          </svg>
-          <span className="font-medium">{ranking}</span>
+    <div>
+      <div className="bg-green-500 rounded-t-lg mb-6 overflow-hidden shadow-lg">
+        <div className="h-32 sm:h-40 bg-gradient-to-r from-blue-600 to-purple-600 relative">
+          <img 
+            alt="Banner del curso" 
+            src={bannerImage} 
+            className="object-cover opacity-60 w-full h-full"
+          />
+          <div className="absolute inset-0 flex items-end m-3">
+            <p className="text-2xl sm:text-4xl font-bold text-white drop-shadow-lg">{title}</p>
+          </div>
+        </div>
+        <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-3 sm:p-5">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-4">
+            <CourseStats ranking={ranking} progress={progress} semester={semester} />
+            <CourseMetrics 
+              shields={shields} 
+              totalShields={totalShields} 
+              coins={coins} 
+              power={power} 
+            />
+          </div>
         </div>
       </div>
+      <div className="mt-4">
+            <div>
+              <TabNavigation<TabId> 
+                tabs={tabs as Array<{id: TabId, label: string}>}
+                activeTab={activeTab as TabId}
+                onTabChange={onTabChange as (tabId: TabId) => void}
+                tabColor={tabColor}
+                text={textColor}
+              />
+            </div>
+          </div>
     </div>
   );
 };

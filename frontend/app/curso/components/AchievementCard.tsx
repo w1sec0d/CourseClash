@@ -16,7 +16,7 @@ const AchievementCard: React.FC<AchievementCardProps> = ({
   color = 'blue'
 }) => {
   return (
-    <div className={`bg-${color}-50 rounded-lg items-center mb-4 p-4 border border-${color}-200 flex`}>
+    <div className={`bg-${color}-50 rounded-lg items-center mb-4 p-4 border border-${color}-200 flex z-50`}>
       <div className={`bg-${color}-500 text-white rounded-full mr-4 flex-shrink-0 p-3`}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
