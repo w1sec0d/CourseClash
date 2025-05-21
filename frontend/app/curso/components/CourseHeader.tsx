@@ -10,7 +10,7 @@ interface CourseHeaderProps {
   bannerImage: string;
   ranking: string;
   progress: number;
-  level: string;
+  semester: string;
   shields: number;
   totalShields: number;
   coins: number;
@@ -30,7 +30,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
   bannerImage,
   ranking,
   progress,
-  level,
+  semester,
   shields,
   totalShields,
   coins,
@@ -56,7 +56,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
         </div>
         <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-3 sm:p-5">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-4">
-            <CourseStats ranking={ranking} progress={progress} level={level} />
+            <CourseStats ranking={ranking} progress={progress} semester={semester} />
             <CourseMetrics 
               shields={shields} 
               totalShields={totalShields} 

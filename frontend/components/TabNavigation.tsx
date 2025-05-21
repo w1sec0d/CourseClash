@@ -17,7 +17,7 @@ const TabNavigation = <TabId extends string>({
   tabs,
   activeTab,
   onTabChange,
-  tabColor = "orange",
+  tabColor = "indigo",
   text = "gray-500"
 }: TabNavigationProps<TabId>) => {
   return (
@@ -29,7 +29,7 @@ const TabNavigation = <TabId extends string>({
             onClick={() => onTabChange(tab.id)}
             className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === tab.id
-                ? `border-${tabColor}-300 text-${tabColor}-400`
+                ? `border-${tabColor}-500 text-${tabColor}-500`
                 : `border-transparent text-${text} hover:text-${text}`
             }`}
           >

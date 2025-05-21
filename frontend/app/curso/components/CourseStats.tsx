@@ -3,10 +3,10 @@ import React from 'react';
 interface CourseStatsProps {
   ranking: string;
   progress: number;
-  level: string;
+  semester: string;
 }
 
-const CourseStats: React.FC<CourseStatsProps> = ({ ranking, progress, level }) => {
+const CourseStats: React.FC<CourseStatsProps> = ({ ranking, progress, semester }) => {
   return (
     <div className="flex flex-wrap gap-5">
       <div className="bg-emerald-700 rounded-lg p-3 shadow-lg">
@@ -22,18 +22,18 @@ const CourseStats: React.FC<CourseStatsProps> = ({ ranking, progress, level }) =
         <div className="text-slate-100 text-sm mb-1">Progreso</div>
         <div className="items-center flex">
           <div className="w-32 bg-gray-600 rounded-full h-2.5 mr-2">
-            <div style={{ width: `${progress}%` }} className="bg-yellow-600 h-2.5 rounded-full"></div>
+            <div style={{ width: `${progress}%` }} className="bg-indigo-400 h-2.5 rounded-full"></div>
           </div>
           <span className="text-xl font-bold text-white">{progress}%</span>
         </div>
       </div>
       <div className="bg-emerald-700 rounded-lg p-3 shadow-lg">
-        <div className="text-slate-100 text-sm mb-1">Nivel</div>
+        <div className="text-slate-100 text-sm mb-1">Semestre</div>
         <div className="items-center flex">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-300 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <span className="text-xl font-bold text-white">{level}</span>
+          <span className="text-xl font-bold text-white">{semester}</span>
         </div>
       </div>
     </div>

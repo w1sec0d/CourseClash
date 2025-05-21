@@ -4,20 +4,20 @@ import React from 'react';
 
 interface LogrosFilterProps {
   activeTab: 'mis-logros' | 'logros-curso';
-  setActiveTab: (tab: 'mis-logros' | 'logros-curso') => void;
+  onTabChange: (tab: 'mis-logros' | 'logros-curso') => void;
   searchTerm: string;
-  setSearchTerm: (term: string) => void;
+  onSearchChange: (term: string) => void;
   compareWith: string;
-  setCompareWith: (option: string) => void;
+  onCompareChange: (user: string) => void;
 }
 
 const LogrosFilter: React.FC<LogrosFilterProps> = ({
   activeTab,
-  setActiveTab,
+  onTabChange,
   searchTerm,
-  setSearchTerm,
+  onSearchChange,
   compareWith,
-  setCompareWith
+  onCompareChange
 }) => {
   return (
     <div className="mb-6">
@@ -27,7 +27,7 @@ const LogrosFilter: React.FC<LogrosFilterProps> = ({
             className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
               activeTab === 'mis-logros' ? 'bg-emerald-700 text-white' : 'text-white hover:bg-emerald-700/80'
             }`}
-            onClick={() => setActiveTab('mis-logros')}
+            onClick={() => onTabChange('mis-logros')}
           >
             MIS LOGROS
           </button>
@@ -35,7 +35,7 @@ const LogrosFilter: React.FC<LogrosFilterProps> = ({
             className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
               activeTab === 'logros-curso' ? 'bg-emerald-700 text-white' : 'text-white hover:bg-emerald-700/80'
             }`}
-            onClick={() => setActiveTab('logros-curso')}
+            onClick={() => onTabChange('logros-curso')}
           >
             LOGROS DEL CURSO
           </button>
@@ -55,7 +55,7 @@ const LogrosFilter: React.FC<LogrosFilterProps> = ({
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
               placeholder="Buscar logros"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => onSearchChange(e.target.value)}
             />
           </div>
         </div>
@@ -64,7 +64,7 @@ const LogrosFilter: React.FC<LogrosFilterProps> = ({
           <select
             className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
             value={compareWith}
-            onChange={(e) => setCompareWith(e.target.value)}
+            onChange={(e) => onCompareChange(e.target.value)}
           >
             <option value="" disabled>Comparar con...</option>
             <option value="compañeros">Compañeros de curso</option>

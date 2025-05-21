@@ -126,7 +126,7 @@ export default function Curso() {
               bannerImage="https://placehold.co/1200x300/gray/white?text=Matem%C3%A1ticas+Avanzadas"
               ranking="3º Lugar"
               progress={65}
-              level="Intermedio"
+              semester="2023-1"
               shields={8}
               totalShields={12}
               coins={500}
@@ -142,7 +142,7 @@ export default function Curso() {
                 { id: 'Estadísticas', label: 'Estadísticas' },
                 { id: 'Logros', label: 'Logros' }
               ]}
-              tabColor="yellow"
+              tabColor="indigo"
               textColor="gray-50"
             />
             
