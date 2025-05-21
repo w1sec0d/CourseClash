@@ -283,6 +283,16 @@ class Mutation:
         """
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
+                print(
+                    "🔑 Register request:",
+                    {
+                        "username": username,
+                        "email": email,
+                        "password": password,
+                        "full_name": fullName,
+                        "role": role.value if role else "STUDENT",
+                    },
+                )
                 response = await client.post(
                     f"{AUTH_SERVICE_URL}/auth/register",
                     json={
@@ -312,9 +322,9 @@ class Mutation:
 
                 return AuthSuccess(
                     user=User(**user_data),
-                    token=auth_data.get("access_token", ""),
-                    refreshToken=auth_data.get("refresh_token", ""),
-                    expiresAt=auth_data.get("expires_at", ""),
+                    token=auth_data.get("token", ""),
+                    refreshToken=auth_data.get("token_refresh", ""),
+                    expiresAt=auth_data.get("exp", ""),
                 )
         except Exception as e:
             return AuthError(message=str(e), code="SERVICE_ERROR")

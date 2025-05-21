@@ -539,6 +539,7 @@ def update_password(
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     try:
+        logger.info("🔑 Register request:")
         # Verificar si el correo ya está registrado
         if USE_MOCK_DATA:
             # Crear usuario en datos mock
@@ -557,16 +558,29 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
                     detail=result.get("error", "Error al registrar el usuario"),
                 )
 
+            # Generate token for mock user
+            payload = {
+                "id": result["user"]["id"],
+                "email": user.email,
+                "is_superuser": result["user"]["is_superuser"],
+            }
+
+            token, token_refresh, exp = encode_token(payload)
+
             return {
                 "message": "User created successfully",
                 "user": {
                     "username": user.username,
                     "email": user.email,
-                    "full_name": user.full_name,
-                    "is_active": user.is_active,
-                    "is_superuser": user.is_superuser,
-                    "id": result.get("user_id", "1"),  # ID simulado
+                    "fullName": user.full_name,
+                    "avatar": None,
+                    "role": "ADMIN" if result["user"]["is_superuser"] else "STUDENT",
+                    "createdAt": result["user"]["created_at"],
+                    "updatedAt": None,
                 },
+                "token": token,  # Add token
+                "token_refresh": token_refresh,  # Add refresh token
+                "exp": exp,  # Add expiration
             }
 
         # Si no estamos en modo mock, usar la base de datos real
@@ -594,20 +608,6 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
                 """
         )
 
-        logger.info("Executing query: %s", query)
-        logger.info("user", user)
-        logger.info(
-            "Parameters: %s",
-            {
-                "username": user.username,
-                "email": user.email,
-                "password_hash": password_hash,
-                "full_name": user.full_name,
-                "is_active": 1 if user.is_active else 0,
-                "is_superuser": 1 if user.is_superuser else 0,
-            },
-        )
-
         db.execute(
             query,
             {
@@ -627,19 +627,30 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         )
         result = db.execute(get_id_query, {"email": user.email}).fetchone()
 
+        # Generate token for the new user
+        payload = {
+            "id": result[0],
+            "email": user.email,
+            "is_superuser": bool(result[3]),
+        }
+
+        token, token_refresh, exp = encode_token(payload)
+
         return {
             "message": "User created successfully",
             "user": {
                 "id": str(result[0]) if result else None,
                 "username": user.username,
                 "email": user.email,
-                "full_name": user.full_name,
-                "is_active": bool(result[2]) if result else True,  # Convert to boolean
-                "is_superuser": (
-                    bool(result[3]) if result else False
-                ),  # Convert to boolean
-                "created_at": str(result[1]) if result and len(result) > 1 else None,
+                "fullName": user.full_name,
+                "avatar": None,
+                "role": "ADMIN" if bool(result[3]) else "STUDENT",
+                "createdAt": str(result[1]) if result and len(result) > 1 else None,
+                "updatedAt": None,
             },
+            "token": token,  # Add token
+            "token_refresh": token_refresh,  # Add refresh token
+            "exp": exp,  # Add expiration
         }
 
     except HTTPException as e:

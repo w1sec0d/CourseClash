@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema } from '@/lib/form-schemas';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
-// import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 interface RegisterFormValues {
   firstName: string;
@@ -40,7 +40,7 @@ export default function Register() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const { register: registerUser } = useAuth();
-  // const router = useRouter();
+  const router = useRouter();
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
@@ -64,7 +64,7 @@ export default function Register() {
       console.log('✅ Registration successful:', result);
 
       // Redirect to dashboard after successful registration
-      // router.push('/dashboard');
+      router.push('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
       setError('root', {
