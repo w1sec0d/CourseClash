@@ -6,6 +6,7 @@ import (
 	"courseclash/duel-service/internal/duelsync"
 	duelhandlers "courseclash/duel-service/internal/handlers"
 	"courseclash/duel-service/internal/models"
+	"courseclash/duel-service/internal/repositories"
 
 	"github.com/gin-gonic/gin"
 )
@@ -84,9 +85,36 @@ func wsDuelHandler(c *gin.Context) {
 	duelhandlers.WsHandler(c.Writer, c.Request, duelID, playerID)
 }
 
+// getPlayerHandler obtiene la información de un jugador por su ID.
+// @Summary Obtiene información de un jugador
+// @Description Obtiene los datos de un jugador por su ID, incluyendo ELO y rango
+// @Tags jugadores
+// @Produce json
+// @Param player_id path string true "ID del jugador" example:"player123"
+// @Success 200 {object} models.PlayerData "Información del jugador"
+// @Failure 500 {object} models.ErrorResponse "Error interno del servidor"
+// @Router /api/players/{player_id} [get]
+func getPlayerHandler(c *gin.Context) {
+	playerID := c.Param("player_id")
+	
+	// Crear una instancia del repositorio de jugadores
+	playerRepo := repositories.NewPlayerRepository()
+	
+	// Obtener los datos del jugador
+	playerData, err := playerRepo.GetPlayerByID(playerID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener información del jugador"})
+		return
+	}
+	
+	// Devolver los datos del jugador
+	c.JSON(http.StatusOK, playerData)
+}
+
 // RegisterRoutes configura todas las rutas del servidor Gin.
 func RegisterRoutes(r *gin.Engine) {
 	r.POST("/api/duels/request", requestDuelHandler)
 	r.POST("/api/duels/accept", acceptDuelHandler)
 	r.GET("/ws/duels/:duel_id/:player_id", wsDuelHandler)
+	r.GET("/api/players/:player_id", getPlayerHandler)
 }

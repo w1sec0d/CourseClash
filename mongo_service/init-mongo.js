@@ -29,39 +29,39 @@ db.duel_answers.insertOne({
 });
 
 // Insertar perfiles de usuario de ejemplo con diferentes rangos y ELO
-db.user_profiles.insertMany([
+db.players.insertMany([
   // Jugador novato (Bronce)
   {
     player_id: "user_001",
     elo: 350,
-    rank: "Bronce"
+    rank: "Bronce",
   },
-  
+
   // Jugador intermedio (Plata)
   {
     player_id: "user_002",
     elo: 850,
-    rank: "Plata"
+    rank: "Plata",
   },
-  
+
   // Jugador avanzado (Oro)
   {
     player_id: "user_003",
     elo: 1500,
-    rank: "Oro"
+    rank: "Oro",
   },
-  
+
   // Jugador experto (Diamante)
   {
     player_id: "user_004",
     elo: 2500,
-    rank: "Diamante"
+    rank: "Diamante",
   },
-  
+
   // Jugador élite (Maestro)
   {
     player_id: "user_005",
     elo: 3200,
-    rank: "Maestro"
-  }
+    rank: "Maestro",
+  },
 ]);
