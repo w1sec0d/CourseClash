@@ -383,7 +383,7 @@ export default function Login() {
             </button>
           </div>
         </form>
-        <div className='mt-8'>
+        {/* <div className='mt-8'>
           <div className='relative'>
             <div className='items-center absolute inset-0 flex'>
               <div className='w-full border-t border-gray-300'></div>
@@ -398,7 +398,7 @@ export default function Login() {
             <SocialIcon icon='google' showText={false} />
             <SocialIcon icon='facebook' showText={false} />
           </div>
-        </div>
+        </div> */}
         <p className='mt-8 text-center text-sm text-gray-600'>
           ¿No tienes una cuenta?{' '}
           <Link

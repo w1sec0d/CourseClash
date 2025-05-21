@@ -5,6 +5,8 @@ import NavigationBar from '../components/NavigationBar';
 import Footer from '../components/Footer';
 import clsx from 'clsx';
 import { AuthProvider } from '@/lib/auth-context';
+import { Suspense } from 'react';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -24,7 +26,9 @@ export default function RootLayout({
       <body className={clsx(inter.className, 'bg-white')}>
         <AuthProvider>
           <NavigationBar />
-          <main>{children}</main>
+          <Suspense fallback={<LoadingSpinner />}>
+            <main>{children}</main>
+          </Suspense>
           <Footer />
         </AuthProvider>
       </body>

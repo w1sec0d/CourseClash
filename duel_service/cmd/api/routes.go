@@ -37,7 +37,8 @@ func requestDuelHandler(c *gin.Context) {
 	}
 	duelsync.DuelRequests[duelID] = make(chan bool)
 	duelsync.Mu.Unlock()
-	c.JSON(http.StatusOK, gin.H{"duel_id": duelID})
+	message := "Duelo solicitado exitosamente"
+	c.JSON(http.StatusOK, gin.H{"duel_id": duelID, "message": message})
 }
 
 // acceptDuelHandler maneja la aceptación de un duelo.
@@ -54,7 +55,7 @@ func requestDuelHandler(c *gin.Context) {
 func acceptDuelHandler(c *gin.Context) {
 	var accept models.AcceptDuelRequest
 	if err := c.ShouldBindJSON(&accept); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Peticion invalida"})
 		return
 	}
 	duelsync.Mu.Lock()
@@ -62,9 +63,12 @@ func acceptDuelHandler(c *gin.Context) {
 	duelsync.Mu.Unlock()
 	if exists {
 		channel <- true
-		c.JSON(http.StatusOK, gin.H{"message": "Duel accepted"})
+		c.JSON(http.StatusOK, gin.H{
+			"duel_id": accept.DuelID,
+			"message": "Duelo aceptado exitosamente",
+		})
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Duel not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Duelo no encontrado"})
 	}
 }
 

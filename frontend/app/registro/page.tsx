@@ -193,7 +193,7 @@ export default function Register() {
           <p className='text-gray-600 mb-8'>
             ¡Únete a Course Clash y comienza tu aventura académica!
           </p>
-          <div className='mb-6 space-y-3'>
+          {/* <div className='mb-6 space-y-3'>
             <SocialIcon icon='google' />
             <SocialIcon icon='facebook' />
           </div>
@@ -206,7 +206,7 @@ export default function Register() {
                 O regístrate con email
               </span>
             </div>
-          </div>
+          </div> */}
           {errors.root && (
             <div className='p-4 text-white bg-red-500 rounded-lg mb-6'>
               {errors.root.message as string}
