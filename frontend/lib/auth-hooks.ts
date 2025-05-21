@@ -12,7 +12,7 @@ export type User = {
   id: string;
   username: string;
   email: string;
-  name?: string;
+  fullName?: string;
   avatar?: string;
   role: 'STUDENT' | 'TEACHER' | 'ADMIN';
   createdAt: string;
@@ -86,31 +86,31 @@ export function useLogin() {
 
     try {
       const loginMutation = `
-      mutation Login($email: String!, $password: String!) {
-        login(email: $email, password: $password) {
-          __typename
-          ... on AuthSuccess {
-            user {
-              id
-              username
-              email
-              name
-              avatar
-              role
-              createdAt
-              updatedAt
+        mutation Login($email: String!, $password: String!) {
+          login(email: $email, password: $password) {
+            __typename
+            ... on AuthSuccess {
+              user {
+                id
+                username
+                email
+                name
+                avatar
+                role
+                createdAt
+                updatedAt
+              }
+              token
+              refreshToken
+              expiresAt
             }
-            token
-            refreshToken
-            expiresAt
-          }
-          ... on AuthError {
-            message
-            code
+            ... on AuthError {
+              message
+              code
+            }
           }
         }
-      }
-    `;
+      `;
 
       console.log('📤 Sending login request to API Gateway');
       const data = await fetchGraphQL({
@@ -167,7 +167,7 @@ export function useRegister() {
       username: string;
       email: string;
       password: string;
-      name?: string;
+      fullName?: string;
       role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
     }) => {
       setLoading(true);
@@ -182,43 +182,43 @@ export function useRegister() {
 
       try {
         const registerMutation = `
-        mutation Register(
-          $username: String!
-          $email: String!
-          $password: String!
-          $name: String
-          $role: UserRole
-        ) {
-          register(
-            username: $username
-            email: $email
-            password: $password
-            name: $name
-            role: $role
+          mutation Register(
+            $username: String!
+            $email: String!
+            $password: String!
+            $fullName: String
+            $role: UserRole
           ) {
-            __typename
-            ... on AuthSuccess {
-              user {
-                id
-                username
-                email
-                name
-                avatar
-                role
-                createdAt
-                updatedAt
+            register(
+              username: $username
+              email: $email
+              password: $password
+              fullName: $fullName
+              role: $role
+            ) {
+              __typename
+              ... on AuthSuccess {
+                user {
+                  id
+                  username
+                  email
+                  fullName
+                  avatar
+                  role
+                  createdAt
+                  updatedAt
+                }
+                token
+                refreshToken
+                expiresAt
               }
-              token
-              refreshToken
-              expiresAt
-            }
-            ... on AuthError {
-              message
-              code
+              ... on AuthError {
+                message
+                code
+              }
             }
           }
-        }
-      `;
+        `;
 
         console.log('📤 Sending register request to API Gateway');
         const data = await fetchGraphQL({
@@ -273,10 +273,10 @@ export function useLogout() {
 
     try {
       const logoutMutation = `
-        mutation Logout {
-          logout
-        }
-      `;
+          mutation Logout {
+            logout
+          }
+        `;
 
       console.log('📤 Sending logout request to API Gateway');
       // Call the API with authentication headers
@@ -321,19 +321,19 @@ export function useCurrentUser() {
 
     try {
       const meQuery = `
-        query Me {
-          me {
-            id
-            username
-            email
-            name
-            avatar
-            role
-            createdAt
-            updatedAt
+          query Me {
+            me {
+              id
+              username
+              email
+              name
+              avatar
+              role
+              createdAt
+              updatedAt
+            }
           }
-        }
-      `;
+        `;
 
       console.log('📤 Sending user session request to API Gateway');
       // Call the API with authentication headers
@@ -394,21 +394,21 @@ export function useForgotPassword() {
 
     try {
       const forgotPasswordMutation = `
-        mutation ForgotPassword($email: String!) {
-          forgotPassword(email: $email) {
-            __typename
-            ... on ForgotPasswordSuccess {
-              message
-              code
-              token
-            }
-            ... on ForgotPasswordError {
-              message
-              code
+          mutation ForgotPassword($email: String!) {
+            forgotPassword(email: $email) {
+              __typename
+              ... on ForgotPasswordSuccess {
+                message
+                code
+                token
+              }
+              ... on ForgotPasswordError {
+                message
+                code
+              }
             }
           }
-        }
-      `;
+        `;
 
       console.log('📤 Sending password reset request to API Gateway');
       const data = await fetchGraphQL({
@@ -479,19 +479,19 @@ export function useForgotPassword() {
 
       try {
         const updatePasswordMutation = `
-        mutation UpdatePassword($newPassword: String!, $code: String!, $email: String!) {
-          updatePassword(newPassword: $newPassword, code: $code, email: $email) {
-            __typename
-            ... on UpdatePasswordSuccess {
-              message
-            }
-            ... on UpdatePasswordError {
-              message
-              code
+          mutation UpdatePassword($newPassword: String!, $code: String!, $email: String!) {
+            updatePassword(newPassword: $newPassword, code: $code, email: $email) {
+              __typename
+              ... on UpdatePasswordSuccess {
+                message
+              }
+              ... on UpdatePasswordError {
+                message
+                code
+              }
             }
           }
-        }
-      `;
+        `;
 
         console.log('📤 Sending password update request to API Gateway');
         const data = await fetchGraphQL({

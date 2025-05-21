@@ -21,14 +21,8 @@ import os
 import httpx
 from enum import Enum, auto
 
-# Importar funciones de la base de datos simulada para autenticación
-from app.utils.mock_db import (
-    get_user_by_email,
-    get_user_by_id,
-    generate_mock_token,
-    add_user,
-    verify_mock_token,
-)
+# Environment variables
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth_user_service:8000")
 
 
 # Tipos GraphQL para el módulo de autenticación
@@ -44,7 +38,7 @@ class User:
     id: str
     username: str
     email: str
-    name: Optional[str] = None
+    fullName: Optional[str] = None
     avatar: Optional[str] = None
     role: UserRole
     createdAt: str
@@ -105,9 +99,6 @@ UpdatePasswordResult = strawberry.union(
 )
 
 
-# Eliminamos las clases de entrada ya que usaremos argumentos directos
-
-
 # Consultas (Queries)
 @strawberry.type
 class Query:
@@ -119,32 +110,24 @@ class Query:
         Returns:
             Optional[User]: Información del usuario o None si no está autenticado
         """
-        auth_header = info.context["request"].headers.get("authorization")
+        request = info.context["request"]
+        auth_header = request.headers.get("authorization")
 
         if not auth_header:
             return None
 
         try:
-            # Extraer el token del encabezado de autorización
-            scheme, token = auth_header.split()
-            if scheme.lower() != "bearer":
-                return None
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{AUTH_SERVICE_URL}/auth/me",
+                    headers={"Authorization": auth_header},
+                )
 
-            # Verificar el token
-            user_data = verify_mock_token(token)
-            if not user_data:
-                return None
+                if response.status_code != 200:
+                    return None
 
-            return User(
-                id=user_data["id"],
-                username=user_data["username"],
-                email=user_data["email"],
-                name=user_data.get("name"),
-                avatar=user_data.get("avatar"),
-                role=user_data["role"],
-                createdAt=user_data["createdAt"],
-                updatedAt=user_data.get("updatedAt"),
-            )
+                user_data = response.json()
+                return User(**user_data)
         except Exception:
             return None
 
@@ -168,7 +151,7 @@ class Query:
             id=user_data["id"],
             username=user_data["username"],
             email=user_data["email"],
-            name=user_data.get("name"),
+            fullName=user_data.get("fullName"),
             avatar=user_data.get("avatar"),
             role=user_data["role"],
             createdAt=user_data["createdAt"],
@@ -199,72 +182,33 @@ class Mutation:
             - SERVER_ERROR: Error del servidor al procesar la solicitud
         """
         try:
-            # Validar que se hayan proporcionado credenciales
-            if not email or not password:
-                return AuthError(
-                    message="Correo y contraseña son requeridos", code="INVALID_INPUT"
-                )
-
-            # Preparar los datos para el microservicio de autenticación
-            auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000")
-            login_url = f"{auth_service_url}/auth/login"
-            print("Login URL: ", login_url)
-
-            # Utilizar el cliente HTTP para realizar la petición al microservicio
             async with httpx.AsyncClient(timeout=10.0) as client:
-                # Realizar la petición al microservicio de autenticación
-                # Nota: el microservicio espera 'username' como el correo y 'password'
                 response = await client.post(
-                    login_url, json={"username": email, "password": password}
+                    f"{AUTH_SERVICE_URL}/auth/login",
+                    json={"username": email, "password": password},
                 )
-                print("Response: ", response)
 
-                # Log para depuración
-                print(f"Login request to {login_url} - Status: {response.status_code}")
-
-                # Si hay un error HTTP, devolver un error de autenticación
                 if response.status_code != 200:
                     error_detail = "Credenciales inválidas"
                     try:
                         error_data = response.json()
                         if "detail" in error_data:
                             error_detail = error_data["detail"]
-                    except Exception as json_error:
-                        print(f"Error parsing response: {str(json_error)}")
-
+                    except Exception:
+                        pass
                     return AuthError(message=error_detail, code="AUTHENTICATION_ERROR")
 
-                # Procesar la respuesta exitosa
                 auth_data = response.json()
-
-                # Mapear la respuesta del microservicio al formato GraphQL
                 user_data = auth_data.get("user", {})
 
                 return AuthSuccess(
-                    user=User(
-                        id=str(user_data.get("id", "")),
-                        username=user_data.get("username", ""),
-                        email=user_data.get("email", ""),
-                        name=user_data.get("full_name"),
-                        # El microservicio no devuelve avatar, usamos None
-                        avatar=None,
-                        # Convertir is_superuser a ADMIN o mantener STUDENT como default
-                        role="ADMIN" if user_data.get("is_superuser") else "STUDENT",
-                        createdAt=user_data.get("created_at", ""),
-                        # El microservicio no devuelve updated_at, usamos None
-                        updatedAt=None,
-                    ),
-                    token=auth_data.get("token", ""),
-                    refreshToken=auth_data.get("token_refresh", ""),
-                    expiresAt=auth_data.get("exp", ""),
+                    user=User(**user_data),
+                    token=auth_data.get("access_token", ""),
+                    refreshToken=auth_data.get("refresh_token", ""),
+                    expiresAt=auth_data.get("expires_at", ""),
                 )
-
         except Exception as e:
-            # En producción, se debería registrar este error en un sistema de monitoreo
-            print(f"Login error: {str(e)}")
-            return AuthError(
-                message="Error inesperado al iniciar sesión", code="SERVER_ERROR"
-            )
+            return AuthError(message=str(e), code="SERVICE_ERROR")
 
     @strawberry.mutation
     async def register(
@@ -272,60 +216,62 @@ class Mutation:
         username: str,
         email: str,
         password: str,
-        name: Optional[str] = None,
+        fullName: Optional[str] = None,
         role: Optional[UserRole] = None,
     ) -> AuthResult:
         """
         Registra un nuevo usuario en el sistema.
 
         Args:
-            input (RegisterInput): Datos del nuevo usuario
+            username (str): Nombre de usuario
+            email (str): Correo electrónico
+            password (str): Contraseña
+            fullName (Optional[str]): Nombre completo del usuario
+            role (Optional[UserRole]): Rol del usuario
 
         Returns:
-            AuthSuccess: Token de autenticación e información del usuario
-
-        Raises:
-            Exception: Si el usuario ya existe
+            AuthResult: Resultado de la operación de registro
         """
-        # Crear nuevo usuario
-        # En producción, la contraseña debería estar hasheada
-        hashed_password = f"hashed_{password}"  # Esto es un ejemplo, usar bcrypt o similar en producción
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    f"{AUTH_SERVICE_URL}/auth/register",
+                    json={
+                        "username": username,
+                        "email": email,
+                        "password": password,
+                        "full_name": fullName,
+                        "role": role.value if role else "STUDENT",
+                    },
+                )
 
-        new_user = add_user(
-            username=username,
-            email=email,
-            password=hashed_password,
-            name=name,
-            role=role or "STUDENT",
-        )
+                if response.status_code != 201:
+                    error_detail = "Error al registrar usuario"
+                    try:
+                        error_data = response.json()
+                        if "detail" in error_data:
+                            error_detail = error_data["detail"]
+                    except Exception:
+                        pass
+                    return AuthError(message=error_detail, code="REGISTRATION_ERROR")
 
-        if not new_user:
-            return AuthError(
-                message="El usuario ya existe con este correo o nombre de usuario",
-                code="USER_ALREADY_EXISTS",
-            )
+                auth_data = response.json()
+                user_data = auth_data.get("user", {})
 
-        # Generar token de autenticación
-        token_data = generate_mock_token(new_user["id"])
+                if "full_name" in user_data:
+                    user_data["fullName"] = user_data.pop("full_name")
 
-        return AuthSuccess(
-            user=User(
-                id=new_user["id"],
-                username=new_user["username"],
-                email=new_user["email"],
-                name=new_user.get("name"),
-                avatar=new_user.get("avatar"),
-                role=new_user["role"],
-                createdAt=new_user["createdAt"],
-                updatedAt=new_user.get("updatedAt"),
-            ),
-            token=token_data["token"],
-            refreshToken=token_data["refreshToken"],
-            expiresAt=token_data["expiresAt"],
-        )
+                return AuthSuccess(
+                    user=User(**user_data),
+                    token=auth_data.get("access_token", ""),
+                    refreshToken=auth_data.get("refresh_token", ""),
+                    expiresAt=auth_data.get("expires_at", ""),
+                )
+        except Exception as e:
+            return AuthError(message=str(e), code="SERVICE_ERROR")
 
     @strawberry.mutation
-    async def refreshToken(self, refreshToken: str) -> AuthSuccess:
+    async def refreshToken(self, refreshToken: str) -> AuthResult:
         """
         Renueva el token de autenticación usando un refresh token.
 
@@ -338,41 +284,37 @@ class Mutation:
         Raises:
             Exception: Si el refresh token es inválido o el usuario no existe
         """
-        if not refreshToken or not refreshToken.startswith("mock-refresh-token-"):
-            raise Exception("Token de refresco inválido")
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    f"{AUTH_SERVICE_URL}/auth/refresh",
+                    json={"refresh_token": refreshToken},
+                )
 
-        # Extraer el ID de usuario del token
-        parts = refreshToken.split("-")
-        if len(parts) < 4:
-            raise Exception("Formato de token de refresco inválido")
+                if response.status_code != 200:
+                    error_detail = "Token de actualización inválido"
+                    try:
+                        error_data = response.json()
+                        if "detail" in error_data:
+                            error_detail = error_data["detail"]
+                    except Exception:
+                        pass
+                    return AuthError(message=error_detail, code="REFRESH_ERROR")
 
-        user_id = parts[3]
-        user_data = get_user_by_id(user_id)
+                auth_data = response.json()
+                user_data = auth_data.get("user", {})
 
-        if not user_data:
-            raise Exception("Usuario no encontrado")
-
-        # Generar un nuevo token de autenticación
-        token_data = generate_mock_token(user_data["id"])
-
-        return AuthSuccess(
-            user=User(
-                id=user_data["id"],
-                username=user_data["username"],
-                email=user_data["email"],
-                name=user_data.get("name"),
-                avatar=user_data.get("avatar"),
-                role=user_data["role"],
-                createdAt=user_data["createdAt"],
-                updatedAt=user_data.get("updatedAt"),
-            ),
-            token=token_data["token"],
-            refreshToken=token_data["refreshToken"],
-            expiresAt=token_data["expiresAt"],
-        )
+                return AuthSuccess(
+                    user=User(**user_data),
+                    token=auth_data.get("access_token", ""),
+                    refreshToken=auth_data.get("refresh_token", ""),
+                    expiresAt=auth_data.get("expires_at", ""),
+                )
+        except Exception as e:
+            return AuthError(message=str(e), code="SERVICE_ERROR")
 
     @strawberry.mutation
-    async def logout(self) -> bool:
+    async def logout(self, info) -> bool:
         """
         Cierra la sesión del usuario actual.
 
@@ -381,8 +323,22 @@ class Mutation:
         Returns:
             bool: Siempre retorna True indicando éxito
         """
-        # En una implementación real, aquí se invalidaría el token
-        return True
+        request = info.context["request"]
+        auth_header = request.headers.get("authorization")
+
+        if not auth_header:
+            return False
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    f"{AUTH_SERVICE_URL}/auth/logout",
+                    headers={"Authorization": auth_header},
+                )
+
+                return response.status_code == 200
+        except Exception:
+            return False
 
     @strawberry.mutation
     async def resetPassword(self, email: str) -> bool:

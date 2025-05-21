@@ -53,7 +53,7 @@ export default function Register() {
         username: data.email.split('@')[0], // Create username from email
         email: data.email,
         password: data.password,
-        name: fullName,
+        fullName: fullName,
         role:
           data.user_type === 'teacher'
             ? ('TEACHER' as const)
@@ -64,7 +64,7 @@ export default function Register() {
       console.log('✅ Registration successful:', result);
 
       // Redirect to dashboard after successful registration
-      router.push('/dashboard');
+      // router.push('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
       setError('root', {

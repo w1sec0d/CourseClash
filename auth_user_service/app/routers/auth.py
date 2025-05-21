@@ -4,6 +4,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 import bcrypt
 from datetime import datetime
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Importación de funciones para codificación y decodificación del token
 from ..core.security import (
@@ -292,34 +297,35 @@ def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
     try:
         db: Session = next(get_db())
         query = text(""" SELECT * FROM users where id = :id""")
-        result = db.execute(query, {'id': user['id']}).fetchone()
-        if not result: 
+        result = db.execute(query, {"id": user["id"]}).fetchone()
+        if not result:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail='User not found'
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
+
+        # Convert tinyint to boolean for is_active and is_superuser
         user = User(
             id=result[0],
             username=result[1],
             email=result[2],
             full_name=result[4],
-            is_active=result[5],
-            is_superuser=result[6],
+            is_active=bool(result[5]),  # Convert tinyint to boolean
+            is_superuser=bool(result[6]),  # Convert tinyint to boolean
             created_at=str(result[7]),
-            avatar_url = result[8],
-            bio = result[9],
-            experience_points = result[10]
+            avatar_url=result[8],
+            bio=result[9],
+            experience_points=result[10],
         )
 
         return user
     except HTTPException as e:
         raise e
-
     except Exception as e:
         raise HTTPException(
-            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f'Error en el servidor {e}'
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error en el servidor {e}",
         )
+
 
 # Ruta para refrescar el token
 # Input: token de refresco
@@ -573,24 +579,42 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         query = text(
             """
                     INSERT INTO users (username, email, hashed_password, full_name, is_active, is_superuser) 
-                    VALUES (:username, :email, :password, :full_name, :is_active, :is_superuser)
-                    RETURNING id, created_at
+                    VALUES (:username, :email, :password_hash, :full_name, :is_active, :is_superuser)
                 """
         )
 
-        result = db.execute(
+        logger.info("Executing query: %s", query)
+        logger.info("user", user)
+        logger.info(
+            "Parameters: %s",
+            {
+                "username": user.username,
+                "email": user.email,
+                "password_hash": password_hash,
+                "full_name": user.full_name,
+                "is_active": 1 if user.is_active else 0,
+                "is_superuser": 1 if user.is_superuser else 0,
+            },
+        )
+
+        db.execute(
             query,
             {
                 "username": user.username,
                 "email": user.email,
-                "password": password_hash,
+                "password_hash": password_hash,
                 "full_name": user.full_name,
-                "is_active": user.is_active,
-                "is_superuser": user.is_superuser,
+                "is_active": 1 if user.is_active else 0,
+                "is_superuser": 1 if user.is_superuser else 0,
             },
-        ).fetchone()
-
+        )
         db.commit()
+
+        # Get the ID of the newly created user
+        get_id_query = text(
+            "SELECT id, created_at, is_active, is_superuser FROM users WHERE email = :email"
+        )
+        result = db.execute(get_id_query, {"email": user.email}).fetchone()
 
         return {
             "message": "User created successfully",
@@ -599,8 +623,10 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
                 "username": user.username,
                 "email": user.email,
                 "full_name": user.full_name,
-                "is_active": user.is_active,
-                "is_superuser": user.is_superuser,
+                "is_active": bool(result[2]) if result else True,  # Convert to boolean
+                "is_superuser": (
+                    bool(result[3]) if result else False
+                ),  # Convert to boolean
                 "created_at": str(result[1]) if result and len(result) > 1 else None,
             },
         }
@@ -609,6 +635,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         raise e
     except Exception as e:
         db.rollback()
+        logger.error("Error creating user: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
