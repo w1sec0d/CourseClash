@@ -1,29 +1,73 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import LogroItem from './LogroItem';
+import LogrosProgressBar from './LogrosProgressBar';
+import LogrosFilter from './LogrosFilter';
+import { logrosData, getLogrosDesbloqueadosCount, getTotalLogros } from '../data/logrosData';
 
 const LogrosTab: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'mis-logros' | 'logros-curso'>('mis-logros');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [compareWith, setCompareWith] = useState('');
+  const [filteredLogros, setFilteredLogros] = useState(logrosData);
+  
+  // Filtrar logros basados en la búsqueda y la pestaña activa
+  useEffect(() => {
+    let filtered = logrosData;
+    
+    // Filtrar por búsqueda
+    if (searchTerm.trim() !== '') {
+      filtered = filtered.filter(logro => 
+        logro.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        logro.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Filtrar por pestaña activa
+    if (activeTab === 'mis-logros') {
+      // Mostrar todos los logros (desbloqueados y no desbloqueados)
+    } else if (activeTab === 'logros-curso') {
+      // En la pestaña de logros del curso, podemos mostrar los logros ordenados por porcentaje
+      filtered = [...filtered].sort((a, b) => b.porcentajeJugadores - a.porcentajeJugadores);
+    }
+    
+    setFilteredLogros(filtered);
+  }, [searchTerm, activeTab]);
+
   return (
-    <div className="p-4">
-      <h2 className="text-lg font-semibold mb-4">Logros</h2>
-      <div className="space-y-4">
-        {/* Aquí irá la implementación de los logros */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-md font-medium mb-2">Logros disponibles</h3>
-          <div className="space-y-3">
-            {/* Ejemplo de tarjeta de logro */}
-            <div className="flex items-center space-x-3 bg-gray-50 p-3 rounded">
-              <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-800">Logro de ejemplo</p>
-                <p className="text-xs text-gray-500">Descripción del logro</p>
-              </div>
+    <div className="p-6 bg-white text-gray-800">
+      <div className="max-w-5xl mx-auto">
+        {/* Barra de progreso */}
+        <LogrosProgressBar 
+          totalLogros={getTotalLogros()} 
+          logrosDesbloqueados={getLogrosDesbloqueadosCount()} 
+        />
+        
+        {/* Filtros y búsqueda */}
+        <LogrosFilter 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          compareWith={compareWith}
+          setCompareWith={setCompareWith}
+        />
+        
+        {/* Lista de logros */}
+        <div className="space-y-1">
+          {filteredLogros.length > 0 ? (
+            filteredLogros.map(logro => (
+              <LogroItem 
+                key={logro.id}
+                {...logro}
+              />
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              <p>No se encontraron logros que coincidan con tu búsqueda.</p>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
