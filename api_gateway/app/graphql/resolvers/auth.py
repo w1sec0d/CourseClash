@@ -123,12 +123,37 @@ class Query:
                     headers={"Authorization": auth_header},
                 )
 
+                print("🔑 Response!!!:", response)
+
                 if response.status_code != 200:
                     return None
 
                 user_data = response.json()
-                return User(**user_data)
-        except Exception:
+
+                # Transform the data to match GraphQL User type
+                graphql_user_data = {
+                    "id": str(user_data.get("id")),
+                    "username": user_data.get("username"),
+                    "email": user_data.get("email"),
+                    "fullName": user_data.get(
+                        "full_name"
+                    ),  # Transform full_name to fullName
+                    "avatar": user_data.get(
+                        "avatar_url"
+                    ),  # Transform avatar_url to avatar
+                    "role": (
+                        "ADMIN" if user_data.get("is_superuser") else "STUDENT"
+                    ),  # Transform is_superuser to role
+                    "createdAt": user_data.get(
+                        "created_at"
+                    ),  # Transform created_at to createdAt
+                    "updatedAt": None,  # Set to None since backend doesn't provide it
+                }
+
+                print("👤 Transformed user data:", graphql_user_data)  # Debug log
+                return User(**graphql_user_data)
+        except Exception as e:
+            print("❌ Error in me query:", str(e))
             return None
 
     @strawberry.field
@@ -227,9 +252,9 @@ class Mutation:
 
                 return AuthSuccess(
                     user=User(**graphql_user_data),
-                    token=auth_data.get("access_token", ""),
-                    refreshToken=auth_data.get("refresh_token", ""),
-                    expiresAt=auth_data.get("expires_at", ""),
+                    token=auth_data.get("token", ""),
+                    refreshToken=auth_data.get("token_refresh", ""),
+                    expiresAt=auth_data.get("exp", ""),
                 )
         except Exception as e:
             return AuthError(message=str(e), code="SERVICE_ERROR")

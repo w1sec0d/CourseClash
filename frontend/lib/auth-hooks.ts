@@ -121,6 +121,7 @@ export function useLogin() {
         query: loginMutation,
         variables: { email, password },
       });
+      console.log('🔑 Login response:', data);
 
       console.log('📥 Received login response:', {
         type: data.login.__typename,
@@ -137,6 +138,7 @@ export function useLogin() {
       }
 
       const authResponse = data.login as AuthResponse;
+      console.log('🔑 Auth token', data.login);
       setAuthToken(authResponse.token);
       console.log('🔑 Auth token stored successfully');
 
@@ -326,6 +328,8 @@ export function useCurrentUser() {
     setError(null);
 
     console.log('👤 Fetching current user session');
+    const headers = getAuthHeaders();
+    console.log('🔑 Headers being sent:', headers);
 
     try {
       const meQuery = `
@@ -344,14 +348,14 @@ export function useCurrentUser() {
         `;
 
       console.log('📤 Sending user session request to API Gateway');
-      // Call the API with authentication headers
       const data = await fetchGraphQL({
         query: meQuery,
-        headers: getAuthHeaders(),
+        headers: headers,
       });
 
+      console.log('📥 Raw response:', data);
       console.log('me data', data);
-      console.log(getAuthHeaders());
+      console.log('Auth headers:', headers);
 
       if (data.me) {
         console.log('📥 User session found:', {
