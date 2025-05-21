@@ -60,8 +60,19 @@ export default function Curso() {
   const importantFiles = [
     {
       icon: (
-        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <svg
+          className='w-5 h-5 text-emerald-600'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            strokeWidth={2}
+            d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+          />
         </svg>
       ),
       title: 'Sílabo del Curso',
@@ -69,8 +80,19 @@ export default function Curso() {
     },
     {
       icon: (
-        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <svg
+          className='w-5 h-5 text-emerald-600'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            strokeWidth={2}
+            d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+          />
         </svg>
       ),
       title: 'Cronograma de Clases',
@@ -88,7 +110,8 @@ export default function Curso() {
         avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
       },
       timeAgo: '2h',
-      content: '¡Hola a todos! Les recuerdo que la tarea 1 debe ser entregada el próximo lunes. No olviden revisar los materiales de estudio en la sección de archivos.',
+      content:
+        '¡Hola a todos! Les recuerdo que la tarea 1 debe ser entregada el próximo lunes. No olviden revisar los materiales de estudio en la sección de archivos.',
       likes: 12,
       comments: 5,
       isLiked: false,
@@ -101,7 +124,8 @@ export default function Curso() {
         avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
       },
       timeAgo: '5h',
-      content: '¿Alguien podría ayudarme con el ejercicio 3 de la guía de trabajo? No entiendo bien cómo plantear la solución.',
+      content:
+        '¿Alguien podría ayudarme con el ejercicio 3 de la guía de trabajo? No entiendo bien cómo plantear la solución.',
       likes: 8,
       comments: 3,
       isLiked: true,
@@ -112,7 +136,10 @@ export default function Curso() {
     <div>
       <CourseNavbar toggleSidebar={toggleSidebar} />
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <SidebarOverlay isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <SidebarOverlay
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
       <section className='pt-16 lg:pl-64'>
         <div className='mx-auto md:p-6 container p-4'>
           <div className='mb-6'>
@@ -149,7 +176,11 @@ export default function Curso() {
                   content={post.content}
                   likes={post.likes}
                   comments={post.comments}
-                  badge={post.author.role === 'Docente' ? { text: 'Docente', color: 'emerald' } : undefined}
+                  badge={
+                    post.author.role === 'Docente'
+                      ? { text: 'Docente', color: 'emerald' }
+                      : undefined
+                  }
                 />
               ))}
             </div>

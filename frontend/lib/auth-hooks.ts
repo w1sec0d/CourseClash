@@ -20,13 +20,17 @@ export type User = {
 };
 
 export class AuthError extends Error {
+  public isServerError: boolean;
+
   constructor(
     message: string,
     public code: AuthErrorCode = 'UNKNOWN_ERROR',
-    public isServerError: boolean = false
+    isServerError?: boolean
   ) {
     super(message);
     this.name = 'AuthError';
+    Object.setPrototypeOf(this, AuthError.prototype);
+    this.isServerError = isServerError ?? false;
   }
 }
 
@@ -94,7 +98,7 @@ export function useLogin() {
                 id
                 username
                 email
-                name
+                fullName  
                 avatar
                 role
                 createdAt
@@ -125,33 +129,36 @@ export function useLogin() {
       });
 
       if (data.login.__typename === 'AuthError') {
-        const error = new AuthError(
+        throw new AuthError(
           data.login.message || 'Error de autenticación',
           data.login.code as AuthErrorCode,
           true
         );
-        throw error;
       }
 
       const authResponse = data.login as AuthResponse;
-
-      // Store the token
       setAuthToken(authResponse.token);
       console.log('🔑 Auth token stored successfully');
 
       setLoading(false);
       return authResponse;
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof AuthError
-          ? err.message
-          : err instanceof Error
-          ? err.message
-          : 'Failed to login';
-      console.error('❌ Login error:', errorMessage);
-      setError(errorMessage);
+      console.error('❌ Login error:', err);
       setLoading(false);
-      throw err;
+
+      if (err instanceof AuthError) {
+        setError(err.message);
+        throw err;
+      }
+
+      // Si el error no es una instancia de AuthError, crear una nueva instancia
+      const error = new AuthError(
+        err instanceof Error ? err.message : 'Error de autenticación',
+        'UNKNOWN_ERROR',
+        true
+      );
+      setError(error.message);
+      throw error;
     }
   }, []);
 
@@ -176,6 +183,7 @@ export function useRegister() {
       console.log('📝 Register attempt:', {
         username: userData.username,
         email: userData.email,
+        fullName: userData.fullName,
         role: userData.role,
         timestamp: new Date().toISOString(),
       });
@@ -326,7 +334,7 @@ export function useCurrentUser() {
               id
               username
               email
-              name
+              fullName
               avatar
               role
               createdAt
@@ -349,6 +357,7 @@ export function useCurrentUser() {
         console.log('📥 User session found:', {
           id: data.me.id,
           username: data.me.username,
+          fullName: data.me.fullName,
           role: data.me.role,
           timestamp: new Date().toISOString(),
         });

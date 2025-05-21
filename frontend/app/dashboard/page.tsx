@@ -10,7 +10,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Show welcome message when user logs in and we haven't shown it yet
-    if (user?.name && !hasShownWelcome.current) {
+    if (user?.fullName && !hasShownWelcome.current) {
       hasShownWelcome.current = true;
       const Toast = Swal.mixin({
         toast: true,
@@ -26,7 +26,7 @@ export default function Dashboard() {
 
       Toast.fire({
         icon: 'success',
-        title: `¡Bienvenid@, ${user.name}!`,
+        title: `¡Bienvenid@, ${user.fullName}!`,
         background: '#065f46', // emerald-800
         color: '#ffffff',
         iconColor: '#10b981', // emerald-500

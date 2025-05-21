@@ -230,7 +230,7 @@ def login(form_data: Login, db: Session = Depends(get_db)):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={
-                    "message": "Invalid credentials",
+                    "message": "Correo electrónico o contraseña inválidos",
                     "code": AuthErrorCode.INVALID_CREDENTIALS,
                 },
             )
@@ -240,7 +240,7 @@ def login(form_data: Login, db: Session = Depends(get_db)):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={
-                    "message": "Invalid credentials",
+                    "message": "Correo electrónico o contraseña inválidos",
                     "code": AuthErrorCode.INVALID_CREDENTIALS,
                 },
             )

@@ -133,3 +133,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 	is_active BOOLEAN DEFAULT TRUE,
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+INSERT INTO users (username, email, hashed_password, full_name, is_active, is_superuser) 
+VALUES ('profesor', 'profesor@gmail.com', '123', 'Teacher', TRUE, TRUE),
+('estudiante', 'estudiante@gmail.com', '123', 'Student', TRUE, FALSE);

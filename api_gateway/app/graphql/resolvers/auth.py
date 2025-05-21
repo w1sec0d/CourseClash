@@ -189,14 +189,20 @@ class Mutation:
                 )
 
                 if response.status_code != 200:
+                    error_data = response.json()
                     error_detail = "Credenciales inválidas"
-                    try:
-                        error_data = response.json()
-                        if "detail" in error_data:
+                    error_code = "AUTHENTICATION_ERROR"
+
+                    if "detail" in error_data:
+                        if isinstance(error_data["detail"], dict):
+                            error_detail = error_data["detail"].get(
+                                "message", error_detail
+                            )
+                            error_code = error_data["detail"].get("code", error_code)
+                        else:
                             error_detail = error_data["detail"]
-                    except Exception:
-                        pass
-                    return AuthError(message=error_detail, code="AUTHENTICATION_ERROR")
+
+                    return AuthError(message=error_detail, code=error_code)
 
                 auth_data = response.json()
                 user_data = auth_data.get("user", {})
