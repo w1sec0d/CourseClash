@@ -57,7 +57,7 @@ export default function Dashboard() {
                 Mis Cursos
               </a>
               <Link
-                href='/duelo#'
+                href='/duelos'
                 className='hover:text-emerald-200 transition'
               >
                 Duelos
