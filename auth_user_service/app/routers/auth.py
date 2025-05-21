@@ -289,16 +289,16 @@ def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
             )
         return user_obj
 
-    # Si estamos usando la base de datos real
     try:
         db: Session = next(get_db())
         query = text(""" SELECT * FROM users where id = :id""")
-        result = db.execute(query, {"id": user["id"]}).fetchone()
-        if not result:
+        result = db.execute(query, {'id': user['id']}).fetchone()
+        if not result: 
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='User not found'
             )
-        user_obj = User(
+        user = User(
             id=result[0],
             username=result[1],
             email=result[2],
@@ -306,14 +306,20 @@ def get_current_user(user: Annotated[dict, Depends(decode_token)]) -> User:
             is_active=result[5],
             is_superuser=result[6],
             created_at=str(result[7]),
-        )
-        return user_obj
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching user data: {e}",
+            avatar_url = result[8],
+            bio = result[9],
+            experience_points = result[10]
         )
 
+        return user
+    except HTTPException as e:
+        raise e
+
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f'Error en el servidor {e}'
+        )
 
 # Ruta para refrescar el token
 # Input: token de refresco

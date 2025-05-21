@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Servicio de Autenticación y Usuarios
@@ -6,50 +6,68 @@ services:
     build:
       context: ./auth_user_service
     ports:
-      - '8000:8000'
+      - "8001:8001"
     environment:
-      - DATABASE_URL=mysql://root:password@mysql:3306/auth_db
-      - JWT_SECRET=your_jwt_secret_key
-      - JWT_ALGORITHM=HS256
-      - JWT_EXPIRATION=3600
+      - DATABASE_URL=mysql+pymysql://root:password@mysql:3306/courseClash
+      - SECRET=Arquisoft
+      - ALGORITM=HS256
+      - MAIL_USERNAME=courseclasheducation@gmail.com
+      - MAIL_PASSWORD=omhdrobuncjwjmoh
+      - MAIL_FROM=courseclasheducation@gmail.com
+      - MAIL_PORT=587
+      - MAIL_SERVER=smtp.gmail.com
     volumes:
       - ./auth_user_service:/app
     # depends_on:
     #   - mysql
     networks:
       - courseclash-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
   # Servicio de Cursos
-  # course_service:
-  #   build:
-  #     context: ./course_service
-  #   ports:
-  #     - '8001:8001'
-  #   environment:
-  #     - DATABASE_URL=mysql://root:password@mysql:3306/course_db
-  #     - JWT_SECRET=your_jwt_secret_key
-  #   volumes:
-  #     - ./course_service:/app
-  #   depends_on:
-  #     - mysql
-  #   networks:
-  #     - courseclash-network
-  #   command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+  course_service:
+    build:
+      context: ./course_service
+    ports:
+      - '8001:8001'
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:password@mysql:3306/courseClash
+      - JWT_SECRET=your_jwt_secret_key
+    volumes:
+      - ./course_service:/app
+    depends_on:
+      - mysql
+    networks:
+      - courseclash-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
   # Servicio de Duelos
-  # duel_service:
-  #   build:
-  #     context: ./duel_service
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - '8002:8002'
-  #   environment:
-  #     - MONGODB_URI=mongodb://mongo:27017/duel_db
-  #   depends_on:
-  #     - mongo
-  #   networks:
-  #     - courseclash-network
+  duel-service:
+    build:
+      context: ./duel_service
+      dockerfile: Dockerfile
+    container_name: courseclash-duel-service
+    ports:
+      - "8002:8002"
+    restart: unless-stopped
+    environment:
+      - GIN_MODE=release
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8002/swagger/index.html",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - courseclash-network
 
   # API Gateway
   api_gateway:
@@ -101,20 +119,21 @@ services:
       retries: 3
       start_period: 40s
 
-  # # Base de datos MySQL (para auth_user_service y course_service)
-  # mysql:
-  #   image: mysql:8.0
-  #   ports:
-  #     - '3306:3306'
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD=password
-  #     - MYSQL_DATABASE=auth_db
-  #   volumes:
-  #     - mysql_data:/var/lib/mysql
-  #     - ./init-scripts/mysql:/docker-entrypoint-initdb.d
-  #   networks:
-  #     - courseclash-network
-  #   command: --default-authentication-plugin=mysql_native_password
+
+  # Base de datos MySQL (para auth_user_service y course_service)
+  mysql:
+    image: mysql:8.0
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=courseClash
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql:/docker-entrypoint-initdb.d
+    networks:
+      - courseclash-network
+    command: --default-authentication-plugin=mysql_native_password
 
   # # Base de datos MongoDB (para duel_service)
   # mongo:
