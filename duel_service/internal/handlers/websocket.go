@@ -7,7 +7,7 @@ import (
 
 	"courseclash/duel-service/internal/duelsync"
 	"courseclash/duel-service/internal/models"
-	"courseclash/duel-service/internal/services"
+	"courseclash/duel-service/internal/repositories"
 
 	"github.com/gorilla/websocket"
 )
@@ -24,19 +24,19 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 	// Termina la conexión cuando todo se ha ejecutado
 	defer conn.Close()
 
-	// Recibir la información inicial del jugador, incluyendo su ELO
-	var initialData map[string]interface{}
-	if err := conn.ReadJSON(&initialData); err != nil {
-		log.Printf("Error al leer datos iniciales del jugador %s: %v", playerID, err)
-		conn.WriteMessage(websocket.TextMessage, []byte("Error al recibir datos iniciales. Cerrando conexión."))
+	// Crear una instancia del repositorio de jugadores para obtener el elo y el rango
+	playerRepo := repositories.NewPlayerRepository()
+	
+	// Obtener los datos del jugador desde MongoDB
+	playerData, err := playerRepo.GetPlayerByID(playerID)
+	if err != nil {
+		log.Printf("Error al obtener datos del jugador %s desde MongoDB: %v", playerID, err)
+		conn.WriteMessage(websocket.TextMessage, []byte("Error al obtener datos del jugador. Cerrando conexión."))
 		return
 	}
-
-	// Extraer el ELO del jugador, con un valor por defecto si no se proporciona
-	playerElo := services.DefaultElo // ELO inicial por defecto
-	if elo, ok := initialData["elo"].(float64); ok {
-		playerElo = int(elo)
-	}
+	
+	// Usar el ELO obtenido de MongoDB
+	playerElo := playerData.Elo
 
 	// Crear el canal Done para este jugador. Este canal permite reconocder cuando un jugador termino
 	playerDoneChan := make(chan struct{})
@@ -48,12 +48,8 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		Done:  playerDoneChan,
 	}
 
-	// Extraer el rango actual si se proporciona, o calcularlo basado en el ELO
-	if rank, ok := initialData["rank"].(string); ok && rank != "" {
-		player.Rank = rank
-	} else {
-		player.Rank = string(services.GetRankByElo(playerElo))
-	}
+	// Usar el rango obtenido de MongoDB
+	player.Rank = playerData.Rank
 
 	duelsync.Mu.Lock()
 

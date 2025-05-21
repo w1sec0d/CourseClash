@@ -14,6 +14,13 @@ type Player struct {
 	Done  chan struct{}
 }
 
+// PlayerData representa los datos de un jugador almacenados en MongoDB
+type PlayerData struct {
+	PlayerID string `bson:"player_id" json:"player_id"`
+	Elo      int    `bson:"elo" json:"elo"`
+	Rank     string `bson:"rank" json:"rank"`
+}
+
 // Question representa una pregunta del duelo.
 type Question struct {
 	ID       string

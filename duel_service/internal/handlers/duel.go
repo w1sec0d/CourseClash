@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"courseclash/duel-service/internal/models"
+	"courseclash/duel-service/internal/repositories"
 	"courseclash/duel-service/internal/services"
 )
 
@@ -127,6 +128,29 @@ func endDuel(player1 *models.Player, player2 *models.Player) {
 	// Actualizar los rangos de los jugadores
 	player1.Rank = string(newRank1)
 	player2.Rank = string(newRank2)
+	
+	// Guardar los cambios en MongoDB
+	playerRepo := repositories.NewPlayerRepository()
+	
+	// Actualizar jugador 1
+	player1Data := &models.PlayerData{
+		PlayerID: player1.ID,
+		Elo:      player1.Elo,
+		Rank:     player1.Rank,
+	}
+	if err := playerRepo.UpdatePlayer(player1Data); err != nil {
+		log.Printf("Error al actualizar datos del jugador %s en MongoDB: %v", player1.ID, err)
+	}
+	
+	// Actualizar jugador 2
+	player2Data := &models.PlayerData{
+		PlayerID: player2.ID,
+		Elo:      player2.Elo,
+		Rank:     player2.Rank,
+	}
+	if err := playerRepo.UpdatePlayer(player2Data); err != nil {
+		log.Printf("Error al actualizar datos del jugador %s en MongoDB: %v", player2.ID, err)
+	}
 
 	finalMessage := map[string]interface{}{
 		"type": "duel_end",
