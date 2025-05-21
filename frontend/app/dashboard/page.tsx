@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import Swal from 'sweetalert2';
+import Link from 'next/link';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -55,12 +56,12 @@ export default function Dashboard() {
               >
                 Mis Cursos
               </a>
-              <a
-                href='/9twIWsbSYpNA4lj2s5SG#'
+              <Link
+                href='/duelo#'
                 className='hover:text-emerald-200 transition'
               >
                 Duelos
-              </a>
+              </Link>
               <a
                 href='/9twIWsbSYpNA4lj2s5SG#'
                 className='hover:text-emerald-200 transition'
