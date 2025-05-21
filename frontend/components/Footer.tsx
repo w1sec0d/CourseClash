@@ -84,17 +84,17 @@ const Footer = () => {
                   Duelos
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   href='/precios'
                   className='text-emerald-200 hover:text-white transition-colors'
                 >
                   Precios
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
-          <div>
+          {/* <div>
             <p className='text-lg font-semibold mb-4'>Soporte</p>
             <ul className='space-y-2'>
               <li>
@@ -151,7 +151,7 @@ const Footer = () => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
         </div>
         <div className='mt-12 pt-8 border-t border-emerald-700'>
           <p className='text-emerald-200 text-center'>
