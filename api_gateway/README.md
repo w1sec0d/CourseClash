@@ -1,6 +1,6 @@
 # API Gateway
 
-Este componente actúa como punto de entrada único para el frontend, gestionando la autenticación y el enrutamiento hacia los diferentes servicios de CourseClash.
+Este componente actúa como punto de entrada único para el frontend, gestionando la autenticación y el enrutamiento hacia los diferentes servicios de CourseClash a través de GraphQL.
 
 ## Tecnologías
 
@@ -23,28 +23,31 @@ Este componente actúa como punto de entrada único para el frontend, gestionand
 │   ├── middlewares/          # Middlewares para procesamiento de peticiones
 │   │   ├── __init__.py
 │   │   └── auth_middleware.py # Middleware de autenticación
-│   └── routers/              # Enrutadores a diferentes servicios
+│   └── graphql/              # Implementación de GraphQL
 │       ├── __init__.py
-│       ├── auth_router.py    # Enrutamiento al servicio de autenticación
-│       ├── course_router.py  # Enrutamiento al servicio de cursos
-│       └── duel_router.py    # Enrutamiento al servicio de duelos
+│       ├── schema.py         # Esquema principal de GraphQL
+│       └── resolvers/        # Resolvers para cada servicio
+│           ├── __init__.py
+│           ├── auth.py       # Resolvers de autenticación
+│           ├── courses.py    # Resolvers de cursos
+│           └── duels.py      # Resolvers de duelos
 ├── .env                      # Variables de entorno (no incluir en git)
 └── .gitignore                # Archivos a ignorar por git
 ```
 
 ## Funcionalidades Principales
 
-- Punto de entrada único para todas las peticiones del frontend
+- Punto de entrada único para todas las peticiones del frontend a través de GraphQL
 - Validación de tokens JWT y gestión de autenticación
 - Enrutamiento de peticiones a los servicios correspondientes
 - Transformación de respuestas si es necesario
-- Implementación de GraphQL para consultas eficientes
 - Manejo de errores centralizado
 - Logging y monitorización de peticiones
 
 ## Cómo Ejecutar
 
 1. Configurar variables de entorno en el archivo `.env`:
+
    ```
    AUTH_SERVICE_URL=http://localhost:8000
    COURSE_SERVICE_URL=http://localhost:8001
@@ -53,26 +56,28 @@ Este componente actúa como punto de entrada único para el frontend, gestionand
    ```
 
 2. Ejecutar el servidor:
+
    ```bash
    uvicorn app.main:app --reload --port 8080
    ```
 
-3. Acceder a la documentación de la API:
+3. Acceder a la documentación:
+   - GraphQL Playground: http://localhost:8080/api/graphql
    - Swagger UI: http://localhost:8080/docs
    - ReDoc: http://localhost:8080/redoc
-   - GraphQL Playground: http://localhost:8080/graphql
 
 ## Endpoints Principales
 
-- `POST /api/auth/*`: Enrutados al servicio de autenticación
-- `GET/POST/PUT/DELETE /api/courses/*`: Enrutados al servicio de cursos
-- `GET/POST /api/duels/*`: Enrutados al servicio de duelos
-- `POST /graphql`: Endpoint de GraphQL para consultas complejas
+- `POST /api/graphql`: Endpoint único de GraphQL para todas las operaciones
+  - Autenticación (login, register, etc.)
+  - Gestión de cursos
+  - Gestión de duelos
 
-## Ventajas del API Gateway
+## Ventajas del API Gateway con GraphQL
 
-- **Simplificación para el Cliente**: El frontend solo necesita comunicarse con un único punto de entrada.
+- **Simplificación para el Cliente**: El frontend solo necesita comunicarse con un único endpoint GraphQL.
 - **Seguridad Centralizada**: La autenticación y autorización se manejan en un solo lugar.
-- **Transformación de Datos**: Puede adaptar las respuestas de los servicios según las necesidades del cliente.
-- **Enrutamiento Inteligente**: Dirige las peticiones al servicio adecuado basándose en la ruta y el método.
+- **Flexibilidad en las Consultas**: Los clientes pueden solicitar exactamente los datos que necesitan.
+- **Reducción de Peticiones**: Múltiples operaciones pueden realizarse en una sola petición.
+- **Transformación de Datos**: Adapta las respuestas de los servicios según las necesidades del cliente.
 - **Monitorización**: Facilita el seguimiento y análisis del tráfico de la API.

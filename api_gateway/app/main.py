@@ -4,14 +4,12 @@ API Gateway para CourseClash
 Punto de entrada principal de la API Gateway de CourseClash.
 
 Este módulo configura y lanza la aplicación FastAPI, incluyendo:
-- Rutas de la API
+- Configuración de GraphQL
 - Middlewares
 - Manejo de errores
-- Integración con GraphQL
 
 Estructura:
-- /api/*: Endpoints REST para autenticación, cursos y duelos
-- /graphql: Endpoint GraphQL para consultas más complejas
+- /api/graphql: Endpoint GraphQL para todas las operaciones
 - /health: Endpoint de verificación de estado del servicio
 """
 
@@ -20,14 +18,11 @@ from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from strawberry.fastapi import GraphQLRouter
-import httpx
+from typing import Dict, Any
 
 # Configuración de logging
 from app.core.logger import logger, setup_logger
 from app.core.middleware import setup_middlewares
-
-# Importar routers
-from app.routers import auth, courses, duels
 
 # Importar esquema de GraphQL
 from app.graphql.schema import schema
@@ -38,32 +33,94 @@ logger = setup_logger("courseclash.api")
 # Crear la aplicación FastAPI
 app = FastAPI(
     title="CourseClash API Gateway",
-    description="API Gateway for CourseClash platform",
+    description="""
+    API Gateway para la plataforma CourseClash.
+    
+    Este servicio actúa como punto de entrada único para todas las operaciones
+    de la plataforma, proporcionando una interfaz GraphQL unificada.
+    
+    ## Características Principales
+    
+    - **Autenticación**: Gestión de usuarios, login, registro y tokens
+    - **Cursos**: Creación y gestión de cursos educativos
+    - **Duelos**: Sistema de desafíos entre estudiantes
+    
+    ## Ejemplos de Uso GraphQL
+    
+    ### Autenticación
+    ```graphql
+    mutation Login {
+      login(email: "usuario@ejemplo.com", password: "contraseña") {
+        user {
+          id
+          username
+          email
+        }
+        token
+        refreshToken
+      }
+    }
+    ```
+    
+    ### Cursos
+    ```graphql
+    query GetCourses {
+      getCourses {
+        id
+        title
+        description
+        level
+        category
+      }
+    }
+    ```
+    
+    ### Duelos
+    ```graphql
+    mutation CreateDuel {
+      createDuel(
+        title: "Desafío de Matemáticas"
+        description: "Resuelve estos problemas"
+      ) {
+        id
+        title
+        status
+      }
+    }
+    ```
+    """,
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    contact={
+        "name": "CourseClash Team",
+        "url": "https://courseclash.com/contact",
+        "email": "support@courseclash.com",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
 )
 
 # Configurar middlewares personalizados
 setup_middlewares(app)
 
-# Configuración de CORS (Intercambio de Recursos de Origen Cruzado)
-# Solo permite solicitudes desde localhost para mayor seguridad
+# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        # localhost in general
         "http://localhost",
         "http://127.0.0.1",
-        "http://localhost:3000",  # React dev server
-        "http://127.0.0.1:3000",  # React dev server alternative
-        "http://localhost:8001",  # Auth User Service
-        "http://127.0.0.1:8001"  # Auth User Service alternative
-        "http://localhost:8002",  # Duel Service
-        "http://127.0.0.1:8002"  # Duel Service alternative
-        "http://localhost:8003",  # Course Service
-        "http://127.0.0.1:8003",  # Course Service alternative
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8001",
+        "http://127.0.0.1:8001",
+        "http://localhost:8002",
+        "http://127.0.0.1:8002",
+        "http://localhost:8003",
+        "http://127.0.0.1:8003",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -71,23 +128,104 @@ app.add_middleware(
 )
 
 # Endpoint de GraphQL
-graphql_app = GraphQLRouter(schema)
-app.include_router(graphql_app, prefix="/api/graphql")
+graphql_app = GraphQLRouter(
+    schema,
+    path="/api/graphql",
+    graphiql=True,  # Habilita GraphiQL para desarrollo
+)
 
-# Incluir routers REST de cada servicio
-app.include_router(auth.router, prefix="/api", tags=["auth"])
-app.include_router(courses.router, prefix="/api/courses", tags=["courses"])
-app.include_router(duels.router, prefix="/api/duels", tags=["duels"])
+app.include_router(
+    graphql_app,
+    prefix="/api/graphql",
+    tags=["GraphQL"],
+    responses={
+        200: {
+            "description": "Operación GraphQL exitosa",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "data": {
+                            "getCourses": [
+                                {
+                                    "id": "1",
+                                    "title": "Matemáticas Básicas",
+                                    "description": "Curso introductorio",
+                                    "level": "BEGINNER",
+                                    "category": "MATH",
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+        },
+        400: {
+            "description": "Error en la consulta GraphQL",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "errors": [
+                            {
+                                "message": "Invalid query",
+                                "locations": [{"line": 1, "column": 1}],
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+    },
+)
 
 
 # Rutas de la API Gateway para revisar que todo esta bien
-@app.get("/", tags=["root"])
+@app.get(
+    "/",
+    tags=["root"],
+    summary="Bienvenida",
+    description="Endpoint de bienvenida que confirma que el API Gateway está funcionando",
+    response_model=Dict[str, str],
+    responses={
+        200: {
+            "description": "Mensaje de bienvenida",
+            "content": {
+                "application/json": {
+                    "example": {"message": "Welcome to CourseClash API Gateway"}
+                }
+            },
+        }
+    },
+)
 async def root():
+    """
+    Endpoint de bienvenida que confirma que el API Gateway está funcionando.
+
+    Returns:
+        Dict[str, str]: Mensaje de bienvenida
+    """
     return {"message": "Welcome to CourseClash API Gateway"}
 
 
-@app.get("/health", tags=["health"])
+@app.get(
+    "/health",
+    tags=["health"],
+    summary="Estado del Servicio",
+    description="Verifica el estado de salud del API Gateway",
+    response_model=Dict[str, str],
+    responses={
+        200: {
+            "description": "Estado del servicio",
+            "content": {"application/json": {"example": {"status": "healthy"}}},
+        }
+    },
+)
 async def health():
+    """
+    Verifica el estado de salud del API Gateway.
+
+    Returns:
+        Dict[str, str]: Estado del servicio
+    """
     return {"status": "healthy"}
 
 
