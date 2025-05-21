@@ -60,8 +60,22 @@ export default function QuizScreen({
     const handleMessage = (event: MessageEvent) => {
       try {
         console.log('Raw WebSocket message:', event.data);
+        console.log('Message type:', typeof event.data);
 
-        const data = JSON.parse(event.data);
+        // Handle plain text messages
+        if (typeof event.data === 'string' && !event.data.startsWith('{')) {
+          console.log('Received text message:', event.data);
+          if (
+            event.data === '¡Oponente conectado! El duelo comenzará pronto.'
+          ) {
+            setIsWaiting(true);
+          }
+          return;
+        }
+
+        // Handle JSON messages
+        const data =
+          typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
         console.log('Parsed WebSocket message:', data);
 
         if (data.type === 'question') {
@@ -74,12 +88,14 @@ export default function QuizScreen({
           console.log('Duel end message received:', data);
           setDuelResults(data.data);
           console.log('Duel results state set to:', data.data);
-          // Keep the connection open
         } else if (data.type === 'error') {
           setError(data.message);
+        } else {
+          console.log('Unknown message type:', data.type);
         }
       } catch (err) {
         console.error('Error parsing WebSocket message:', err);
+        console.error('Raw message that caused error:', event.data);
         setError('Error al procesar el mensaje del servidor');
       }
     };
