@@ -7,9 +7,8 @@ import {
   HomeIcon,
   SparklesIcon,
   TrophyIcon,
-  ArrowRightOnRectangleIcon,
-  UserPlusIcon,
   ArrowRightStartOnRectangleIcon,
+  UserPlusIcon,
   AcademicCapIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/lib/auth-context';
@@ -174,7 +173,7 @@ export const NavigationBar = () => {
                       'hover:bg-emerald-400 transition-colors duration-300'
                     )}
                   >
-                    <ArrowRightOnRectangleIcon className='h-5 w-5' />
+                    <ArrowRightStartOnRectangleIcon className='h-5 w-5' />
                     Iniciar Sesión
                   </Link>
                   <Link
@@ -260,10 +259,10 @@ export const NavigationBar = () => {
                     href='/login'
                     className={clsx(
                       'bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                      'w-full text-center hover:bg-emerald-400'
+                      'w-full text-center hover:bg-emerald-400 hover:cursor-pointer'
                     )}
                   >
-                    <ArrowRightOnRectangleIcon className='h-5 w-5' />
+                    <ArrowRightStartOnRectangleIcon className='h-5 w-5' />
                     Iniciar Sesión
                   </Link>
                 </div>
@@ -286,7 +285,7 @@ export const NavigationBar = () => {
                   onClick={handleLogout}
                   className={clsx(
                     'bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                    'w-full text-center hover:bg-emerald-400'
+                    'w-full text-center hover:bg-emerald-400 hover:cursor-pointer'
                   )}
                 >
                   <ArrowRightStartOnRectangleIcon className='h-5 w-5' />
