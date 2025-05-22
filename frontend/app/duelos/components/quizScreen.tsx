@@ -83,7 +83,7 @@ export default function QuizScreen({
           setCurrentQuestion(data.data);
           setError(null);
           // Update opponent progress when new question arrives
-          setOpponentProgress((prev) => Math.min(prev + 1, totalQuestions));
+          setOpponentProgress((prev) => Math.min(prev + 1, totalQuestions) - 1);
         } else if (data.type === 'opponent_progress') {
           console.log('Opponent progress update:', data.progress);
           setOpponentProgress(data.progress);

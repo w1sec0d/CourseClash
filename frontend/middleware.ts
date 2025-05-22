@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-export async function middleware(_request: NextRequest) {
-  // Since we're using client-side auth with localStorage,
-  // we'll just pass through all requests
+// Since we can't access localStorage in middleware (server-side),
+// we'll handle all auth protection in the client using ProtectedRoute component
+export async function middleware() {
   return NextResponse.next();
 }
 
