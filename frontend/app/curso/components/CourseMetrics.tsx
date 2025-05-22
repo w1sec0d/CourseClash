@@ -4,20 +4,18 @@ interface CourseMetricsProps {
   shields: number;
   totalShields: number;
   coins: number;
-  power: number;
 }
 
 /**
- * A component that displays some metrics about a course, such as the number of shields unlocked, total shields, coins and power.
+ * A component that displays some metrics about a course, such as the number of shields unlocked, total shields, and coins.
  *
  * @param {Object} props
  * @prop {number} shields - The number of shields unlocked.
  * @prop {number} totalShields - The total number of shields available.
  * @prop {number} coins - The number of coins obtained.
- * @prop {number} power - The power obtained.
  * @returns {React.ReactElement}
  */
-const CourseMetrics: React.FC<CourseMetricsProps> = ({ shields, totalShields, coins, power }) => {
+const CourseMetrics: React.FC<CourseMetricsProps> = ({ shields, totalShields, coins }) => {
   return (
     <div className="mt-2 sm:mt-0 flex gap-3">
       <div className="bg-emerald-700 rounded-lg items-center p-2 px-3 flex shadow-lg">

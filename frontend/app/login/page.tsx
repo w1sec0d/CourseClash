@@ -1,6 +1,6 @@
 'use client';
 
-import SocialIcon from '@/components/SocialIcon';
+// Se eliminó la importación de SocialIcon que no se utilizaba
 import Link from 'next/link';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';

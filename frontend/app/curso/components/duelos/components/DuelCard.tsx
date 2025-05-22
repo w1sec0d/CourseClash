@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface Duelo {
   id: number;
@@ -28,11 +29,12 @@ const DuelCard: React.FC<DuelCardProps> = ({ duelo, getStatusBadge, getResultBad
     <div className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center">
-          <div className="h-12 w-12 rounded-full overflow-hidden mr-3">
-            <img
+          <div className="relative h-12 w-12 rounded-full overflow-hidden mr-3">
+            <Image
               src={duelo.opponent.avatar}
               alt={`Avatar de ${duelo.opponent.name}`}
-              className="h-full w-full object-cover"
+              fill
+              className="object-cover"
             />
           </div>
           <div>

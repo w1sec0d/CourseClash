@@ -155,7 +155,6 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
             detalle1={`${sampleEstadisticas.tareasCompletadas} completadas`}
             detalle2={`${sampleEstadisticas.tareasPendientes} pendientes`}
             color1="text-blue-500"
-            color2="text-amber-500"
           />
           <EstadisticaCard
             icon={
@@ -169,7 +168,6 @@ const EstadisticasTab: React.FC<EstadisticasTabProps> = ({ estadisticas }) => {
             detalle1={`${sampleEstadisticas.duelosGanados} victorias`}
             detalle2={`${sampleEstadisticas.duelosPerdidos} derrotas`}
             color1="text-emerald-500"
-            color2="text-red-500"
           />
         </motion.div>
 

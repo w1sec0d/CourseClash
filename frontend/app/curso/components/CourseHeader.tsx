@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import TabNavigation from '@/components/TabNavigation';
 import CourseStats from './CourseStats';
 import CourseMetrics from './CourseMetrics';
@@ -53,7 +54,6 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
   shields,
   totalShields,
   coins,
-  power,
   activeTab,
   onTabChange,
   tabs,
@@ -64,10 +64,12 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
     <div>
       <div className="bg-green-500 rounded-t-lg mb-6 overflow-hidden shadow-lg">
         <div className="h-32 sm:h-40 bg-gradient-to-r from-blue-600 to-purple-600 relative">
-          <img 
+          <Image 
             alt="Banner del curso" 
             src={bannerImage} 
             className="object-cover opacity-60 w-full h-full"
+            fill
+            priority
           />
           <div className="absolute inset-0 flex items-end m-3">
             <p className="text-2xl sm:text-4xl font-bold text-white drop-shadow-lg">{title}</p>
@@ -80,7 +82,6 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
               shields={shields} 
               totalShields={totalShields} 
               coins={coins} 
-              power={power} 
             />
           </div>
         </div>

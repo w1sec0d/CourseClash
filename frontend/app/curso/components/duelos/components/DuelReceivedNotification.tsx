@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface DuelReceivedNotificationProps {
   challenger: {
@@ -63,11 +64,14 @@ const DuelReceivedNotification: React.FC<DuelReceivedNotificationProps> = ({
       
       <div className="p-4">
         <div className="flex items-center mb-3">
-          <img
-            src={challenger.avatar}
-            alt={challenger.name}
-            className="w-12 h-12 rounded-full border-2 border-indigo-200"
-          />
+          <div className="relative w-12 h-12 rounded-full border-2 border-indigo-200 overflow-hidden">
+            <Image
+              src={challenger.avatar}
+              alt={challenger.name}
+              fill
+              className="object-cover"
+            />
+          </div>
           <div className="ml-3">
             <p className="font-medium text-gray-800">{challenger.name}</p>
             <p className="text-sm text-gray-500">Nivel {challenger.level}</p>

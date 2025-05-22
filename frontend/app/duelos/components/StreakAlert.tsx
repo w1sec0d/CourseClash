@@ -1,9 +1,8 @@
 interface StreakAlertProps {
-  streak: number;
   message: string;
 }
 
-export function StreakAlert({ streak, message }: StreakAlertProps) {
+export function StreakAlert({ message }: StreakAlertProps) {
   return (
     <div className='bg-gradient-to-r text-white rounded-lg shadow-lg items-center from-emerald-500 to-emerald-700 p-4 flex animate-pulse'>
       <svg

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface AchievementUnlockedNotificationProps {
   achievement: {
@@ -97,11 +98,13 @@ const AchievementUnlockedNotification: React.FC<AchievementUnlockedNotificationP
       
       <div className="p-4">
         <div className="flex items-start gap-4">
-          <div className={`p-2 rounded-lg ${typeStyles.border} bg-opacity-10 bg-current`}>
-            <img
+          <div className={`p-2 rounded-lg ${typeStyles.border} bg-opacity-10 bg-current relative w-16 h-16 flex items-center justify-center`}>
+            <Image
               src={achievement.icon}
               alt={achievement.title}
-              className="w-12 h-12 object-contain"
+              width={48}
+              height={48}
+              className="object-contain"
             />
           </div>
           <div className="flex-1">

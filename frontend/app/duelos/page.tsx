@@ -14,11 +14,12 @@ export default function Duelos() {
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(
     null
   );
-  const [acceptResponse, setAcceptResponse] =
-    useState<AcceptDuelResponse | null>(null);
+  // Se eliminó la variable acceptResponse no utilizada
+  const [, setAcceptResponse] = useState<AcceptDuelResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAccepting, setIsAccepting] = useState(false);
+  // Se eliminó la variable isAccepting no utilizada
+  const [, setIsAccepting] = useState(false);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
   const [notificationWs, setNotificationWs] = useState<WebSocket | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
@@ -464,57 +465,8 @@ export default function Duelos() {
     }
   };
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleAcceptFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setAcceptFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleConnectWebSocket = () => {
-    if (!formData.duelId || !formData.playerId) {
-      setError('Por favor, completa todos los campos');
-      return;
-    }
-
-    // Cerrar conexión existente si hay una
-    if (wsConnection) {
-      wsConnection.close();
-    }
-
-    // Crear nueva conexión WebSocket
-    const ws = new WebSocket(
-      `ws://localhost:8002/ws/duels/${formData.duelId}/${formData.playerId}`
-    );
-
-    ws.onopen = () => {
-      setError(null);
-      setShowQuiz(true);
-    };
-
-    ws.onerror = (error) => {
-      setError('Error en la conexión WebSocket');
-      console.error('WebSocket error:', error);
-    };
-
-    ws.onclose = () => {
-      // Only hide quiz if there's an error or if we're not showing results
-      if (error) {
-        setShowQuiz(false);
-      }
-    };
-
-    setWsConnection(ws);
-  };
+  // Se eliminaron las funciones handleFormChange, handleAcceptFormChange, handleConnectWebSocket
+  // y setupWebSocket que no se utilizaban en el componente
 
   return (
     <div className='container mx-auto p-4'>

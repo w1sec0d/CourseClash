@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface Usuario {
   id: number;
@@ -66,11 +67,12 @@ const UserList: React.FC<UserListProps> = ({ usuarios, filtroRanking }) => {
           </div>
           
           <div className="flex-shrink-0 mr-3">
-            <div className="h-10 w-10 rounded-full overflow-hidden">
-              <img
+            <div className="relative h-10 w-10 rounded-full overflow-hidden">
+              <Image
                 src={usuario.avatar}
                 alt={usuario.name}
-                className="h-full w-full object-cover"
+                fill
+                className="object-cover"
               />
             </div>
           </div>

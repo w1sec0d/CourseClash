@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown, ChevronRight, Star, Search, Plus, Home, BookOpen, Users, Award, AlertCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, Star, Plus, Home, BookOpen, Users, Award, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 import { twMerge } from 'tailwind-merge';
 
 // Tipos
@@ -35,7 +36,7 @@ const CourseCategory: React.FC<CategoryProps & { activeCourseId?: string }> = ({
   name, 
   courses, 
   isExpanded: initialExpanded = true,
-  isFavorite = false,
+  // isFavorite no se utiliza en este componente
   activeCourseId,
   count
 }) => {
@@ -96,18 +97,24 @@ const CourseSidebar: React.FC<CourseSidebarProps> = ({
   categorizedCourses,
   activeCourseId
 }) => {
-  // Simulación de cursos planos para la sección "Mis Cursos"
-  const myCourses = [
-    ...favorites,
-    ...categorizedCourses.flatMap(cat => cat.courses)
-  ];
+  // Comentario: Se eliminó la variable myCourses que no se utilizaba
 
   return (
     <aside className="bg-white h-screen w-64 flex flex-col border-r border-gray-200">
       {/* User Info */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-emerald-100">
         <div className="w-10 h-10 rounded-full bg-emerald-200 flex items-center justify-center text-lg font-semibold text-emerald-800">
-          {mockUser.avatar ? <img src={mockUser.avatar} alt="avatar" className="rounded-full w-full h-full" /> : "MR"}
+          {mockUser.avatar ? (
+            <div className="relative w-full h-full">
+              <Image 
+                src={mockUser.avatar} 
+                alt="avatar" 
+                className="rounded-full object-cover" 
+                fill
+                sizes="40px"
+              />
+            </div>
+          ) : "MR"}
         </div>
         <div>
           <div className="font-semibold text-emerald-900 leading-tight">{mockUser.name}</div>
@@ -116,7 +123,7 @@ const CourseSidebar: React.FC<CourseSidebarProps> = ({
       </div>
       {/* Main Menu */}
       <nav className="flex flex-col gap-1 px-2 py-2 border-b border-emerald-100 bg-emerald-50">
-        {sidebarMenu.map((item, i) => (
+        {sidebarMenu.map((item) => (
           <Link key={item.href} href={item.href} className="flex items-center gap-2 px-3 py-2 rounded text-emerald-900 hover:bg-emerald-100 transition-colors text-sm font-medium">
             {item.icon}
             <span>{item.label}</span>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { ReactNode } from 'react';
+import Image from 'next/image';
 import PostComment from './PostComment';
 import CommentForm from './CommentForm';
 
@@ -50,7 +51,14 @@ const Post: React.FC<PostProps> = ({
       <div className="p-4">
         <div className="justify-between items-start mb-4 flex">
           <div className="items-center flex">
-            <img alt={`Foto de perfil de ${author}`} src={`https://placehold.co/50x50/emerald/white?text=${author.substring(0, 2)}`} className="h-12 w-12 rounded-full mr-3"></img>
+            <div className="relative h-12 w-12 rounded-full mr-3 overflow-hidden">
+              <Image 
+                alt={`Foto de perfil de ${author}`} 
+                src={`https://placehold.co/50x50/emerald/white?text=${author.substring(0, 2)}`} 
+                fill
+                className="object-cover"
+              />
+            </div>
             <div>
               <p className='font-medium text-emerald-800'>{author}</p>
               <p className='text-sm text-gray-500'>{timeAgo}</p>

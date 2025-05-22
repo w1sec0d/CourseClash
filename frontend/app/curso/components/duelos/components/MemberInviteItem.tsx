@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface Member {
   id: number;
@@ -17,11 +18,12 @@ interface MemberInviteItemProps {
 const MemberInviteItem: React.FC<MemberInviteItemProps> = ({ member, onInvite, disabled }) => (
   <div className="flex items-center justify-between p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
     <div className="flex items-center">
-      <div className="h-10 w-10 rounded-full overflow-hidden mr-3">
-        <img
+      <div className="relative h-10 w-10 rounded-full overflow-hidden mr-3">
+        <Image
           src={member.avatar}
           alt={`Avatar de ${member.name}`}
-          className="h-full w-full object-cover"
+          fill
+          className="object-cover"
         />
       </div>
       <div>

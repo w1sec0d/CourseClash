@@ -1,6 +1,6 @@
 'use client';
 import Button from '@/components/Button';
-import SocialIcon from '@/components/SocialIcon';
+// Se eliminó la importación de SocialIcon que no se utilizaba
 import Image from 'next/image';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
