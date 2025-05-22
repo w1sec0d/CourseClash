@@ -2,7 +2,7 @@ interface DuelHeaderProps {
   title: string;
   opponent: string;
   playerProgress: number;
-  opponentProgress: number;
+  // opponentProgress: number;
   totalQuestions: number;
 }
 
@@ -10,7 +10,7 @@ export function DuelHeader({
   title,
   opponent,
   playerProgress,
-  opponentProgress,
+  // opponentProgress,
   totalQuestions,
 }: DuelHeaderProps) {
   return (
@@ -37,7 +37,7 @@ export function DuelHeader({
             {playerProgress}/{totalQuestions}
           </span>
         </div>
-        <div className='items-center flex space-x-2 flex-1'>
+        {/* <div className='items-center flex space-x-2 flex-1'>
           <div className='h-3 bg-gray-200 rounded-full flex-grow'>
             <div
               style={{ width: `${(opponentProgress / totalQuestions) * 100}%` }}
@@ -47,7 +47,7 @@ export function DuelHeader({
           <span className='font-medium text-gray-700'>
             {opponentProgress}/{totalQuestions}
           </span>
-        </div>
+        </div> */}
       </div>
     </div>
   );

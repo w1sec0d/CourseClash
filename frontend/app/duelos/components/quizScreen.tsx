@@ -49,7 +49,7 @@ export default function QuizScreen({
   );
   const [isWaiting, setIsWaiting] = useState(true);
   const [playerProgress, setPlayerProgress] = useState(0);
-  const [opponentProgress, setOpponentProgress] = useState(0);
+  // const [opponentProgress, setOpponentProgress] = useState(0);
   const [totalQuestions] = useState(5);
   const [error, setError] = useState<string | null>(null);
   const [duelResults, setDuelResults] = useState<DuelResultsData | null>(null);
@@ -83,10 +83,10 @@ export default function QuizScreen({
           setCurrentQuestion(data.data);
           setError(null);
           // Update opponent progress when new question arrives
-          setOpponentProgress((prev) => Math.min(prev + 1, totalQuestions));
+          // setOpponentProgress((prev) => Math.min(prev + 1, totalQuestions));
         } else if (data.type === 'opponent_progress') {
-          console.log('Opponent progress update:', data.progress);
-          setOpponentProgress(data.progress);
+          // console.log('Opponent progress update:', data.progress);
+          // setOpponentProgress(data.progress);
           // If opponent has finished all questions, show waiting message
           if (data.progress >= totalQuestions) {
             setError('Tu oponente ha terminado. Esperando tus respuestas...');
@@ -190,7 +190,7 @@ export default function QuizScreen({
             title='Duelo de Preguntas'
             opponent={opponentId}
             playerProgress={playerProgress}
-            opponentProgress={opponentProgress}
+            // opponentProgress={opponentProgress}
             totalQuestions={totalQuestions}
           />
 

@@ -19,7 +19,9 @@ interface NavigationBarProps {
   toggleSidebar?: () => void;
 }
 
-export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) => {
+export const NavigationBar: React.FC<NavigationBarProps> = ({
+  toggleSidebar,
+}) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAuthenticated, logout, isInitialized } = useAuth();
   const router = useRouter();
@@ -159,13 +161,14 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
           )}
           <div className='items-center flex'>
             <div className='flex-shrink-0'>
-              {/* <Image
-                alt='Logo de Course Clash - Espada insertada en un birrete de graduación'
-                src='https://placehold.co/200x80/emerald/white?text=Course+Clash'
-                className='h-12 w-auto'
-                width={200}
-                height={80}
-              /> */}
+              <Image
+                alt='Logo de Course Clash'
+                src='/logo_no_title.svg'
+                className='h-20 w-auto'
+                width={150}
+                height={50}
+                priority
+              />
             </div>
             <div className='md:block hidden'>
               <div className='ml-10 items-baseline flex space-x-4'>
@@ -228,16 +231,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
                   Cerrar Sesión
                 </button>
               )}
-              <Image
-                alt='Logo de Course Clash'
-                src='/logo_no_title.svg'
-                className='h-20 w-auto'
-                width={150}
-                height={50}
-                priority
-              />
             </div>
-            <Link href="/" className='text-white text-2xl font-bold'>Course Clash</Link>
           </div>
           <div className='md:hidden -mr-2 flex'>
             <button
