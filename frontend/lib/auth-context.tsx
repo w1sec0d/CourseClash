@@ -72,8 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleLogin = useCallback(
     async (email: string, password: string) => {
       const result = await login(email, password);
+      if ('error' in result) {
+        throw result.error;
+      }
       await fetchCurrentUser();
-      return result;
+      return result.data;
     },
     [login, fetchCurrentUser]
   );
