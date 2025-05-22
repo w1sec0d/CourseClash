@@ -82,8 +82,15 @@ export default function QuizScreen({
           setIsWaiting(false);
           setCurrentQuestion(data.data);
           setError(null);
+          // Update opponent progress when new question arrives
+          setOpponentProgress((prev) => Math.min(prev + 1, totalQuestions));
         } else if (data.type === 'opponent_progress') {
+          console.log('Opponent progress update:', data.progress);
           setOpponentProgress(data.progress);
+          // If opponent has finished all questions, show waiting message
+          if (data.progress >= totalQuestions) {
+            setError('Tu oponente ha terminado. Esperando tus respuestas...');
+          }
         } else if (data.type === 'duel_end') {
           console.log('Duel end message received:', data);
           setDuelResults(data.data);
@@ -105,7 +112,7 @@ export default function QuizScreen({
       console.log('Cleaning up WebSocket connection');
       wsConnection.removeEventListener('message', handleMessage);
     };
-  }, [wsConnection]);
+  }, [wsConnection, totalQuestions]);
 
   const handleAnswerSelect = (selectedOption: string) => {
     if (!wsConnection || !currentQuestion) return;
@@ -180,9 +187,8 @@ export default function QuizScreen({
           )}
 
           <DuelHeader
-            title='Duelo de Matemáticas'
+            title='Duelo de Preguntas'
             opponent={opponentId}
-            timeRemaining='--:--'
             playerProgress={playerProgress}
             opponentProgress={opponentProgress}
             totalQuestions={totalQuestions}

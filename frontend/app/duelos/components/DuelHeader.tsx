@@ -1,7 +1,6 @@
 interface DuelHeaderProps {
   title: string;
   opponent: string;
-  timeRemaining: string;
   playerProgress: number;
   opponentProgress: number;
   totalQuestions: number;
@@ -10,7 +9,6 @@ interface DuelHeaderProps {
 export function DuelHeader({
   title,
   opponent,
-  timeRemaining,
   playerProgress,
   opponentProgress,
   totalQuestions,
@@ -22,10 +20,10 @@ export function DuelHeader({
           <p className='text-xl font-bold text-emerald-800'>{title}</p>
           <p className='text-gray-600'>Vs. {opponent}</p>
         </div>
-        <div className='text-center bg-white rounded-lg shadow-md p-3'>
+        {/* <div className='text-center bg-white rounded-lg shadow-md p-3'>
           <p className='text-xl font-bold text-emerald-700'>{timeRemaining}</p>
           <p className='text-sm text-gray-500'>Tiempo restante</p>
-        </div>
+        </div> */}
       </div>
       <div className='mt-4 items-center justify-between flex'>
         <div className='items-center mr-4 flex space-x-2 flex-1'>
