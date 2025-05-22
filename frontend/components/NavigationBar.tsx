@@ -1,6 +1,7 @@
 'use client';
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import clsx from 'clsx';
 import {
@@ -14,17 +15,15 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
 
-interface NavigationBarProps {
-  toggleSidebar?: () => void;
-}
+interface NavigationBarProps {}
 
 export const NavigationBar: React.FC<NavigationBarProps> = ({
-  toggleSidebar,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAuthenticated, logout, isInitialized } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [showSidebar, setShowSidebar] = useState(true);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -134,39 +133,16 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     <nav className='bg-emerald-700 shadow-lg sticky top-0 z-50'>
       <div className='mx-auto px-4 sm:px-6 lg:px-2 max-w-7xl'>
         <div className='items-center justify-between h-16 flex'>
-          {toggleSidebar && (
-            <button
-              type='button'
-              className='p-2 mr-2 rounded hover:bg-emerald-600 transition lg:hidden'
-              id='sidebarToggle'
-              onClick={toggleSidebar}
-              aria-label='Toggle sidebar'
-            >
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                className='h-6 w-6 text-white'
-                fill='none'
-                viewBox='0 0 24 24'
-                stroke='currentColor'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M4 6h16M4 12h16M4 18h16'
-                ></path>
-              </svg>
-            </button>
-          )}
           <div className='items-center flex'>
-            <div className='flex-shrink-0'>
-              {/* <Image
+            <div className='flex-shrink-0 flex items-center'>
+              <Image
                 alt='Logo de Course Clash - Espada insertada en un birrete de graduación'
-                src='https://placehold.co/200x80/emerald/white?text=Course+Clash'
-                className='h-12 w-auto'
+                src='/logo_no_title.svg'
+                className='h-21 w-auto mr-1'
                 width={200}
                 height={80}
-              /> */}
+              />
+              <span className='text-white font-bold text-xl tracking-tight'>CourseClash</span>
             </div>
             <div className='md:block hidden'>
               <div className='ml-10 items-baseline flex space-x-4'>
