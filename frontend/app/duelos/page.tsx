@@ -5,6 +5,7 @@ import { REQUEST_DUEL, ACCEPT_DUEL } from '../graphql/mutations/duel';
 import { RequestDuelResponse, AcceptDuelResponse } from '../types/duel';
 import { fetchGraphQL } from '@/lib/graphql-client';
 import QuizScreen from './components/quizScreen';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function Duelos() {
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(

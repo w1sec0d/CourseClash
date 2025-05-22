@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import {
-  fetchGraphQL,
-  setAuthToken,
-  clearAuthToken,
-  getAuthHeaders,
-} from './graphql-client';
+import { fetchGraphQL, getAuthHeaders } from './graphql-client';
 
 export type User = {
   id: string;
@@ -139,9 +134,16 @@ export function useLogin() {
 
       const authResponse = data.login as AuthResponse;
       console.log('🔑 Auth token', data.login);
-      setAuthToken(authResponse.token);
-      console.log('🔑 Auth token stored successfully');
 
+      // Set the token in an HTTP-only cookie
+      document.cookie = `auth_token=${authResponse.token}; path=/; secure; samesite=strict`;
+
+      // If you have a refresh token, set it in a separate cookie
+      if (authResponse.refreshToken) {
+        document.cookie = `refresh_token=${authResponse.refreshToken}; path=/; secure; samesite=strict`;
+      }
+
+      console.log('🔑 Auth token stored in cookies');
       setLoading(false);
       return authResponse;
     } catch (err: unknown) {
@@ -153,7 +155,6 @@ export function useLogin() {
         throw err;
       }
 
-      // Si el error no es una instancia de AuthError, crear una nueva instancia
       const error = new AuthError(
         err instanceof Error ? err.message : 'Error de autenticación',
         'UNKNOWN_ERROR',
@@ -249,7 +250,6 @@ export function useRegister() {
             type: data.register.__typename,
           });
 
-          // Asegurarnos de que el error tenga el formato correcto
           const errorMessage =
             typeof data.register.message === 'string'
               ? data.register.message
@@ -264,9 +264,15 @@ export function useRegister() {
 
         const authResponse = data.register as AuthResponse;
 
-        // Store the token
-        setAuthToken(authResponse.token);
-        console.log('🔑 Auth token stored for new user');
+        // Store the token in an HTTP-only cookie
+        document.cookie = `auth_token=${authResponse.token}; path=/; secure; samesite=strict`;
+
+        // If you have a refresh token, set it in a separate cookie
+        if (authResponse.refreshToken) {
+          document.cookie = `refresh_token=${authResponse.refreshToken}; path=/; secure; samesite=strict`;
+        }
+
+        console.log('🔑 Auth token stored in cookies for new user');
 
         setLoading(false);
         return authResponse;
@@ -279,7 +285,6 @@ export function useRegister() {
           throw err;
         }
 
-        // Si el error no es una instancia de AuthError, crear una nueva instancia
         const error = new AuthError(
           err instanceof Error ? err.message : 'Error al registrar el usuario',
           'UNKNOWN_ERROR',
@@ -313,17 +318,19 @@ export function useLogout() {
         `;
 
       console.log('📤 Sending logout request to API Gateway');
-      // Call the API with authentication headers
       await fetchGraphQL({
         query: logoutMutation,
         headers: getAuthHeaders(),
       });
       console.log('📥 Received logout response');
 
-      // Clear the token
-      clearAuthToken();
-      console.log('🔓 Auth token cleared');
+      // Clear the cookies
+      document.cookie =
+        'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+      document.cookie =
+        'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
 
+      console.log('🔓 Auth tokens cleared from cookies');
       setLoading(false);
       return true;
     } catch (err: unknown) {
@@ -332,9 +339,12 @@ export function useLogout() {
       console.error('❌ Logout error:', errorMessage);
       setError(errorMessage);
       setLoading(false);
-      // Even if the API call fails, we clear the token
-      clearAuthToken();
-      console.log('🔓 Auth token cleared (after error)');
+      // Even if the API call fails, we clear the cookies
+      document.cookie =
+        'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+      document.cookie =
+        'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+      console.log('🔓 Auth tokens cleared from cookies (after error)');
       return false;
     }
   }, []);
@@ -382,7 +392,7 @@ export function useCurrentUser() {
       console.log('Auth headers:', headers);
 
       if (data.me) {
-        console.log('📥 User session found:', {
+        console.log('�� User session found:', {
           id: data.me.id,
           username: data.me.username,
           fullName: data.me.fullName,
