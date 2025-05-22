@@ -43,38 +43,7 @@ export default function Dashboard() {
               {/* <img alt="Logo de Course Clash - Una espada insertada en un birrete de graduación" src="https://placehold.co/50x50?text=Logo" className="h-10"> */}
               <span className='font-bold text-xl'>Course Clash</span>
             </div>
-            <div className='md:flex hidden space-x-6'>
-              <a
-                href='/9twIWsbSYpNA4lj2s5SG#'
-                className='hover:text-emerald-200 transition'
-              >
-                Inicio
-              </a>
-              <a
-                href='/9twIWsbSYpNA4lj2s5SG#'
-                className='hover:text-emerald-200 transition'
-              >
-                Mis Cursos
-              </a>
-              <Link
-                href='/duelos'
-                className='hover:text-emerald-200 transition'
-              >
-                Duelos
-              </Link>
-              <a
-                href='/9twIWsbSYpNA4lj2s5SG#'
-                className='hover:text-emerald-200 transition'
-              >
-                Tienda
-              </a>
-              <a
-                href='/9twIWsbSYpNA4lj2s5SG#'
-                className='hover:text-emerald-200 transition'
-              >
-                Logros
-              </a>
-            </div>
+
             <div className='items-center flex space-x-4'>
               <div className='items-center bg-emerald-600 rounded-full px-3 py-1 flex'>
                 <svg

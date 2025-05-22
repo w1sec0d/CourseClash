@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth-context';
 import { User } from '@/lib/auth-hooks';
 import Button from '@/components/Button';
 import { TrophyIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 
 export default function Duelos() {
   const { user } = useAuth();
@@ -459,7 +460,13 @@ export default function Duelos() {
             <div className='lg:w-1/2 bg-gradient-to-br rounded-xl shadow-xl from-emerald-500 to-emerald-700 overflow-hidden'>
               <div className='flex flex-col'>
                 <div className='items-center justify-center p-6 flex'>
-                  {/* <img alt="Imagen de dos estudiantes enfrentándose en un duelo académico con espadas de conocimiento" src="https://placehold.co/300x400?text=Duelo" className="object-cover transform hover:scale-105 transition duration-300 rounded-lg h-64"> */}
+                  <Image
+                    src='/images/duels.webp'
+                    alt='Duelo'
+                    width={300}
+                    height={400}
+                    className='object-cover transform hover:scale-105 transition duration-300 rounded-lg h-64'
+                  />
                 </div>
                 <div className='text-white p-6'>
                   <p className='text-2xl font-bold mb-4'>
