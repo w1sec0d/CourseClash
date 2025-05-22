@@ -7,6 +7,7 @@ import { fetchGraphQL } from '@/lib/graphql-client';
 import QuizScreen from './components/quizScreen';
 import { useAuth } from '@/lib/auth-context';
 import { User } from '@/lib/auth-hooks';
+import Button from '@/components/Button';
 
 export default function Duelos() {
   const { user, isAuthenticated } = useAuth();
@@ -92,11 +93,6 @@ export default function Duelos() {
   };
 
   const handleRequestDuel = async () => {
-    if (!isAuthenticated) {
-      setError('Debes iniciar sesión para solicitar un duelo');
-      return;
-    }
-
     if (!opponentUser) {
       setError('Debes buscar y seleccionar un oponente primero');
       return;
@@ -209,11 +205,7 @@ export default function Duelos() {
 
   return (
     <div className='container mx-auto p-4'>
-      {!isAuthenticated ? (
-        <div className='text-center p-4 bg-yellow-100 rounded'>
-          <p>Debes iniciar sesión para acceder a los duelos</p>
-        </div>
-      ) : !showQuiz ? (
+      {!showQuiz ? (
         <>
           <h1 className='text-2xl font-bold mb-4'>Duelos</h1>
 
@@ -236,7 +228,7 @@ export default function Duelos() {
                     className='flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
                     placeholder='ejemplo@correo.com'
                   />
-                  <button
+                  <Button
                     onClick={handleSearchOpponent}
                     disabled={isSearching}
                     className={`ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
@@ -244,7 +236,7 @@ export default function Duelos() {
                     }`}
                   >
                     {isSearching ? 'Buscando...' : 'Buscar'}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -256,32 +248,28 @@ export default function Duelos() {
                   </p>
                   <p>Correo: {opponentUser.email}</p>
                   <p>Rol: {opponentUser.role}</p>
+                  {opponentUser && (
+                    <Button
+                      onClick={handleRequestDuel}
+                      disabled={isLoading}
+                      className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${
+                        isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      {isLoading ? 'Solicitando...' : 'Solicitar Duelo'}
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {duelResponse && (
+                <div className='mt-4 p-4 bg-green-100 rounded'>
+                  <h2 className='font-bold'>Duelo Solicitado:</h2>
+                  <p>ID del Duelo: {duelResponse.duelId}</p>
+                  <p>Mensaje: {duelResponse.message}</p>
                 </div>
               )}
             </div>
-          </div>
-
-          <div className='mb-8'>
-            <h2 className='text-xl font-semibold mb-4'>Solicitar Duelo</h2>
-            <button
-              onClick={handleRequestDuel}
-              disabled={isLoading || !opponentUser}
-              className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${
-                isLoading || !opponentUser
-                  ? 'opacity-50 cursor-not-allowed'
-                  : ''
-              }`}
-            >
-              {isLoading ? 'Solicitando...' : 'Solicitar Duelo'}
-            </button>
-
-            {duelResponse && (
-              <div className='mt-4 p-4 bg-green-100 rounded'>
-                <h2 className='font-bold'>Duelo Solicitado:</h2>
-                <p>ID del Duelo: {duelResponse.duelId}</p>
-                <p>Mensaje: {duelResponse.message}</p>
-              </div>
-            )}
           </div>
 
           <div className='mb-8'>
@@ -381,7 +369,7 @@ export default function Duelos() {
         <QuizScreen
           wsConnection={wsConnection}
           playerId={formData.playerId}
-          opponentId={formData.playerId === user?.id ? 'user_002' : user?.id}
+          opponentId={opponentUser?.id || 'user_002'}
         />
       )}
     </div>
