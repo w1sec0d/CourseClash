@@ -392,7 +392,7 @@ export default function Duelos() {
     }
 
     try {
-      await fetchGraphQL({
+      const data = await fetchGraphQL({
         query: ACCEPT_DUEL,
         variables: {
           input: {
