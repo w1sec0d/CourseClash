@@ -103,25 +103,45 @@ export async function fetchGraphQL({
   }
 }
 
-// Almacena el token de autenticación en localStorage (solo en el cliente)
+// Almacena el token de autenticación en localStorage y cookies (solo en el cliente)
 export const setAuthToken = (token: string) => {
   if (typeof window !== 'undefined') {
+    // Guardar en localStorage
     localStorage.setItem('authToken', token);
+
+    // Guardar en cookies
+    document.cookie = `auth_token=${token}; path=/; max-age=2592000; SameSite=Lax`; // 30 días
   }
 };
 
-// Obtiene el token de autenticación desde localStorage (solo en el cliente)
+// Obtiene el token de autenticación desde localStorage o cookies (solo en el cliente)
 export const getAuthToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('authToken');
+    // Intentar obtener de localStorage primero
+    const token = localStorage.getItem('authToken');
+    if (token) return token;
+
+    // Si no está en localStorage, intentar obtener de cookies
+    const cookies = document.cookie.split(';');
+    const authCookie = cookies.find((cookie) =>
+      cookie.trim().startsWith('auth_token=')
+    );
+    if (authCookie) {
+      const token = authCookie.split('=')[1];
+      // Guardar en localStorage para futuras referencias
+      localStorage.setItem('authToken', token);
+      return token;
+    }
   }
   return null;
 };
 
-// Elimina el token de autenticación de localStorage (solo en el cliente)
+// Elimina el token de autenticación de localStorage y cookies (solo en el cliente)
 export const clearAuthToken = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('authToken');
+    document.cookie =
+      'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   }
 };
 

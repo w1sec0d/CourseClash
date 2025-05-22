@@ -101,6 +101,7 @@ services:
     environment:
       - NODE_ENV=production
       - API_URL=http://api_gateway:8080
+      - NEXT_PUBLIC_API_URL=http://api_gateway:8080
     depends_on:
       - api_gateway
     networks:
