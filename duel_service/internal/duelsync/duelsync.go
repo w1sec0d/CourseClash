@@ -30,6 +30,32 @@ var (
 	Mu              sync.Mutex                      
 )
 
+// NotificationConnections almacena las conexiones WebSocket para notificaciones por ID de usuario
+var (
+	NotificationConnections = make(map[string]*websocket.Conn)
+	NotificationMu          sync.Mutex // Mutex para proteger el acceso a NotificationConnections
+)
+
+// SendNotification envía una notificación a un usuario específico si tiene una conexión activa
+func SendNotification(userID string, message interface{}) bool {
+	NotificationMu.Lock()
+	defer NotificationMu.Unlock()
+	
+	conn, exists := NotificationConnections[userID]
+	if !exists || conn == nil {
+		return false
+	}
+	
+	err := conn.WriteJSON(message)
+	if err != nil {
+		log.Printf("Error al enviar notificación a usuario %s: %v", userID, err)
+		delete(NotificationConnections, userID)
+		return false
+	}
+	
+	return true
+}
+
 // CleanupDuel limpia los recursos asociados a un duelo terminado
 func CleanupDuel(duelID string) {
 	Mu.Lock()

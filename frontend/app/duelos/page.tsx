@@ -10,7 +10,7 @@ import { User } from '@/lib/auth-hooks';
 import Button from '@/components/Button';
 
 export default function Duelos() {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(
     null
   );
@@ -20,6 +20,7 @@ export default function Duelos() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
+  const [notificationWs, setNotificationWs] = useState<WebSocket | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
   const [formData, setFormData] = useState({
     duelId: '',
@@ -31,15 +32,117 @@ export default function Duelos() {
   const [opponentEmail, setOpponentEmail] = useState('');
   const [opponentUser, setOpponentUser] = useState<User | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [pendingChallenges, setPendingChallenges] = useState<
+    Array<{
+      duelId: string;
+      requesterId: string;
+      requesterName: string;
+      timestamp: string;
+    }>
+  >([]);
 
   useEffect(() => {
     if (user?.id) {
+      console.log('User data loaded:', user);
+      console.log('Setting playerId to:', user.id);
       setFormData((prev) => ({
         ...prev,
         playerId: user.id,
       }));
+    } else {
+      console.log('User data not available or missing ID:', user);
     }
   }, [user]);
+
+  // Establecer la conexión WebSocket para notificaciones de duelos al cargar la página
+  useEffect(() => {
+    let localWs: WebSocket | null = null;
+
+    if (user?.id && !notificationWs) {
+      console.log(
+        `Attempting to connect to notifications WebSocket for user ${user.id}...`
+      );
+
+      const connectWebSocket = () => {
+        const wsUrl = `ws://localhost:8002/ws/notifications/${user.id}`;
+        console.log(`Connecting to WebSocket URL: ${wsUrl}`);
+
+        localWs = new WebSocket(wsUrl);
+
+        localWs.onopen = () => {
+          console.log(
+            'Notification WebSocket connection established successfully'
+          );
+          setError(null); // Clear any existing connection errors
+        };
+
+        localWs.onmessage = (event) => {
+          try {
+            console.log('WebSocket message received:', event.data);
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'duel_request') {
+              console.log('Duel request notification received:', data);
+              setPendingChallenges((prev) => [
+                ...prev,
+                {
+                  duelId: data.duelId,
+                  requesterId: data.requesterId,
+                  requesterName: data.requesterName,
+                  timestamp: new Date().toISOString(),
+                },
+              ]);
+            } else if (data.type === 'welcome') {
+              console.log('Welcome message received:', data);
+            }
+          } catch (error) {
+            console.error('Error parsing WebSocket message:', error);
+          }
+        };
+
+        localWs.onerror = (error) => {
+          console.error('Notification WebSocket error:', error);
+          console.log(
+            'WebSocket connection failed. Will retry in 3 seconds...'
+          );
+
+          // Show error message to user
+          setError('Error de conexión con el servidor. Reintentando...');
+        };
+
+        localWs.onclose = (event) => {
+          console.log(
+            `Notification WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason}`
+          );
+
+          // Attempt to reconnect after a short delay, but only if not an intentional close
+          if (event.code !== 1000) {
+            // 1000 is normal closure
+            setTimeout(() => {
+              console.log('Attempting to reconnect WebSocket...');
+              if (user?.id) {
+                connectWebSocket();
+              }
+            }, 3000);
+          }
+        };
+
+        setNotificationWs(localWs);
+      };
+
+      connectWebSocket();
+
+      // Cleanup function for this specific effect
+      return () => {
+        console.log('Component unmounting, cleaning up WebSocket connection');
+        try {
+          localWs?.close();
+        } catch (error) {
+          console.error('Error closing WebSocket:', error);
+        }
+      };
+    }
+  }, [user, notificationWs]);
 
   // Limpiar la conexión WebSocket cuando el componente se desmonte
   useEffect(() => {
@@ -93,6 +196,100 @@ export default function Duelos() {
   };
 
   const handleRequestDuel = async () => {
+    console.log('Current user state:', user);
+    console.log('User ID:', user?.id);
+
+    // Check if user exists but ID is missing
+    if (user && !user.id) {
+      console.log(
+        'User exists but ID is missing. Full user object:',
+        JSON.stringify(user)
+      );
+
+      // Check if the ID might be under a different property name
+      const possibleIdFields = ['_id', 'userId', 'uid', 'userID'];
+      let alternativeId = null;
+
+      for (const field of possibleIdFields) {
+        // Use Record to avoid TypeScript errors
+        const userRecord = user as Record<string, unknown>;
+        if (userRecord[field]) {
+          console.log(
+            `Found alternative ID field: ${field} with value: ${String(
+              userRecord[field]
+            )}`
+          );
+          alternativeId = String(userRecord[field]);
+          break;
+        }
+      }
+
+      if (alternativeId && opponentUser) {
+        // Use the alternative ID if found
+        const data = await fetchGraphQL({
+          query: REQUEST_DUEL,
+          variables: {
+            input: {
+              requesterId: String(alternativeId),
+              opponentId: opponentUser.id,
+            },
+          },
+        });
+
+        setDuelResponse(data.requestDuel);
+        setError(null);
+
+        // Rest of the successful duel request handling...
+        setFormData((prev) => ({
+          ...prev,
+          duelId: data.requestDuel.duelId,
+        }));
+
+        if (data.requestDuel.duelId) {
+          // Establish WebSocket connection...
+          if (wsConnection) {
+            wsConnection.close();
+          }
+
+          const ws = new WebSocket(
+            `ws://localhost:8002/ws/duels/${data.requestDuel.duelId}/${alternativeId}`
+          );
+
+          ws.onopen = () => {
+            setError(null);
+            setShowQuiz(true);
+          };
+
+          ws.onerror = (error) => {
+            setError('Error en la conexión WebSocket');
+            console.error('WebSocket error:', error);
+          };
+
+          ws.onclose = () => {
+            if (error) {
+              setShowQuiz(false);
+            }
+          };
+
+          setWsConnection(ws);
+        }
+
+        setIsLoading(false);
+        return;
+      }
+
+      setError(
+        'Tu sesión existe pero falta el ID de usuario. Intenta cerrar sesión y volver a iniciar.'
+      );
+      return;
+    }
+
+    // Original check
+    if (!user?.id) {
+      setError('Debes iniciar sesión para solicitar un duelo');
+      return;
+    }
+
     if (!opponentUser) {
       setError('Debes buscar y seleccionar un oponente primero');
       return;
@@ -100,11 +297,14 @@ export default function Duelos() {
 
     setIsLoading(true);
     try {
+      // Ensure we have a valid ID, use an explicit string to avoid type issues
+      const requesterId = String(user.id);
+
       const data = await fetchGraphQL({
         query: REQUEST_DUEL,
         variables: {
           input: {
-            requesterId: user?.id,
+            requesterId: requesterId,
             opponentId: opponentUser.id,
           },
         },
@@ -159,8 +359,33 @@ export default function Duelos() {
     }
   };
 
-  const handleAcceptDuel = async () => {
-    if (!acceptFormData.duelId) {
+  const handleChallengeAccept = (duelId: string) => {
+    setAcceptFormData({
+      duelId: duelId,
+    });
+
+    // Auto-accept the challenge
+    handleAcceptDuel(duelId);
+
+    // Remove from pending challenges
+    setPendingChallenges((prev) =>
+      prev.filter((challenge) => challenge.duelId !== duelId)
+    );
+  };
+
+  const handleChallengeReject = (duelId: string) => {
+    // TODO: Send reject notification to backend if needed
+
+    // Remove from pending challenges
+    setPendingChallenges((prev) =>
+      prev.filter((challenge) => challenge.duelId !== duelId)
+    );
+  };
+
+  const handleAcceptDuel = async (duelId?: string) => {
+    const duelIdToUse = duelId || acceptFormData.duelId;
+
+    if (!duelIdToUse) {
       setError('Por favor, ingresa el ID del duelo');
       return;
     }
@@ -171,13 +396,50 @@ export default function Duelos() {
         query: ACCEPT_DUEL,
         variables: {
           input: {
-            duelId: acceptFormData.duelId,
+            duelId: duelIdToUse,
           },
         },
       });
 
       setAcceptResponse(data.acceptDuel);
       setError(null);
+
+      // Establecer el ID del duelo en el formData
+      setFormData((prev) => ({
+        ...prev,
+        duelId: duelIdToUse,
+      }));
+
+      // Establecer la conexión WebSocket inmediatamente después de aceptar
+      if (duelIdToUse && user?.id) {
+        // Cerrar conexión existente si hay una
+        if (wsConnection) {
+          wsConnection.close();
+        }
+
+        // Crear nueva conexión WebSocket
+        const ws = new WebSocket(
+          `ws://localhost:8002/ws/duels/${duelIdToUse}/${user.id}`
+        );
+
+        ws.onopen = () => {
+          setError(null);
+          setShowQuiz(true);
+        };
+
+        ws.onerror = (error) => {
+          setError('Error en la conexión WebSocket');
+          console.error('WebSocket error:', error);
+        };
+
+        ws.onclose = () => {
+          if (error) {
+            setShowQuiz(false);
+          }
+        };
+
+        setWsConnection(ws);
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Error al aceptar el duelo'
@@ -245,6 +507,46 @@ export default function Duelos() {
       {!showQuiz ? (
         <>
           <h1 className='text-2xl font-bold mb-4'>Duelos</h1>
+
+          {pendingChallenges.length > 0 && (
+            <div className='mb-8'>
+              <h2 className='text-xl font-semibold mb-4'>
+                Desafíos Pendientes
+              </h2>
+              <div className='space-y-4'>
+                {pendingChallenges.map((challenge) => (
+                  <div
+                    key={challenge.duelId}
+                    className='p-4 bg-yellow-100 rounded border border-yellow-300'
+                  >
+                    <p className='font-semibold'>
+                      Desafío de: {challenge.requesterName}
+                    </p>
+                    <p className='text-sm text-gray-600'>
+                      ID: {challenge.duelId}
+                    </p>
+                    <p className='text-sm text-gray-600'>
+                      Recibido: {new Date(challenge.timestamp).toLocaleString()}
+                    </p>
+                    <div className='mt-2 flex space-x-2'>
+                      <button
+                        onClick={() => handleChallengeAccept(challenge.duelId)}
+                        className='bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm'
+                      >
+                        Aceptar
+                      </button>
+                      <button
+                        onClick={() => handleChallengeReject(challenge.duelId)}
+                        className='bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm'
+                      >
+                        Rechazar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className='mb-8'>
             <h2 className='text-xl font-semibold mb-4'>Buscar Oponente</h2>
@@ -330,7 +632,7 @@ export default function Duelos() {
                 />
               </div>
               <button
-                onClick={handleAcceptDuel}
+                onClick={() => handleAcceptDuel()}
                 disabled={isAccepting}
                 className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ${
                   isAccepting ? 'opacity-50 cursor-not-allowed' : ''
