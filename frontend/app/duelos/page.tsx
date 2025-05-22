@@ -5,9 +5,11 @@ import { REQUEST_DUEL, ACCEPT_DUEL } from '../graphql/mutations/duel';
 import { RequestDuelResponse, AcceptDuelResponse } from '../types/duel';
 import { fetchGraphQL } from '@/lib/graphql-client';
 import QuizScreen from './components/quizScreen';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { useAuth } from '@/lib/auth-context';
+import { User } from '@/lib/auth-hooks';
 
 export default function Duelos() {
+  const { user, isAuthenticated } = useAuth();
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(
     null
   );
@@ -20,12 +22,23 @@ export default function Duelos() {
   const [showQuiz, setShowQuiz] = useState(false);
   const [formData, setFormData] = useState({
     duelId: '',
-    playerId: '',
+    playerId: user?.id || '',
   });
   const [acceptFormData, setAcceptFormData] = useState({
     duelId: '',
   });
-  const [messageInput, setMessageInput] = useState('');
+  const [opponentEmail, setOpponentEmail] = useState('');
+  const [opponentUser, setOpponentUser] = useState<User | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    if (user?.id) {
+      setFormData((prev) => ({
+        ...prev,
+        playerId: user.id,
+      }));
+    }
+  }, [user]);
 
   // Limpiar la conexión WebSocket cuando el componente se desmonte
   useEffect(() => {
@@ -36,15 +49,67 @@ export default function Duelos() {
     };
   }, [wsConnection]);
 
+  const handleSearchOpponent = async () => {
+    if (!opponentEmail) {
+      setError('Por favor, ingresa el correo del oponente');
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const searchUserQuery = `
+        query SearchUserByEmail($email: String!) {
+          getUserByEmail(email: $email) {
+            id
+            username
+            email
+            fullName
+            role
+          }
+        }
+      `;
+
+      const data = await fetchGraphQL({
+        query: searchUserQuery,
+        variables: { email: opponentEmail },
+      });
+
+      if (data.getUserByEmail) {
+        setOpponentUser(data.getUserByEmail);
+        setError(null);
+      } else {
+        setError('No se encontró ningún usuario con ese correo');
+        setOpponentUser(null);
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Error al buscar el usuario'
+      );
+      setOpponentUser(null);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const handleRequestDuel = async () => {
+    if (!isAuthenticated) {
+      setError('Debes iniciar sesión para solicitar un duelo');
+      return;
+    }
+
+    if (!opponentUser) {
+      setError('Debes buscar y seleccionar un oponente primero');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const data = await fetchGraphQL({
         query: REQUEST_DUEL,
         variables: {
           input: {
-            requesterId: 'user_001',
-            opponentId: 'user_002',
+            requesterId: user?.id,
+            opponentId: opponentUser.id,
           },
         },
       });
@@ -142,45 +207,69 @@ export default function Duelos() {
     setWsConnection(ws);
   };
 
-  const handleSendMessage = () => {
-    if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) {
-      setError('No hay conexión WebSocket activa');
-      return;
-    }
-
-    if (!messageInput.trim()) {
-      setError('El mensaje no puede estar vacío');
-      return;
-    }
-
-    try {
-      // Enviamos el mensaje en el formato que espera el backend
-      wsConnection.send(
-        JSON.stringify({
-          answer: messageInput,
-        })
-      );
-      setMessageInput('');
-      setError(null);
-    } catch (err) {
-      setError('Error al enviar el mensaje');
-      console.error('Error sending message:', err);
-    }
-  };
-
   return (
     <div className='container mx-auto p-4'>
-      {!showQuiz ? (
+      {!isAuthenticated ? (
+        <div className='text-center p-4 bg-yellow-100 rounded'>
+          <p>Debes iniciar sesión para acceder a los duelos</p>
+        </div>
+      ) : !showQuiz ? (
         <>
           <h1 className='text-2xl font-bold mb-4'>Duelos</h1>
+
+          <div className='mb-8'>
+            <h2 className='text-xl font-semibold mb-4'>Buscar Oponente</h2>
+            <div className='space-y-4'>
+              <div>
+                <label
+                  htmlFor='opponentEmail'
+                  className='block text-sm font-medium text-gray-700'
+                >
+                  Correo del Oponente
+                </label>
+                <div className='mt-1 flex rounded-md shadow-sm'>
+                  <input
+                    type='email'
+                    id='opponentEmail'
+                    value={opponentEmail}
+                    onChange={(e) => setOpponentEmail(e.target.value)}
+                    className='flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+                    placeholder='ejemplo@correo.com'
+                  />
+                  <button
+                    onClick={handleSearchOpponent}
+                    disabled={isSearching}
+                    className={`ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                      isSearching ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {isSearching ? 'Buscando...' : 'Buscar'}
+                  </button>
+                </div>
+              </div>
+
+              {opponentUser && (
+                <div className='mt-4 p-4 bg-green-100 rounded'>
+                  <h3 className='font-bold'>Oponente Encontrado:</h3>
+                  <p>
+                    Nombre: {opponentUser.fullName || opponentUser.username}
+                  </p>
+                  <p>Correo: {opponentUser.email}</p>
+                  <p>Rol: {opponentUser.role}</p>
+                </div>
+              )}
+            </div>
+          </div>
 
           <div className='mb-8'>
             <h2 className='text-xl font-semibold mb-4'>Solicitar Duelo</h2>
             <button
               onClick={handleRequestDuel}
-              disabled={isLoading}
+              disabled={isLoading || !opponentUser}
               className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                isLoading || !opponentUser
+                  ? 'opacity-50 cursor-not-allowed'
+                  : ''
               }`}
             >
               {isLoading ? 'Solicitando...' : 'Solicitar Duelo'}
@@ -292,9 +381,7 @@ export default function Duelos() {
         <QuizScreen
           wsConnection={wsConnection}
           playerId={formData.playerId}
-          opponentId={
-            formData.playerId === 'user_001' ? 'user_002' : 'user_001'
-          }
+          opponentId={formData.playerId === user?.id ? 'user_002' : user?.id}
         />
       )}
     </div>
