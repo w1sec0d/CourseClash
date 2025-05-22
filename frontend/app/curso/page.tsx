@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import CourseNavbar from './components/CourseNavbar';
+import NavigationBar from '../../components/NavigationBar';
 import Sidebar from './components/Sidebar';
 import SidebarOverlay from './components/SidebarOverlay';
 import CourseHeader from './components/CourseHeader';
@@ -136,7 +136,6 @@ export default function Curso() {
 
   return (
     <div>
-      <CourseNavbar toggleSidebar={toggleSidebar} />
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <SidebarOverlay
         isOpen={isSidebarOpen}
