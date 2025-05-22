@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import clsx from 'clsx';
+import { useAuth } from '@/lib/auth-context';
+import { usePathname } from 'next/navigation';
 import {
   HomeIcon,
   SparklesIcon,
@@ -13,12 +15,19 @@ import {
   UserPlusIcon,
 } from '@heroicons/react/24/outline';
 
-interface NavigationBarProps {
-  toggleSidebar?: () => void;
-}
+interface NavigationBarProps {}
 
-export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) => {
+export const NavigationBar: React.FC<NavigationBarProps> = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
+  
+  // Verificar si la ruta actual debe mostrar el sidebar
+  const showSidebar = isAuthenticated && (
+    pathname?.startsWith('/curso') || 
+    pathname?.startsWith('/dashboard') || 
+    pathname?.startsWith('/perfil')
+  );
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -28,12 +37,22 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
     <nav className='bg-emerald-700 shadow-lg sticky top-0 z-50'>
       <div className='mx-auto px-4 sm:px-6 lg:px-2 max-w-7xl'>
         <div className='items-center justify-between h-16 flex'>
-          {toggleSidebar && (
+          {showSidebar && (
             <button
               type='button'
               className='p-2 mr-2 rounded hover:bg-emerald-600 transition lg:hidden'
               id='sidebarToggle'
-              onClick={toggleSidebar}
+              onClick={() => {
+                // Toggle del sidebar
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar?.classList.contains('translate-x-0')) {
+                  sidebar?.classList.remove('translate-x-0');
+                  sidebar?.classList.add('-translate-x-full');
+                } else {
+                  sidebar?.classList.add('translate-x-0');
+                  sidebar?.classList.remove('-translate-x-full');
+                }
+              }}
               aria-label='Toggle sidebar'
             >
               <svg
@@ -65,6 +84,54 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
             </div>
             <Link href="/" className='text-white text-2xl font-bold'>Course Clash</Link>
           </div>
+          
+          {/* Menú para pantallas medianas y grandes */}
+          <div className='hidden md:flex items-center justify-end space-x-4 flex-1'>
+            <Link
+              href='/#inicio'
+              className='text-white hover:bg-emerald-600 px-3 py-2 rounded-md text-sm font-medium'
+            >
+              Inicio
+            </Link>
+            <Link
+              href='/#caracteristicas'
+              className='text-white hover:bg-emerald-600 px-3 py-2 rounded-md text-sm font-medium'
+            >
+              Características
+            </Link>
+            <Link
+              href='/duelos'
+              className='text-white hover:bg-emerald-600 px-3 py-2 rounded-md text-sm font-medium'
+            >
+              Duelos
+            </Link>
+            <Link
+              href='/precios'
+              className='text-white hover:bg-emerald-600 px-3 py-2 rounded-md text-sm font-medium'
+            >
+              Precios
+            </Link>
+            
+            {!isAuthenticated && (
+              <div className='flex items-center ml-2 space-x-3'>
+                <Link
+                  href='/login'
+                  className='text-white hover:bg-emerald-500 bg-emerald-600 px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1'
+                >
+                  <ArrowRightOnRectangleIcon className='h-4 w-4' />
+                  Iniciar Sesión
+                </Link>
+                <Link
+                  href='/registro'
+                  className='text-emerald-700 hover:bg-gray-100 bg-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1 border border-emerald-700'
+                >
+                  <UserPlusIcon className='h-4 w-4' />
+                  Registrarse
+                </Link>
+              </div>
+            )}
+          </div>
+          
           <div className='md:hidden -mr-2 flex'>
             <button
               type='button'
