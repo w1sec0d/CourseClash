@@ -1454,3 +1454,45 @@
 {"timestamp": "2025-05-22T01:01:33.875138+00:00", "level": "INFO", "message": "Petición completada 1747875693874-3786", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
 {"timestamp": "2025-05-22T01:01:33.930371+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql/", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
 {"timestamp": "2025-05-22T01:01:34.015461+00:00", "level": "INFO", "message": "Petición completada 1747875693929-3514", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:04:55.209658+00:00", "level": "INFO", "message": "Petición recibida: POST /graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:04:55.210398+00:00", "level": "WARNING", "message": "Petición con error del cliente 1747875895209-7841", "pathname": "/app/app/core/middleware.py", "lineno": 236, "module": "middleware"}
+{"timestamp": "2025-05-22T01:04:57.075578+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:04:57.075991+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:04:57.076520+00:00", "level": "INFO", "message": "Petición completada 1747875897075-3786", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:04:57.077035+00:00", "level": "INFO", "message": "Petición completada 1747875897075-3786", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:04:57.130437+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql/", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:04:57.131314+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql/", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:04:57.219982+00:00", "level": "INFO", "message": "Petición completada 1747875897130-3514", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:04:57.220521+00:00", "level": "INFO", "message": "Petición completada 1747875897131-3514", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:01.156163+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:01.156922+00:00", "level": "INFO", "message": "Petición completada 1747875901155-3786", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:01.168683+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql/", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:01.251492+00:00", "level": "INFO", "message": "Petición completada 1747875901168-3514", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:03.860044+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:03.860604+00:00", "level": "INFO", "message": "Petición completada 1747875903859-3786", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:03.871866+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql/", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:03.917668+00:00", "level": "INFO", "message": "Petición completada 1747875903871-3514", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:14.541025+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:14.541502+00:00", "level": "INFO", "message": "Petición completada 1747875914540-3786", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:14.588550+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql/", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:14.632766+00:00", "level": "INFO", "message": "Petición completada 1747875914588-3514", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:28.475105+00:00", "level": "INFO", "message": "Petición recibida: POST /graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:28.475850+00:00", "level": "WARNING", "message": "Petición con error del cliente 1747875928474-7841", "pathname": "/app/app/core/middleware.py", "lineno": 236, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:29.101970+00:00", "level": "INFO", "message": "Petición recibida: POST /graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:29.102915+00:00", "level": "WARNING", "message": "Petición con error del cliente 1747875929101-7841", "pathname": "/app/app/core/middleware.py", "lineno": 236, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.026484+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.027092+00:00", "level": "INFO", "message": "Petición completada 1747875930026-3786", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.058548+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql/", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.115758+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.116458+00:00", "level": "INFO", "message": "Petición completada 1747875930115-3786", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.124953+00:00", "level": "INFO", "message": "Petición completada 1747875930058-3514", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.137107+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql/", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.219760+00:00", "level": "INFO", "message": "Petición completada 1747875930136-3514", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.543115+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.543831+00:00", "level": "INFO", "message": "Petición completada 1747875930542-3786", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.566514+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql/", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.620486+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.621785+00:00", "level": "INFO", "message": "Petición completada 1747875930619-3786", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.633730+00:00", "level": "INFO", "message": "Petición completada 1747875930566-3514", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.661443+00:00", "level": "INFO", "message": "Petición recibida: POST /api/graphql/", "pathname": "/app/app/core/middleware.py", "lineno": 194, "module": "middleware"}
+{"timestamp": "2025-05-22T01:05:30.758421+00:00", "level": "INFO", "message": "Petición completada 1747875930660-3514", "pathname": "/app/app/core/middleware.py", "lineno": 241, "module": "middleware"}

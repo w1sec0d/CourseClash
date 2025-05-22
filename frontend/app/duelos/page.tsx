@@ -112,6 +112,43 @@ export default function Duelos() {
 
       setDuelResponse(data.requestDuel);
       setError(null);
+
+      // Establecer el ID del duelo en el formData
+      setFormData((prev) => ({
+        ...prev,
+        duelId: data.requestDuel.duelId,
+      }));
+
+      // Establecer la conexión WebSocket inmediatamente después de una solicitud exitosa
+      if (data.requestDuel.duelId && user?.id) {
+        // Cerrar conexión existente si hay una
+        if (wsConnection) {
+          wsConnection.close();
+        }
+
+        // Crear nueva conexión WebSocket
+        const ws = new WebSocket(
+          `ws://localhost:8002/ws/duels/${data.requestDuel.duelId}/${user.id}`
+        );
+
+        ws.onopen = () => {
+          setError(null);
+          setShowQuiz(true);
+        };
+
+        ws.onerror = (error) => {
+          setError('Error en la conexión WebSocket');
+          console.error('WebSocket error:', error);
+        };
+
+        ws.onclose = () => {
+          if (error) {
+            setShowQuiz(false);
+          }
+        };
+
+        setWsConnection(ws);
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Error al solicitar el duelo'
