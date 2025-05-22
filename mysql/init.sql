@@ -134,6 +134,31 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Insertar un usuario de ejemplo
+INSERT INTO users (username, email, hashed_password, full_name, avatar_url, bio, experience_points)
+VALUES ('johndoe', 'johndoe@example.com', 'hashed_password_example', 'John Doe', 'https://example.com/avatar.jpg', 'Desarrollador apasionado por la tecnología.', 1500);
+
+-- Insertar un usuario de ejemplo
+INSERT INTO users (username, email, hashed_password, full_name, avatar_url, bio, experience_points)
+VALUES ('danielM', 'dani@example.com', 'hashed_password_example', 'John Doe', 'https://example.com/avatar.jpg', 'Back.', 1000);
+
+
+-- Insertar un curso de ejemplo asociado al usuario recién creado
+INSERT INTO courses (title, description, creator_id)
+VALUES ('Introducción a SQL', 'Aprende los conceptos básicos de SQL y cómo manejar bases de datos.', 1);
+
+-- Insertar un curso de ejemplo asociado al usuario recién creado
+INSERT INTO courses (title, description, creator_id)
+VALUES ('Introducción a Java', 'Aprende los conceptos básicos de Java.', 1);
+
+-- Insertar un participante como estudiante en el curso "Introducción a SQL"
+INSERT INTO course_participants (course_id, user_id, role)
+VALUES (1, 2, 'student');
+
+-- Insertar un participante como estudiante en el curso "Introducción a SQL"
+INSERT INTO course_participants (course_id, user_id, role)
+VALUES (2, 2, 'student');
+
 INSERT INTO users (username, email, hashed_password, full_name, is_active, is_superuser) 
 VALUES ('profesor', 'profesor@gmail.com', '$2b$12$ZMvtGFcPHaAOw505skhUXOVZnNDYkgaaquM8HC8t4Ga7vkxL4z5Be', 'Teacher', TRUE, TRUE),
 ('estudiante', 'estudiante@gmail.com', '$2b$12$ZMvtGFcPHaAOw505skhUXOVZnNDYkgaaquM8HC8t4Ga7vkxL4z5Be', 'Student', TRUE, FALSE);
