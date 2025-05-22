@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import NavigationBar from '../../components/NavigationBar';
-import Sidebar from './components/Sidebar';
-import SidebarOverlay from './components/SidebarOverlay';
+import Sidebar from '../../components/Sidebar';
+import SidebarOverlay from '../../components/SidebarOverlay';
 import CourseHeader from './components/CourseHeader';
 import { AnunciosTab, MaterialesTab, TareasTab, DuelosTab, RankingTab, EstadisticasTab, LogrosTab } from './components/tabs';
 
@@ -136,15 +136,6 @@ export default function Curso() {
 
   return (
     <div>
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <SidebarOverlay
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
-      <section className='pt-16 lg:pl-64'>
-        
-
-
         <div className='mx-auto md:p-6 container p-4 relative'>
           <div className='mb-6'>
             <CourseHeader
@@ -184,7 +175,6 @@ export default function Curso() {
             </div>
           </div>
         </div>
-      </section>
     </div>
   );
 }

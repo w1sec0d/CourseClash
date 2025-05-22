@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import NavigationBar from '../components/NavigationBar';
+import Sidebar from '../components/Sidebar';
+import SidebarOverlay from '@/components/SidebarOverlay';
 import Footer from '../components/Footer';
 import clsx from 'clsx';
 import { AuthProvider } from '@/lib/auth-context';
@@ -24,8 +26,12 @@ export default function RootLayout({
       <body className={clsx(inter.className, 'bg-white')}>
         <AuthProvider>
           <NavigationBar />
-          <main>{children}</main>
-          <Footer />
+          <div className='pl-64 lg:pl-64'>
+            <Sidebar />
+            <SidebarOverlay />
+            <main>{children}</main>
+            <Footer />
+          </div>  
         </AuthProvider>
       </body>
     </html>

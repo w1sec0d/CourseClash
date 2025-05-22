@@ -18,7 +18,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
 
   return (
     <nav className='bg-emerald-700 shadow-lg sticky top-0 z-50'>
-      <div className='mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl'>
+      <div className='mx-auto px-4 sm:px-6 lg:px-2 max-w-7xl'>
         <div className='items-center justify-between h-16 flex'>
           {toggleSidebar && (
             <button
@@ -47,7 +47,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
           <div className='items-center flex'>
             <div className='flex-shrink-0'>
               <Image
-                alt='Logo de Course Clash - Espada insertada en un birrete de graduación'
+                alt='Logo de Course Clash'
                 src='/logo_no_title.svg'
                 className='h-20 w-auto'
                 width={150}
@@ -55,68 +55,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
                 priority
               />
             </div>
-            <div className='md:block hidden'>
-              <div className='ml-10 items-baseline flex space-x-4'>
-                <Link
-                  href='/'
-                  className={clsx(
-                    'text-white px-3 py-2 rounded-md text-sm font-medium',
-                    'hover:bg-emerald-600'
-                  )}
-                >
-                  Inicio
-                </Link>
-                <Link
-                  href='/#caracteristicas'
-                  className={clsx(
-                    'text-white px-3 py-2 rounded-md text-sm font-medium',
-                    'hover:bg-emerald-600'
-                  )}
-                >
-                  Características
-                </Link>
-                <Link
-                  href='/duelos'
-                  className={clsx(
-                    'text-white px-3 py-2 rounded-md text-sm font-medium',
-                    'hover:bg-emerald-600'
-                  )}
-                >
-                  Duelos
-                </Link>
-                <Link
-                  href='/precios'
-                  className={clsx(
-                    'text-white px-3 py-2 rounded-md text-sm font-medium',
-                    'hover:bg-emerald-600'
-                  )}
-                >
-                  Precios
-                </Link>
-              </div>
-            </div>
-          </div>
-          <div className='md:block hidden'>
-            <div className='ml-4 items-center md:ml-6 flex space-x-3'>
-              <Link
-                href='/login'
-                className={clsx(
-                  'bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium',
-                  'hover:bg-emerald-400 transition-colors duration-300'
-                )}
-              >
-                Iniciar Sesión
-              </Link>
-              <Link
-                href='/registro'
-                className={clsx(
-                  'bg-white text-emerald-700 px-4 py-2 rounded-md text-sm font-medium',
-                  'hover:bg-gray-100 border border-emerald-700 transition-colors duration-300'
-                )}
-              >
-                Registrarse
-              </Link>
-            </div>
+            <h1 className='text-white text-2xl font-bold'>Course Clash</h1>
           </div>
           <div className='md:hidden -mr-2 flex'>
             <button
