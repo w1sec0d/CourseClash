@@ -1,3 +1,9 @@
+import {
+  TrophyIcon,
+  XCircleIcon,
+  HandRaisedIcon,
+} from '@heroicons/react/24/outline';
+
 interface EloChange {
   change: number;
   current: number;
@@ -49,6 +55,15 @@ export function DuelResults({
     <div className='min-h-screen flex items-center justify-center bg-gray-50'>
       <div className='max-w-2xl w-full bg-white rounded-xl shadow-lg p-8'>
         <div className='text-center mb-8'>
+          <div className='flex justify-center mb-4'>
+            {results.is_draw ? (
+              <HandRaisedIcon className='h-16 w-16 text-yellow-500' />
+            ) : isWinner ? (
+              <TrophyIcon className='h-16 w-16 text-emerald-500' />
+            ) : (
+              <XCircleIcon className='h-16 w-16 text-red-500' />
+            )}
+          </div>
           <h2 className='text-3xl font-bold text-gray-800 mb-2'>
             {results.is_draw ? '¡Empate!' : isWinner ? '¡Victoria!' : 'Derrota'}
           </h2>

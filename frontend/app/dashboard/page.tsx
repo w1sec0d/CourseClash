@@ -35,6 +35,7 @@ export default function Dashboard() {
   }, [user]);
   return (
     <div className='bg-white min-h-screen'>
+      <nav className='bg-emerald-700 text-white shadow-lg'></nav>
       <div className='mx-auto px-4 py-8 container'>
         <div className='md:grid-cols-4 mb-8 grid grid-cols-1 gap-4'>
           <div className='bg-emerald-50 rounded-lg items-center shadow p-4 flex'>

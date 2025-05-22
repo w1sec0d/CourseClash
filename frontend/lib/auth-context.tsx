@@ -32,7 +32,7 @@ type AuthContextType = {
   user: User | null; // Usuario actual o null si no está autenticado
   isLoading: boolean; // Indica si hay operaciones de autenticación en curso
   isAuthenticated: boolean; // Indica si el usuario está autenticado
-  isInitialized: boolean; // Indica si el contexto de autenticación ha sido inicializado
+  isInitialized: boolean; // Añadimos este nuevo estado
   login: (email: string, password: string) => Promise<AuthResponse>; // Función para iniciar sesión
   register: (userData: {
     // Función para registrar un nuevo usuario
@@ -58,7 +58,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Proveedor del contexto de autenticación que envuelve la aplicación
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false); // Nuevo estado
   const { user, loading: userLoading, fetchCurrentUser } = useCurrentUser();
   const { login, loading: loginLoading } = useLogin();
   const { requestPasswordReset, updatePassword } = useForgotPassword();
@@ -72,8 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleLogin = useCallback(
     async (email: string, password: string) => {
       const result = await login(email, password);
+      if ('error' in result) {
+        throw result.error;
+      }
       await fetchCurrentUser();
-      return result;
+      return result.data;
     },
     [login, fetchCurrentUser]
   );
@@ -134,15 +137,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // If token exists, fetch the current user
       fetchCurrentUser().then((userData) => {
         setIsAuthenticated(!!userData);
-        setIsInitialized(true);
-      })
-      .catch(() => {
-        setIsAuthenticated(false);
-        setIsInitialized(true);
+        setIsInitialized(true); // Marcamos como inicializado después de verificar
       });
     } else {
       setIsAuthenticated(false);
-      setIsInitialized(true);
+      setIsInitialized(true); // Marcamos como inicializado si no hay token
     }
   }, [fetchCurrentUser]);
 
@@ -201,7 +200,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isLoading,
     isAuthenticated,
-    isInitialized,
+    isInitialized, // Exponemos el nuevo estado
     login: handleLogin,
     register: handleRegister,
     logout: handleLogout,

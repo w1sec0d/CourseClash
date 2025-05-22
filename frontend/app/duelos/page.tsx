@@ -7,6 +7,8 @@ import QuizScreen from './components/quizScreen';
 import { useAuth } from '@/lib/auth-context';
 import { User } from '@/lib/auth-hooks';
 import Button from '@/components/Button';
+import { TrophyIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 
 export default function Duelos() {
   const { user } = useAuth();
@@ -21,9 +23,6 @@ export default function Duelos() {
   const [formData, setFormData] = useState({
     duelId: '',
     playerId: user?.id || '',
-  });
-  const [acceptFormData, setAcceptFormData] = useState({
-    duelId: '',
   });
   const [opponentEmail, setOpponentEmail] = useState('');
   const [opponentUser, setOpponentUser] = useState<User | null>(null);
@@ -370,10 +369,6 @@ export default function Duelos() {
   };
 
   const handleChallengeAccept = (duelId: string) => {
-    setAcceptFormData({
-      duelId: duelId,
-    });
-
     // Auto-accept the challenge
     handleAcceptDuel(duelId);
 
@@ -390,34 +385,34 @@ export default function Duelos() {
     );
   };
 
-  const handleAcceptDuel = async (duelId?: string) => {
-    const duelIdToUse = duelId || acceptFormData.duelId;
-
-    if (!duelIdToUse) {
+  const handleAcceptDuel = async (duelId: string) => {
+    if (!duelId) {
       setError('Por favor, ingresa el ID del duelo');
       return;
     }
 
     try {
-      await fetchGraphQL({
+      const data = await fetchGraphQL({
         query: ACCEPT_DUEL,
         variables: {
           input: {
-            duelId: duelIdToUse,
+            duelId: duelId,
           },
         },
       });
+
+      setDuelResponse(data.acceptDuel);
 
       setError(null);
 
       // Establecer el ID del duelo en el formData
       setFormData((prev) => ({
         ...prev,
-        duelId: duelIdToUse,
+        duelId: duelId,
       }));
 
       // Establecer la conexión WebSocket inmediatamente después de aceptar
-      if (duelIdToUse && user?.id) {
+      if (duelId && user?.id) {
         // Cerrar conexión existente si hay una
         if (wsConnection) {
           wsConnection.close();
@@ -425,7 +420,7 @@ export default function Duelos() {
 
         // Crear nueva conexión WebSocket
         const ws = new WebSocket(
-          `ws://localhost:8002/ws/duels/${duelIdToUse}/${user.id}`
+          `ws://localhost:8002/ws/duels/${duelId}/${user.id}`
         );
 
         ws.onopen = () => {
@@ -457,16 +452,23 @@ export default function Duelos() {
     <div className='container mx-auto p-4'>
       {!showQuiz ? (
         <div className='mx-auto px-4 py-8 container'>
-          <p className='text-3xl font-bold text-emerald-700 mb-6'>
-            Dashboard de Duelos Académicos
+          <p className='text-3xl font-bold text-emerald-700 mb-6 text-center flex items-center justify-center gap-2'>
+            <TrophyIcon className='w-8 h-8' />
+            Duelos Académicos
           </p>
           <div className='lg:flex-row flex flex-col gap-8'>
             <div className='lg:w-1/2 bg-gradient-to-br rounded-xl shadow-xl from-emerald-500 to-emerald-700 overflow-hidden'>
-              <div className='md:flex-row flex flex-col'>
-                <div className='md:w-2/5 items-center justify-center p-6 flex'>
-                  {/* <img alt="Imagen de dos estudiantes enfrentándose en un duelo académico con espadas de conocimiento" src="https://placehold.co/300x400?text=Duelo" className="object-cover transform hover:scale-105 transition duration-300 rounded-lg h-64"> */}
+              <div className='flex flex-col'>
+                <div className='items-center justify-center p-6 flex'>
+                  <Image
+                    src='/images/duels.webp'
+                    alt='Duelo'
+                    width={300}
+                    height={400}
+                    className='object-cover transform hover:scale-105 transition duration-300 rounded-lg h-64'
+                  />
                 </div>
-                <div className='md:w-3/5 text-white p-6'>
+                <div className='text-white p-6'>
                   <p className='text-2xl font-bold mb-4'>
                     ¡Desafía a tus compañeros!
                   </p>
@@ -486,21 +488,21 @@ export default function Duelos() {
                       <li>Refuerza tu aprendizaje mientras juegas</li>
                     </ul>
                   </div>
-                  <div className='items-center mb-4 flex space-x-2'>
+                  {/* <div className='items-center mb-4 flex space-x-2'>
                     <div className='bg-emerald-900/40 rounded-full px-3 py-1 text-sm'>
                       Nivel 3 requerido
                     </div>
                     <div className='bg-emerald-900/40 rounded-full px-3 py-1 text-sm'>
                       +125 XP por victoria
                     </div>
-                  </div>
-                  <p className='text-emerald-100 italic'>
+                  </div> */}
+                  {/* <p className='text-emerald-100 italic'>
                     Tu estadística actual: 8 victorias - 3 derrotas
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>
-            <div className='lg:w-1/2 bg-white rounded-xl shadow-lg border border-emerald-100 p-6'>
+            <div className='lg:w-1/2 bg-white rounded-xl shadow-lg border border-emerald-100 p-6 flex flex-col justify-center'>
               <div className='items-center mb-6 flex'>
                 <div className='bg-emerald-100 rounded-full mr-3 p-2'>
                   <svg
@@ -623,7 +625,7 @@ export default function Duelos() {
                         <div className='items-center flex'>
                           <div>
                             <p className='font-medium text-gray-800'>
-                              {challenge.requesterName}
+                              ¡Desafío recibido!
                             </p>
                             <p className='text-xs text-gray-500'>
                               ID: {challenge.duelId}

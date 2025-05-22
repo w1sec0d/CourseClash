@@ -134,11 +134,13 @@ export function useLogin() {
       });
 
       if (data.login.__typename === 'AuthError') {
-        throw new AuthError(
+        const authError = new AuthError(
           data.login.message || 'Error de autenticación',
           data.login.code as AuthErrorCode,
           true
         );
+        setError(authError.message);
+        return { error: authError };
       }
 
       const authResponse = data.login as AuthResponse;
@@ -154,14 +156,14 @@ export function useLogin() {
 
       console.log('🔑 Auth token stored in cookies');
       setLoading(false);
-      return authResponse;
+      return { data: authResponse };
     } catch (err: unknown) {
       console.error('❌ Login error:', err);
       setLoading(false);
 
       if (err instanceof AuthError) {
         setError(err.message);
-        throw err;
+        return { error: err };
       }
 
       const error = new AuthError(
@@ -170,7 +172,7 @@ export function useLogin() {
         true
       );
       setError(error.message);
-      throw error;
+      return { error };
     }
   }, []);
 
