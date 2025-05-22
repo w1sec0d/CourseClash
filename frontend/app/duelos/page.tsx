@@ -1,8 +1,7 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { REQUEST_DUEL, ACCEPT_DUEL } from '../graphql/mutations/duel';
-import { RequestDuelResponse, AcceptDuelResponse } from '../types/duel';
+import { RequestDuelResponse } from '../types/duel';
 import { fetchGraphQL } from '@/lib/graphql-client';
 import QuizScreen from './components/quizScreen';
 import { useAuth } from '@/lib/auth-context';
@@ -14,12 +13,8 @@ export default function Duelos() {
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(
     null
   );
-  // Se eliminó la variable acceptResponse no utilizada
-  const [, setAcceptResponse] = useState<AcceptDuelResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  // Se eliminó la variable isAccepting no utilizada
-  const [, setIsAccepting] = useState(false);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
   const [notificationWs, setNotificationWs] = useState<WebSocket | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
@@ -389,8 +384,6 @@ export default function Duelos() {
   };
 
   const handleChallengeReject = (duelId: string) => {
-    // TODO: Send reject notification to backend if needed
-
     // Remove from pending challenges
     setPendingChallenges((prev) =>
       prev.filter((challenge) => challenge.duelId !== duelId)
@@ -405,9 +398,8 @@ export default function Duelos() {
       return;
     }
 
-    setIsAccepting(true);
     try {
-      const data = await fetchGraphQL({
+      await fetchGraphQL({
         query: ACCEPT_DUEL,
         variables: {
           input: {
@@ -416,7 +408,6 @@ export default function Duelos() {
         },
       });
 
-      setAcceptResponse(data.acceptDuel);
       setError(null);
 
       // Establecer el ID del duelo en el formData
@@ -459,14 +450,8 @@ export default function Duelos() {
       setError(
         err instanceof Error ? err.message : 'Error al aceptar el duelo'
       );
-      setAcceptResponse(null);
-    } finally {
-      setIsAccepting(false);
     }
   };
-
-  // Se eliminaron las funciones handleFormChange, handleAcceptFormChange, handleConnectWebSocket
-  // y setupWebSocket que no se utilizaban en el componente
 
   return (
     <div className='container mx-auto p-4'>

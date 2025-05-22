@@ -67,12 +67,13 @@ const UserList: React.FC<UserListProps> = ({ usuarios, filtroRanking }) => {
           </div>
           
           <div className="flex-shrink-0 mr-3">
-            <div className="relative h-10 w-10 rounded-full overflow-hidden">
+            <div className="h-10 w-10 rounded-full overflow-hidden">
               <Image
                 src={usuario.avatar}
                 alt={usuario.name}
-                fill
-                className="object-cover"
+                className="h-full w-full object-cover"
+                width={40}
+                height={40}
               />
             </div>
           </div>

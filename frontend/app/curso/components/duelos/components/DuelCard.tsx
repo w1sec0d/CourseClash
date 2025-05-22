@@ -29,12 +29,13 @@ const DuelCard: React.FC<DuelCardProps> = ({ duelo, getStatusBadge, getResultBad
     <div className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center">
-          <div className="relative h-12 w-12 rounded-full overflow-hidden mr-3">
+          <div className="h-12 w-12 rounded-full overflow-hidden mr-3">
             <Image
               src={duelo.opponent.avatar}
               alt={`Avatar de ${duelo.opponent.name}`}
-              fill
-              className="object-cover"
+              className="h-full w-full object-cover"
+              width={48}
+              height={48}
             />
           </div>
           <div>

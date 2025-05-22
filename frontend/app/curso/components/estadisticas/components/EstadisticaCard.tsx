@@ -19,43 +19,26 @@ const CircularProgress: React.FC<{ value1: React.ReactNode; value2: React.ReactN
   color1
 }) => {
   // Función auxiliar para loguear y depurar
-  const log = <T,>(msg: string, val: T): T => {
+
+  const log = (msg: string, val: unknown) => {
     console.log(`[CircularProgress] ${msg}:`, val);
     return val;
   };
 
   // Extraer valores numéricos de ReactNode o string
   const extractNumber = (value: React.ReactNode): number => {
+    if (!value) return 0;
     if (typeof value === 'number') return value;
-    
     if (typeof value === 'string') {
-      const num = parseFloat(value.replace(/[^0-9.]/g, ''));
+      const num = parseFloat(value.replace(/[^0-9.-]+/g, ''));
       return isNaN(num) ? 0 : num;
     }
-    
-    if (React.isValidElement(value)) {
-      // Intentamos extraer un valor numérico del elemento React
-      const props = value.props as { children?: React.ReactNode };
-      
-      if (props && props.children !== undefined) {
-        // Si children es un string (ej: "5%")
-        if (typeof props.children === 'string') {
-          const num = parseFloat(props.children.replace(/[^0-9.]/g, ''));
-          return isNaN(num) ? 0 : num;
-        }
-        // Si children es directamente un número
-        if (typeof props.children === 'number') {
-          return props.children;
-        }
-      }
-    }
-    
     return 0;
   };
   
   // Extraer los valores numéricos
-  const val1 = log('valor1 extraído', extractNumber(value1));
-  let val2 = log('valor2 extraído', extractNumber(value2));
+  const val1 = extractNumber(value1);
+  let val2 = extractNumber(value2 || '0');
   
   // Si valor2 es 0 o no se pudo extraer, lo tratamos como el valor total
   // Hay dos casos principales:

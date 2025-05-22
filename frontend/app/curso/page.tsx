@@ -1,19 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import CourseNavbar from './components/CourseNavbar';
-import Sidebar from './components/Sidebar';
-import SidebarOverlay from './components/SidebarOverlay';
 import CourseHeader from './components/CourseHeader';
 import { AnunciosTab, MaterialesTab, TareasTab, DuelosTab, RankingTab, EstadisticasTab, LogrosTab } from './components/tabs';
 
 export default function Curso() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // Toggle sidebar
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
 
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
@@ -55,8 +47,6 @@ export default function Curso() {
     };
   }, [isSidebarOpen]);
 
-  // Comentario: Se eliminó la variable importantFiles que no se utilizaba
-
   // Sample data for the post feed
   const [posts] = useState([
     {
@@ -92,18 +82,48 @@ export default function Curso() {
   type TabId = 'Anuncios' | 'Materiales' | 'Tareas' | 'Duelos' | 'Ranking' | 'Estadísticas' | 'Logros';
   const [activeTab, setActiveTab] = useState<TabId>('Anuncios');
 
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const sidebar = document.getElementById('sidebar');
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      const target = event.target as HTMLElement;
+
+      if (
+        isSidebarOpen &&
+        !sidebar?.contains(target) &&
+        !sidebarToggle?.contains(target) &&
+        window.innerWidth < 1024
+      ) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    // Handle window resize
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    // Set initial state based on screen size
+    if (window.innerWidth >= 1024) {
+      setIsSidebarOpen(true);
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isSidebarOpen]);
+
   return (
     <div>
-      <CourseNavbar toggleSidebar={toggleSidebar} />
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <SidebarOverlay
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
-      <section className='pt-16 lg:pl-64'>
-        
-
-
         <div className='mx-auto md:p-6 container p-4 relative'>
           <div className='mb-6'>
             <CourseHeader
@@ -115,7 +135,6 @@ export default function Curso() {
               shields={8}
               totalShields={12}
               coins={500}
-              power={3}
               activeTab={activeTab}
               onTabChange={(tabId) => setActiveTab(tabId as TabId)}
               tabs={[
@@ -143,7 +162,6 @@ export default function Curso() {
             </div>
           </div>
         </div>
-      </section>
     </div>
   );
 }

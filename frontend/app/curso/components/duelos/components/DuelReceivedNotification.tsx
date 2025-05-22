@@ -64,14 +64,13 @@ const DuelReceivedNotification: React.FC<DuelReceivedNotificationProps> = ({
       
       <div className="p-4">
         <div className="flex items-center mb-3">
-          <div className="relative w-12 h-12 rounded-full border-2 border-indigo-200 overflow-hidden">
-            <Image
-              src={challenger.avatar}
-              alt={challenger.name}
-              fill
-              className="object-cover"
-            />
-          </div>
+          <Image
+            src={challenger.avatar}
+            alt={challenger.name}
+            className="w-12 h-12 rounded-full border-2 border-indigo-200"
+            width={48}
+            height={48}
+          />
           <div className="ml-3">
             <p className="font-medium text-gray-800">{challenger.name}</p>
             <p className="text-sm text-gray-500">Nivel {challenger.level}</p>
