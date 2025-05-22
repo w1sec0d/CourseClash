@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, CheckCircle, Award, Clock, AlertCircle, Video, FileText, BookOpen, MessageSquare, Lock, Info, Code } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle, Award, Clock, FileText, BookOpen, Lock, Code } from 'lucide-react';
 import { UserProfileProps, ProfileStatsProps, ProfileCourseProps, AchievementProps, CustomizationItem, CurrencyActions } from './types';
 import { motion } from 'framer-motion';
 import Image from 'next/image';

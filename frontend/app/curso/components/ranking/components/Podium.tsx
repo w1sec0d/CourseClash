@@ -65,7 +65,6 @@ const Podium: React.FC<PodiumProps> = ({ topUsers, filtroRanking }) => {
       {/* Segundo lugar */}
       <motion.div variants={item}>
         <PodiumItem
-          position={2}
           avatar={topUsers[1].avatar}
           name={topUsers[1].name}
           value={getValue(topUsers[1])}
@@ -80,7 +79,6 @@ const Podium: React.FC<PodiumProps> = ({ topUsers, filtroRanking }) => {
       {/* Primer lugar */}
       <motion.div variants={item} className="-mb-4">
         <PodiumItem
-          position={1}
           avatar={topUsers[0].avatar}
           name={topUsers[0].name}
           value={getValue(topUsers[0])}
@@ -96,7 +94,6 @@ const Podium: React.FC<PodiumProps> = ({ topUsers, filtroRanking }) => {
       {/* Tercer lugar */}
       <motion.div variants={item}>
         <PodiumItem
-          position={3}
           avatar={topUsers[2].avatar}
           name={topUsers[2].name}
           value={getValue(topUsers[2])}

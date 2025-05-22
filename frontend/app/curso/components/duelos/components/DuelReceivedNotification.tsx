@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface DuelReceivedNotificationProps {
   challenger: {
@@ -63,10 +64,12 @@ const DuelReceivedNotification: React.FC<DuelReceivedNotificationProps> = ({
       
       <div className="p-4">
         <div className="flex items-center mb-3">
-          <img
+          <Image
             src={challenger.avatar}
             alt={challenger.name}
             className="w-12 h-12 rounded-full border-2 border-indigo-200"
+            width={48}
+            height={48}
           />
           <div className="ml-3">
             <p className="font-medium text-gray-800">{challenger.name}</p>

@@ -1,7 +1,7 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface PodiumItemProps {
-  position: number;
   avatar: string;
   name: string;
   value: string | number;
@@ -14,7 +14,6 @@ interface PodiumItemProps {
 }
 
 const PodiumItem: React.FC<PodiumItemProps> = ({
-  position,
   avatar,
   name,
   value,
@@ -30,12 +29,18 @@ const PodiumItem: React.FC<PodiumItemProps> = ({
       {crown && (
         <div className="w-6 h-6 bg-yellow-500 rotate-45 mb-1"></div>
       )}
-      <div className={`${avatarSize} rounded-full overflow-hidden mb-2 border-2 ${borderColor}`}>
-        <img src={avatar} alt={name} className="w-full h-full object-cover" />
+      <div className={`${avatarSize} rounded-full overflow-hidden mb-2 ${borderColor} border-2`}>
+        <Image
+          src={avatar}
+          alt={name}
+          className="h-full w-full object-cover"
+          width={64}
+          height={64}
+        />
       </div>
-      <div className={`${bgColor} ${height} ${width} rounded-t-lg flex flex-col items-center justify-center p-2`}>
-        <p className="text-xs text-white font-semibold truncate w-full text-center">{name}</p>
-        <p className="text-sm font-bold text-white">{value}</p>
+      <div className={`${bgColor} ${height} ${width} rounded-lg p-4 flex flex-col items-center`}>
+        <h3 className="text-sm font-semibold mb-1">{name}</h3>
+        <p className="text-lg font-bold">{value}</p>
       </div>
     </div>
   );

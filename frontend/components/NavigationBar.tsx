@@ -1,6 +1,7 @@
 'use client';
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import clsx from 'clsx';
 import {
@@ -12,7 +13,11 @@ import {
   UserPlusIcon,
 } from '@heroicons/react/24/outline';
 
-export const NavigationBar = () => {
+interface NavigationBarProps {
+  toggleSidebar?: () => void;
+}
+
+export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -21,86 +26,44 @@ export const NavigationBar = () => {
 
   return (
     <nav className='bg-emerald-700 shadow-lg sticky top-0 z-50'>
-      <div className='mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl'>
+      <div className='mx-auto px-4 sm:px-6 lg:px-2 max-w-7xl'>
         <div className='items-center justify-between h-16 flex'>
+          {toggleSidebar && (
+            <button
+              type='button'
+              className='p-2 mr-2 rounded hover:bg-emerald-600 transition lg:hidden'
+              id='sidebarToggle'
+              onClick={toggleSidebar}
+              aria-label='Toggle sidebar'
+            >
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                className='h-6 w-6 text-white'
+                fill='none'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M4 6h16M4 12h16M4 18h16'
+                ></path>
+              </svg>
+            </button>
+          )}
           <div className='items-center flex'>
             <div className='flex-shrink-0'>
-              {/* <Image
-                alt='Logo de Course Clash - Espada insertada en un birrete de graduación'
-                src='https://placehold.co/200x80/emerald/white?text=Course+Clash'
-                className='h-12 w-auto'
-                width={200}
-                height={80}
-              /> */}
+              <Image
+                alt='Logo de Course Clash'
+                src='/logo_no_title.svg'
+                className='h-20 w-auto'
+                width={150}
+                height={50}
+                priority
+              />
             </div>
-            <div className='md:block hidden'>
-              <div className='ml-10 items-baseline flex space-x-4'>
-                <Link
-                  href='/'
-                  className={clsx(
-                    'text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                    'hover:bg-emerald-600'
-                  )}
-                >
-                  <HomeIcon className='h-5 w-5' />
-                  Inicio
-                </Link>
-                <Link
-                  href='/#caracteristicas'
-                  className={clsx(
-                    'text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                    'hover:bg-emerald-600'
-                  )}
-                >
-                  <SparklesIcon className='h-5 w-5' />
-                  Características
-                </Link>
-                <Link
-                  href='/duelos'
-                  className={clsx(
-                    'text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                    'hover:bg-emerald-600'
-                  )}
-                >
-                  <TrophyIcon className='h-5 w-5' />
-                  Duelos
-                </Link>
-                {/* <Link
-                  href='/precios'
-                  className={clsx(
-                    'text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                    'hover:bg-emerald-600'
-                  )}
-                >
-                  <CurrencyDollarIcon className="h-5 w-5" />
-                  Precios
-                </Link> */}
-              </div>
-            </div>
-          </div>
-          <div className='md:block hidden'>
-            <div className='ml-4 items-center md:ml-6 flex space-x-3'>
-              <Link
-                href='/login'
-                className={clsx(
-                  'bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                  'hover:bg-emerald-400 transition-colors duration-300'
-                )}
-              >
-                <ArrowRightOnRectangleIcon className='h-5 w-5' />
-                Iniciar Sesión
-              </Link>
-              <Link
-                href='/registro'
-                className={clsx(
-                  'bg-white text-emerald-700 px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                  'hover:bg-gray-100 border border-emerald-700 transition-colors duration-300'
-                )}
-              >
-                <UserPlusIcon className='h-5 w-5' />
-                Registrarse
-              </Link>
-            </div>
+            <Link href="/" className='text-white text-2xl font-bold'>Course Clash</Link>
           </div>
           <div className='md:hidden -mr-2 flex'>
             <button

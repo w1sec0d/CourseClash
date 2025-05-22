@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 
 interface Material {
   id: number;
@@ -18,8 +16,8 @@ interface MaterialesDestacadosCarouselProps {
 }
 
 const MaterialesDestacadosCarousel: React.FC<MaterialesDestacadosCarouselProps> = ({ materials }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const carouselRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const carouselRef = React.createRef<HTMLDivElement>();
   
   // Filtrar solo materiales destacados
   const destacados = materials.filter(material => material.isImportant);
