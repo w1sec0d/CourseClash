@@ -1,6 +1,5 @@
 'use client';
 
-import SocialIcon from '@/components/SocialIcon';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';

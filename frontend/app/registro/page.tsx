@@ -1,6 +1,5 @@
 'use client';
 import Button from '@/components/Button';
-import SocialIcon from '@/components/SocialIcon';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
