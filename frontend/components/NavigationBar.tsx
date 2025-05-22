@@ -19,7 +19,9 @@ interface NavigationBarProps {
   toggleSidebar?: () => void;
 }
 
-export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) => {
+export const NavigationBar: React.FC<NavigationBarProps> = ({
+  toggleSidebar,
+}) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAuthenticated, logout, isInitialized } = useAuth();
   const router = useRouter();
@@ -228,16 +230,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
                   Cerrar Sesión
                 </button>
               )}
-              <Image
-                alt='Logo de Course Clash'
-                src='/logo_no_title.svg'
-                className='h-20 w-auto'
-                width={150}
-                height={50}
-                priority
-              />
             </div>
-            <Link href="/" className='text-white text-2xl font-bold'>Course Clash</Link>
           </div>
           <div className='md:hidden -mr-2 flex'>
             <button
