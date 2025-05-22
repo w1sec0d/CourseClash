@@ -4,7 +4,8 @@ FROM python:3.11-slim
 # Establecer variables de entorno para Python
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONFAULTHANDLER=1
+    PYTHONFAULTHANDLER=1 \
+    AUTH_SERVICE_URL=http://localhost:8001
 
 # Instalar dependencias del sistema necesarias
 RUN apt-get update && apt-get install -y --no-install-recommends \

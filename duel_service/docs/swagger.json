@@ -1,0 +1,310 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "API para el servicio de duelos de CourseClash",
+        "title": "CourseClash Duel Service API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8002",
+    "basePath": "/api",
+    "paths": {
+        "/api/duels/accept": {
+            "post": {
+                "description": "Permite que el oponente acepte un duelo existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "duelos"
+                ],
+                "summary": "Acepta un duelo",
+                "parameters": [
+                    {
+                        "description": "ID del duelo",
+                        "name": "accept",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AcceptDuelRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Duelo aceptado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/models.AcceptDuelResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida o malformada",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponseInvalidRequest"
+                        }
+                    },
+                    "404": {
+                        "description": "No se encontró el duelo con el ID proporcionado",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponseDuelNotFound"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/duels/request": {
+            "post": {
+                "description": "Crea un nuevo duelo entre dos jugadores",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "duelos"
+                ],
+                "summary": "Solicita un duelo",
+                "parameters": [
+                    {
+                        "description": "Datos del duelo",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RequestDuelRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Duelo solicitado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/models.RequestDuelResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida o malformada",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponseInvalidRequest"
+                        }
+                    },
+                    "409": {
+                        "description": "Ya existe un duelo entre estos jugadores",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponseDuelAlreadyRequested"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/players/{player_id}": {
+            "get": {
+                "description": "Obtiene los datos de un jugador por su ID, incluyendo ELO y rango",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "jugadores"
+                ],
+                "summary": "Obtiene información de un jugador",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del jugador",
+                        "name": "player_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Información del jugador",
+                        "schema": {
+                            "$ref": "#/definitions/models.PlayerData"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/ws/duels/{duel_id}/{player_id}": {
+            "get": {
+                "description": "Establece una conexión WebSocket para un jugador en un duelo. Permite la comunicación en tiempo real durante el duelo.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "duelos"
+                ],
+                "summary": "Conexión WebSocket para duelo",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del duelo",
+                        "name": "duel_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID del jugador",
+                        "name": "player_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "Conexión WebSocket establecida para comunicación en tiempo real durante el duelo",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Jugador no autorizado para este duelo",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Duelo no encontrado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.AcceptDuelRequest": {
+            "type": "object",
+            "required": [
+                "duel_id"
+            ],
+            "properties": {
+                "duel_id": {
+                    "type": "string",
+                    "example": "player123_vs_player456"
+                }
+            }
+        },
+        "models.AcceptDuelResponse": {
+            "type": "object",
+            "properties": {
+                "duel_id": {
+                    "type": "string",
+                    "example": "player123_vs_player456"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Duel accepted"
+                }
+            }
+        },
+        "models.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Error interno del servidor"
+                }
+            }
+        },
+        "models.ErrorResponseDuelAlreadyRequested": {
+            "type": "object",
+            "properties": {
+                "error_code": {
+                    "type": "string",
+                    "example": "duel_already_requested"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "A duel between these players has already been requested"
+                }
+            }
+        },
+        "models.ErrorResponseDuelNotFound": {
+            "type": "object",
+            "properties": {
+                "error_code": {
+                    "type": "string",
+                    "example": "duel_not_found"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "No duel found with the provided ID"
+                }
+            }
+        },
+        "models.ErrorResponseInvalidRequest": {
+            "type": "object",
+            "properties": {
+                "error_code": {
+                    "type": "string",
+                    "example": "invalid_request"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "The request body is missing required fields or is malformed"
+                }
+            }
+        },
+        "models.PlayerData": {
+            "type": "object",
+            "properties": {
+                "elo": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "string"
+                },
+                "rank": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RequestDuelRequest": {
+            "type": "object",
+            "required": [
+                "opponent_id",
+                "requester_id"
+            ],
+            "properties": {
+                "opponent_id": {
+                    "type": "string",
+                    "example": "player456"
+                },
+                "requester_id": {
+                    "type": "string",
+                    "example": "player123"
+                }
+            }
+        },
+        "models.RequestDuelResponse": {
+            "type": "object",
+            "properties": {
+                "duel_id": {
+                    "type": "string",
+                    "example": "player123_vs_player456"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Duel successfully requested"
+                }
+            }
+        }
+    }
+}

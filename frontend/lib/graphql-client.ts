@@ -18,7 +18,8 @@ export async function fetchGraphQL({
     // Endpoint del API Gateway
     const apiGatewayUrl =
       process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8080';
-    const endpoint = `${apiGatewayUrl}/graphql`;
+    const endpoint = `${apiGatewayUrl}/api/graphql`;
+    console.log('Endpoint:', endpoint);
 
     // Start request timing for performance monitoring
     const requestStartTime = performance.now();
@@ -26,15 +27,28 @@ export async function fetchGraphQL({
     // Get operation name for better logging
     const operationType = query.includes('mutation') ? 'Mutation' : 'Query';
     const operationNameMatch = query.match(/(?:mutation|query)\s+(\w+)/i);
-    const operationName = operationNameMatch ? operationNameMatch[1] : 'Unknown';
+    const operationName = operationNameMatch
+      ? operationNameMatch[1]
+      : 'Unknown';
 
     // Show detailed request info with timestamp
-    console.group(`🔄 GraphQL ${operationType}: ${operationName} (${new Date().toISOString()})`)
+    console.group(
+      `🔄 GraphQL ${operationType}: ${operationName} (${new Date().toISOString()})`
+    );
     console.log('📡 Request to:', endpoint);
-    console.log('📝 Query:', query.slice(0, 150) + (query.length > 150 ? '...' : ''));
+    console.log(
+      '📝 Query:',
+      query.slice(0, 150) + (query.length > 150 ? '...' : '')
+    );
     console.log('📦 Variables:', variables);
-    console.log('🔖 Headers:', { ...headers, 'Content-Type': 'application/json' });
+    console.log('🔖 Headers:', {
+      ...headers,
+      'Content-Type': 'application/json',
+    });
     console.groupEnd();
+
+    // delay request
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const res = await fetch(endpoint, {
       method: 'POST',
@@ -57,18 +71,22 @@ export async function fetchGraphQL({
     }
 
     const json = await res.json();
-    
+
     // Calculate request duration
     const requestDuration = performance.now() - requestStartTime;
-    
+
     // Log response information
-    console.group(`📷 GraphQL Response: ${operationName} (${requestDuration.toFixed(0)}ms)`);
+    console.group(
+      `📷 GraphQL Response: ${operationName} (${requestDuration.toFixed(0)}ms)`
+    );
     if (json.errors) {
       console.error('❌ GraphQL Errors:', json.errors);
       console.log('⏱ Duration:', `${requestDuration.toFixed(0)}ms`);
       console.groupEnd();
-      
-      const error = json.errors[0] || { message: 'Error during GraphQL request' };
+
+      const error = json.errors[0] || {
+        message: 'Error during GraphQL request',
+      };
       const errorMessage = error.message || 'Unknown GraphQL error';
       throw new Error(errorMessage);
     } else {
@@ -85,25 +103,45 @@ export async function fetchGraphQL({
   }
 }
 
-// Almacena el token de autenticación en localStorage (solo en el cliente)
+// Almacena el token de autenticación en localStorage y cookies (solo en el cliente)
 export const setAuthToken = (token: string) => {
   if (typeof window !== 'undefined') {
+    // Guardar en localStorage
     localStorage.setItem('authToken', token);
+
+    // Guardar en cookies
+    document.cookie = `auth_token=${token}; path=/; max-age=2592000; SameSite=Lax`; // 30 días
   }
 };
 
-// Obtiene el token de autenticación desde localStorage (solo en el cliente)
+// Obtiene el token de autenticación desde localStorage o cookies (solo en el cliente)
 export const getAuthToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('authToken');
+    // Intentar obtener de localStorage primero
+    const token = localStorage.getItem('authToken');
+    if (token) return token;
+
+    // Si no está en localStorage, intentar obtener de cookies
+    const cookies = document.cookie.split(';');
+    const authCookie = cookies.find((cookie) =>
+      cookie.trim().startsWith('auth_token=')
+    );
+    if (authCookie) {
+      const token = authCookie.split('=')[1];
+      // Guardar en localStorage para futuras referencias
+      localStorage.setItem('authToken', token);
+      return token;
+    }
   }
   return null;
 };
 
-// Elimina el token de autenticación de localStorage (solo en el cliente)
+// Elimina el token de autenticación de localStorage y cookies (solo en el cliente)
 export const clearAuthToken = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('authToken');
+    document.cookie =
+      'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   }
 };
 

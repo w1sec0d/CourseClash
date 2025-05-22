@@ -9,6 +9,7 @@ import { registerSchema } from '@/lib/form-schemas';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
+import { AuthError } from '@/lib/auth-hooks';
 
 interface RegisterFormValues {
   firstName: string;
@@ -47,28 +48,41 @@ export default function Register() {
     try {
       // Create full name from first and last name
       const fullName = `${data.firstName} ${data.lastName}`.trim();
-      
+
       // Map form data to user registration data
       const userData = {
         username: data.email.split('@')[0], // Create username from email
         email: data.email,
         password: data.password,
-        name: fullName,
-        role: data.user_type === 'teacher' ? 'TEACHER' as const : 'STUDENT' as const,
+        fullName: fullName,
+        role:
+          data.user_type === 'teacher'
+            ? ('TEACHER' as const)
+            : ('STUDENT' as const),
       };
 
       const result = await registerUser(userData);
-      console.log('Registration successful:', result);
-      
+      console.log('✅ Registration successful:', result);
+
       // Redirect to dashboard after successful registration
       router.push('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
-      setError('root', {
-        message: error instanceof Error 
-          ? error.message 
-          : 'Error al crear la cuenta. Intenta de nuevo.'
-      });
+      if (error instanceof AuthError) {
+        setError('root', {
+          message: error.message,
+          type: error.code,
+        });
+      } else {
+        console.error('Registration error:', error);
+        setError('root', {
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Error al crear la cuenta. Intenta de nuevo.',
+          type: 'UNKNOWN_ERROR',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -179,7 +193,7 @@ export default function Register() {
           <p className='text-gray-600 mb-8'>
             ¡Únete a Course Clash y comienza tu aventura académica!
           </p>
-          <div className='mb-6 space-y-3'>
+          {/* <div className='mb-6 space-y-3'>
             <SocialIcon icon='google' />
             <SocialIcon icon='facebook' />
           </div>
@@ -192,7 +206,7 @@ export default function Register() {
                 O regístrate con email
               </span>
             </div>
-          </div>
+          </div> */}
           {errors.root && (
             <div className='p-4 text-white bg-red-500 rounded-lg mb-6'>
               {errors.root.message as string}
@@ -360,10 +374,10 @@ export default function Register() {
               </label>
             </div>
             <div>
-              <Button 
-                type='submit' 
-                variant='primary' 
-                className='w-full' 
+              <Button
+                type='submit'
+                variant='primary'
+                className='w-full'
                 disabled={isLoading}
               >
                 {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
