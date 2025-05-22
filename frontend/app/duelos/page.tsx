@@ -625,7 +625,7 @@ export default function Duelos() {
                         <div className='items-center flex'>
                           <div>
                             <p className='font-medium text-gray-800'>
-                              {challenge.requesterName}
+                              ¡Desafío recibido!
                             </p>
                             <p className='text-xs text-gray-500'>
                               ID: {challenge.duelId}

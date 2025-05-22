@@ -3,7 +3,6 @@
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import Swal from 'sweetalert2';
-import Link from 'next/link';
 
 export default function Dashboard() {
   const { user } = useAuth();

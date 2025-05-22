@@ -82,6 +82,8 @@ export default function QuizScreen({
           setIsWaiting(false);
           setCurrentQuestion(data.data);
           setError(null);
+          // Update opponent progress when new question arrives
+          setOpponentProgress((prev) => Math.min(prev + 1, totalQuestions));
         } else if (data.type === 'opponent_progress') {
           console.log('Opponent progress update:', data.progress);
           setOpponentProgress(data.progress);
@@ -110,7 +112,7 @@ export default function QuizScreen({
       console.log('Cleaning up WebSocket connection');
       wsConnection.removeEventListener('message', handleMessage);
     };
-  }, [wsConnection]);
+  }, [wsConnection, totalQuestions]);
 
   const handleAnswerSelect = (selectedOption: string) => {
     if (!wsConnection || !currentQuestion) return;
