@@ -67,7 +67,7 @@ const MaterialesDestacadosCarousel: React.FC<MaterialesDestacadosCarouselProps> 
               {destacados[currentIndex].icon}
               <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-5 w-5 bg-amber-500 text-xs text-white flex items-center justify-center">
+                <span className="relative rounded-full h-5 w-5 bg-amber-500 text-xs text-white flex items-center justify-center">
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"></path>
                   </svg>

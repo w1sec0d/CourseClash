@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import TabNavigation from '@/components/TabNavigation';
 import CourseStats from './CourseStats';
 import CourseMetrics from './CourseMetrics';

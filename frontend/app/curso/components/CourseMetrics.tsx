@@ -8,7 +8,7 @@ interface CourseMetricsProps {
 }
 
 /**
- * A component that displays some metrics about a course, such as the number of shields unlocked, total shields, coins and power.
+ * A component that displays some metrics about a course, such as the number of shields unlocked, total shields, and coins.
  *
  * @param {Object} props
  * @prop {number} shields - The number of shields unlocked.

@@ -9,17 +9,17 @@ interface EstadisticaCardProps {
   detalle1: string;
   detalle2: string;
   color1?: string;
-  color2?: string;
   customContent?: React.ReactNode;
 }
 
 // Componente para la barra de progreso circular
-const CircularProgress: React.FC<{ value1: React.ReactNode; value2: React.ReactNode; color1: string; color2: string }> = ({ 
+const CircularProgress: React.FC<{ value1: React.ReactNode; value2: React.ReactNode; color1: string }> = ({ 
   value1, 
   value2, 
   color1
 }) => {
   // Función auxiliar para loguear y depurar
+
   const log = (msg: string, val: unknown) => {
     console.log(`[CircularProgress] ${msg}:`, val);
     return val;
@@ -117,7 +117,7 @@ const CircularProgress: React.FC<{ value1: React.ReactNode; value2: React.ReactN
   );
 };
 
-const EstadisticaCard: React.FC<EstadisticaCardProps> = ({ icon, label, valor1, valor2, detalle1, detalle2, color1 = '', color2 = '', customContent }) => (
+const EstadisticaCard: React.FC<EstadisticaCardProps> = ({ icon, label, valor1, valor2, detalle1, detalle2, color1 = '', customContent }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -137,14 +137,13 @@ const EstadisticaCard: React.FC<EstadisticaCardProps> = ({ icon, label, valor1, 
         value1={valor1} 
         value2={valor2} 
         color1={color1 || 'text-emerald-500'} 
-        color2={color2 || 'text-gray-300'} 
       />
     )}
     
     <div className="flex items-center justify-center">
       <p className="text-xl font-bold text-gray-800">
         <span className={color1}>{valor1}</span> 
-        {valor2 && <span className={color2}> / {valor2}</span>}
+        {valor2 && <span className="text-gray-500"> / {valor2}</span>}
       </p>
     </div>
     

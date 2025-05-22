@@ -1,5 +1,4 @@
 'use client';
-
 import React from 'react';
 import { useAuth } from '@/lib/auth-context';
 
@@ -28,8 +27,7 @@ const Sidebar: React.FC = () => {
         )}
 
         {/* Métricas del usuario (monedas, notificaciones) */}
-        {isAuthenticated && <UserMetrics />}
-        
+        {isAuthenticated && <UserMetrics />}        
         {/* Menú de navegación */}
         <div className='space-y-2'>
           {/* Enlaces comunes para todos */}
