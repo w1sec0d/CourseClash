@@ -183,6 +183,45 @@ class Query:
             updatedAt=user_data.get("updatedAt"),
         )
 
+    @strawberry.field
+    async def getUserByEmail(self, email: str) -> Optional[User]:
+        """
+        Obtiene un usuario por su correo electrónico.
+
+        Args:
+            email (str): Correo electrónico del usuario
+
+        Returns:
+            Optional[User]: Información del usuario o None si no se encuentra
+        """
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{AUTH_SERVICE_URL}/auth/user/by-email/{email}"
+                )
+
+                if response.status_code != 200:
+                    return None
+
+                user_data = response.json()
+
+                # Transform the data to match GraphQL User type
+                graphql_user_data = {
+                    "id": str(user_data.get("id")),
+                    "username": user_data.get("username"),
+                    "email": user_data.get("email"),
+                    "fullName": user_data.get("full_name"),
+                    "avatar": user_data.get("avatar_url"),
+                    "role": "ADMIN" if user_data.get("is_superuser") else "STUDENT",
+                    "createdAt": user_data.get("created_at"),
+                    "updatedAt": None,
+                }
+
+                return User(**graphql_user_data)
+        except Exception as e:
+            print("❌ Error in getUserByEmail query:", str(e))
+            return None
+
 
 # Mutaciones (Mutations)
 @strawberry.type
