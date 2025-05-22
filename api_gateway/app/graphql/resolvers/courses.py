@@ -17,15 +17,14 @@ COURSE_SERVICE_URL = os.getenv("COURSE_SERVICE_URL", "http://course_service:8003
 
 @strawberry.type
 class Course:
-    id: str
+    id: int
     title: str
     description: Optional[str] = None
-    created_at: str
-    updated_at: Optional[str] = None
-    teacher_id: str
-    status: str
-    level: str
-    category: str
+    creator_id: int
+    created_at : str
+    is_active: int
+    creator_name: str
+
 
 
 @strawberry.type
