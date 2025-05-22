@@ -519,205 +519,217 @@ export default function Duelos() {
   return (
     <div className='container mx-auto p-4'>
       {!showQuiz ? (
-        <>
-          <h1 className='text-2xl font-bold mb-4'>Duelos</h1>
-
-          {pendingChallenges.length > 0 && (
-            <div className='mb-8'>
-              <h2 className='text-xl font-semibold mb-4'>
-                Desafíos Pendientes
-              </h2>
-              <div className='space-y-4'>
-                {pendingChallenges.map((challenge) => (
-                  <div
-                    key={challenge.duelId}
-                    className='p-4 bg-yellow-100 rounded border border-yellow-300'
-                  >
-                    <p className='font-semibold'>
-                      Desafío de: {challenge.requesterName}
+        <div className='mx-auto px-4 py-8 container'>
+          <p className='text-3xl font-bold text-emerald-700 mb-6'>
+            Dashboard de Duelos Académicos
+          </p>
+          <div className='lg:flex-row flex flex-col gap-8'>
+            <div className='lg:w-1/2 bg-gradient-to-br rounded-xl shadow-xl from-emerald-500 to-emerald-700 overflow-hidden'>
+              <div className='md:flex-row flex flex-col'>
+                <div className='md:w-2/5 items-center justify-center p-6 flex'>
+                  {/* <img alt="Imagen de dos estudiantes enfrentándose en un duelo académico con espadas de conocimiento" src="https://placehold.co/300x400?text=Duelo" className="object-cover transform hover:scale-105 transition duration-300 rounded-lg h-64"> */}
+                </div>
+                <div className='md:w-3/5 text-white p-6'>
+                  <p className='text-2xl font-bold mb-4'>
+                    ¡Desafía a tus compañeros!
+                  </p>
+                  <p className='mb-4'>
+                    Pon a prueba tus conocimientos y demuestra quién es el mejor
+                    en tu clase. Gana monedas, experiencia y desbloquea logros
+                    especiales.
+                  </p>
+                  <div className='bg-white/20 rounded-lg mb-4 backdrop-blur-sm p-4'>
+                    <p className='font-bold text-xl mb-2'>
+                      Beneficios de los Duelos
                     </p>
-                    <p className='text-sm text-gray-600'>
-                      ID: {challenge.duelId}
-                    </p>
-                    <p className='text-sm text-gray-600'>
-                      Recibido: {new Date(challenge.timestamp).toLocaleString()}
-                    </p>
-                    <div className='mt-2 flex space-x-2'>
-                      <button
-                        onClick={() => handleChallengeAccept(challenge.duelId)}
-                        className='bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm'
-                      >
-                        Aceptar
-                      </button>
-                      <button
-                        onClick={() => handleChallengeReject(challenge.duelId)}
-                        className='bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm'
-                      >
-                        Rechazar
-                      </button>
+                    <ul className='list-disc list-inside space-y-1'>
+                      <li>Gana hasta 50 monedas por victoria</li>
+                      <li>Sube en el ranking de tu clase</li>
+                      <li>Desbloquea insignias exclusivas</li>
+                      <li>Refuerza tu aprendizaje mientras juegas</li>
+                    </ul>
+                  </div>
+                  <div className='items-center mb-4 flex space-x-2'>
+                    <div className='bg-emerald-900/40 rounded-full px-3 py-1 text-sm'>
+                      Nivel 3 requerido
+                    </div>
+                    <div className='bg-emerald-900/40 rounded-full px-3 py-1 text-sm'>
+                      +125 XP por victoria
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className='mb-8'>
-            <h2 className='text-xl font-semibold mb-4'>Buscar Oponente</h2>
-            <div className='space-y-4'>
-              <div>
-                <label
-                  htmlFor='opponentEmail'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  Correo del Oponente
-                </label>
-                <div className='mt-1 flex rounded-md shadow-sm'>
-                  <input
-                    type='email'
-                    id='opponentEmail'
-                    value={opponentEmail}
-                    onChange={(e) => setOpponentEmail(e.target.value)}
-                    className='flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
-                    placeholder='ejemplo@correo.com'
-                  />
-                  <Button
-                    onClick={handleSearchOpponent}
-                    disabled={isSearching}
-                    className={`ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                      isSearching ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    {isSearching ? 'Buscando...' : 'Buscar'}
-                  </Button>
+                  <p className='text-emerald-100 italic'>
+                    Tu estadística actual: 8 victorias - 3 derrotas
+                  </p>
                 </div>
               </div>
+            </div>
+            <div className='lg:w-1/2 bg-white rounded-xl shadow-lg border border-emerald-100 p-6'>
+              <div className='items-center mb-6 flex'>
+                <div className='bg-emerald-100 rounded-full mr-3 p-2'>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='h-6 w-6 text-emerald-600'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='2'
+                      d='M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5'
+                    ></path>
+                  </svg>
+                </div>
+                <p className='text-2xl font-bold text-gray-800'>
+                  Desafiar a un Estudiante
+                </p>
+              </div>
+              <form
+                className='space-y-6'
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSearchOpponent();
+                }}
+              >
+                <div>
+                  <label
+                    htmlFor='opponentEmail'
+                    className='text-sm font-medium text-gray-700 mb-1 block'
+                  >
+                    Correo del estudiante
+                  </label>
+                  <div className='relative'>
+                    <div className='pl-3 items-center absolute inset-y-0 left-0 flex pointer-events-none'>
+                      <svg
+                        xmlns='http://www.w3.org/2000/svg'
+                        className='h-5 w-5 text-gray-400'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth='2'
+                          d='M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207'
+                        ></path>
+                      </svg>
+                    </div>
+                    <input
+                      name='opponentEmail'
+                      type='email'
+                      value={opponentEmail}
+                      onChange={(e) => setOpponentEmail(e.target.value)}
+                      placeholder='estudiante@universidad.edu'
+                      className='border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition pl-10 w-full py-3 rounded-lg'
+                      id='opponentEmail'
+                    />
+                  </div>
+                </div>
+                <div className='pt-2'>
+                  <Button
+                    type='submit'
+                    disabled={isSearching}
+                    className='hover:bg-emerald-700 transition duration-300 hover:shadow-lg transform hover:-translate-y-1 w-full bg-emerald-600 text-white font-bold py-3 rounded-lg shadow-md'
+                  >
+                    {isSearching ? 'Buscando...' : 'Buscar Estudiante'}
+                  </Button>
+                </div>
+              </form>
 
               {opponentUser && (
-                <div className='mt-4 p-4 bg-green-100 rounded'>
-                  <h3 className='font-bold'>Oponente Encontrado:</h3>
-                  <p>
+                <div className='mt-6 p-4 bg-emerald-50 rounded-lg'>
+                  <h3 className='font-bold text-emerald-800 mb-2'>
+                    Oponente Encontrado:
+                  </h3>
+                  <p className='text-gray-700'>
                     Nombre: {opponentUser.fullName || opponentUser.username}
                   </p>
-                  <p>Correo: {opponentUser.email}</p>
-                  <p>Rol: {opponentUser.role}</p>
-                  {opponentUser && (
-                    <Button
-                      onClick={handleRequestDuel}
-                      disabled={isLoading}
-                      className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${
-                        isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                    >
-                      {isLoading ? 'Solicitando...' : 'Solicitar Duelo'}
-                    </Button>
-                  )}
+                  <p className='text-gray-700'>Correo: {opponentUser.email}</p>
+                  <p className='text-gray-700'>Rol: {opponentUser.role}</p>
+                  <Button
+                    onClick={handleRequestDuel}
+                    disabled={isLoading}
+                    className='mt-4 hover:bg-emerald-700 transition duration-300 hover:shadow-lg transform hover:-translate-y-1 w-full bg-emerald-600 text-white font-bold py-3 rounded-lg shadow-md'
+                  >
+                    {isLoading ? 'Solicitando...' : 'Solicitar Duelo'}
+                  </Button>
                 </div>
               )}
 
               {duelResponse && (
-                <div className='mt-4 p-4 bg-green-100 rounded'>
-                  <h2 className='font-bold'>Duelo Solicitado:</h2>
-                  <p>ID del Duelo: {duelResponse.duelId}</p>
-                  <p>Mensaje: {duelResponse.message}</p>
+                <div className='mt-6 p-4 bg-emerald-50 rounded-lg'>
+                  <h3 className='font-bold text-emerald-800 mb-2'>
+                    Duelo Solicitado:
+                  </h3>
+                  <p className='text-gray-700'>
+                    ID del Duelo: {duelResponse.duelId}
+                  </p>
+                  <p className='text-gray-700'>
+                    Mensaje: {duelResponse.message}
+                  </p>
+                </div>
+              )}
+
+              {pendingChallenges.length > 0 && (
+                <div className='mt-6 pt-4 border-t border-gray-200'>
+                  <p className='font-semibold text-gray-700 mb-2'>
+                    Desafíos Pendientes
+                  </p>
+                  <div className='space-y-3'>
+                    {pendingChallenges.map((challenge) => (
+                      <div
+                        key={challenge.duelId}
+                        className='justify-between items-center bg-emerald-50 rounded-lg flex p-3'
+                      >
+                        <div className='items-center flex'>
+                          <div>
+                            <p className='font-medium text-gray-800'>
+                              {challenge.requesterName}
+                            </p>
+                            <p className='text-xs text-gray-500'>
+                              ID: {challenge.duelId}
+                            </p>
+                            <p className='text-xs text-gray-500'>
+                              Recibido:{' '}
+                              {new Date(challenge.timestamp).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className='flex space-x-2'>
+                          <button
+                            onClick={() =>
+                              handleChallengeAccept(challenge.duelId)
+                            }
+                            className='hover:bg-emerald-600 bg-emerald-500 text-white px-3 py-1 rounded-md text-sm'
+                          >
+                            Aceptar
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleChallengeReject(challenge.duelId)
+                            }
+                            className='hover:bg-gray-300 bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm'
+                          >
+                            Rechazar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className='mt-6 p-4 bg-red-50 rounded-lg'>
+                  <h3 className='font-bold text-red-700 mb-2'>Error:</h3>
+                  <p className='text-red-600'>{error}</p>
                 </div>
               )}
             </div>
           </div>
-
-          <div className='mb-8'>
-            <h2 className='text-xl font-semibold mb-4'>Aceptar Duelo</h2>
-            <div className='space-y-4'>
-              <div>
-                <label
-                  htmlFor='acceptDuelId'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  ID del Duelo
-                </label>
-                <input
-                  type='text'
-                  id='acceptDuelId'
-                  name='duelId'
-                  value={acceptFormData.duelId}
-                  onChange={handleAcceptFormChange}
-                  className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
-                  placeholder='Ej: user_001_vs_user_002'
-                />
-              </div>
-              <button
-                onClick={() => handleAcceptDuel()}
-                disabled={isAccepting}
-                className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ${
-                  isAccepting ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                {isAccepting ? 'Aceptando...' : 'Aceptar Duelo'}
-              </button>
-            </div>
-
-            {acceptResponse && (
-              <div className='mt-4 p-4 bg-green-100 rounded'>
-                <h2 className='font-bold'>Duelo Aceptado:</h2>
-                <p>ID del Duelo: {acceptResponse.duelId}</p>
-                <p>Mensaje: {acceptResponse.message}</p>
-              </div>
-            )}
-          </div>
-
-          <div className='mb-8'>
-            <h2 className='text-xl font-semibold mb-4'>Conectar al Duelo</h2>
-            <div className='space-y-4'>
-              <div>
-                <label
-                  htmlFor='duelId'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  ID del Duelo
-                </label>
-                <input
-                  type='text'
-                  id='duelId'
-                  name='duelId'
-                  value={formData.duelId}
-                  onChange={handleFormChange}
-                  className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
-                  placeholder='Ej: user_001_vs_user_002'
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor='playerId'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  ID del Jugador
-                </label>
-                <input
-                  type='text'
-                  id='playerId'
-                  name='playerId'
-                  value={formData.playerId}
-                  onChange={handleFormChange}
-                  className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
-                  placeholder='Ej: user_001'
-                />
-              </div>
-              <button
-                onClick={handleConnectWebSocket}
-                className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
-              >
-                Conectar al Duelo
-              </button>
-            </div>
-          </div>
-
-          {error && (
-            <div className='mt-4 p-4 bg-red-100 rounded'>
-              <h2 className='font-bold text-red-700'>Error:</h2>
-              <p>{error}</p>
-            </div>
-          )}
-        </>
+        </div>
       ) : (
         <QuizScreen
           wsConnection={wsConnection}
