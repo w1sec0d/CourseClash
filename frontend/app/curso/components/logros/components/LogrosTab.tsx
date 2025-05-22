@@ -11,10 +11,6 @@ import { logrosData, getLogrosDesbloqueadosCount, getTotalLogros } from '../data
 const LogrosTab: React.FC = () => {
   const [showNotification, setShowNotification] = useState(false);
 
-  const handleTestNotification = () => {
-    setShowNotification(true);
-  };
-
   const handleCloseNotification = () => {
     setShowNotification(false);
   };

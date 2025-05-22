@@ -3,7 +3,6 @@
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import Swal from 'sweetalert2';
-import Link from 'next/link';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -1000,7 +999,7 @@ export default function Dashboard() {
                 strokeLinecap='round'
                 strokeLinejoin='round'
                 strokeWidth='2'
-                d='M3 12l2-2m0 0l7-7 7 7m-14 0l2 2m0 0l7 7 7-7m-14 0l2-2m0 0l7-7 7 7m-14 0l2 2m0 0l7 7 7-7'
+                d='M3 12l2-2m0 0l7-7 7 7m-14 0l2 2m0 0l7 7 7-7m-14 0l2-2m0 0l7-7 7 7m-14 0l2 2m0 0l7-7 7 7'
               ></path>
             </svg>
             <span className='text-xs'>Inicio</span>

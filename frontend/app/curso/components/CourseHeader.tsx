@@ -2,6 +2,7 @@ import React from 'react';
 import TabNavigation from '@/components/TabNavigation';
 import CourseStats from './CourseStats';
 import CourseMetrics from './CourseMetrics';
+import Image from 'next/image';
 
 type TabId = string;
 
@@ -14,7 +15,6 @@ interface CourseHeaderProps {
   shields: number;
   totalShields: number;
   coins: number;
-  power: number;
   activeTab: string;
   onTabChange: (tabId: string) => void;
   tabs: Array<{
@@ -25,25 +25,24 @@ interface CourseHeaderProps {
   textColor?: string;
 }
 
-  /**
-   * Renders the header of a course page, including the course title, banner, ranking, progress, semester, and metrics.
-   * Also includes a tab navigation for the course content.
-   * @param title The title of the course.
-   * @param bannerImage The URL of the course banner image.
-   * @param ranking The ranking of the course.
-   * @param progress The progress of the course.
-   * @param semester The semester of the course.
-   * @param shields The number of shields earned in the course.
-   * @param totalShields The total number of shields available in the course.
-   * @param coins The number of coins earned in the course.
-   * @param power The power level of the course.
-   * @param activeTab The ID of the currently active tab.
-   * @param onTabChange A function to call when the active tab changes.
-   * @param tabs The list of tabs to render.
-   * @param tabColor The color of the tabs. Defaults to 'indigo'.
-   * @param textColor The color of the text in the tabs. Defaults to 'gray-50'.
-   * @returns A JSX element representing the course header.
-   */
+/**
+ * Renders the header of a course page, including the course title, banner, ranking, progress, semester, and metrics.
+ * Also includes a tab navigation for the course content.
+ * @param title The title of the course.
+ * @param bannerImage The URL of the course banner image.
+ * @param ranking The ranking of the course.
+ * @param progress The progress of the course.
+ * @param semester The semester of the course.
+ * @param shields The number of shields earned in the course.
+ * @param totalShields The total number of shields available in the course.
+ * @param coins The number of coins earned in the course.
+ * @param activeTab The ID of the currently active tab.
+ * @param onTabChange A function to call when the active tab changes.
+ * @param tabs The list of tabs to render.
+ * @param tabColor The color of the tabs. Defaults to 'indigo'.
+ * @param textColor The color of the text in the tabs. Defaults to 'gray-50'.
+ * @returns A JSX element representing the course header.
+ */
 const CourseHeader: React.FC<CourseHeaderProps> = ({
   title,
   bannerImage,
@@ -53,7 +52,6 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
   shields,
   totalShields,
   coins,
-  power,
   activeTab,
   onTabChange,
   tabs,
@@ -64,10 +62,13 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
     <div>
       <div className="bg-green-500 rounded-t-lg mb-6 overflow-hidden shadow-lg">
         <div className="h-32 sm:h-40 bg-gradient-to-r from-blue-600 to-purple-600 relative">
-          <img 
+          <Image 
             alt="Banner del curso" 
             src={bannerImage} 
             className="object-cover opacity-60 w-full h-full"
+            width={1280}
+            height={160}
+            priority
           />
           <div className="absolute inset-0 flex items-end m-3">
             <p className="text-2xl sm:text-4xl font-bold text-white drop-shadow-lg">{title}</p>
@@ -80,7 +81,6 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
               shields={shields} 
               totalShields={totalShields} 
               coins={coins} 
-              power={power} 
             />
           </div>
         </div>

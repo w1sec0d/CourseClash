@@ -29,10 +29,6 @@ interface DuelosTabProps {
 const DuelosTab: React.FC<DuelosTabProps> = ({ duelos = [] }) => {
   const [showNotification, setShowNotification] = useState(false);
 
-  const handleTestNotification = () => {
-    setShowNotification(true);
-  };
-
   const handleAcceptDuel = () => {
     console.log('Duelo aceptado');
     // Aquí iría la lógica para aceptar el duelo

@@ -55,7 +55,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
                 priority
               />
             </div>
-            <h1 className='text-white text-2xl font-bold'>Course Clash</h1>
+            <Link href="/" className='text-white text-2xl font-bold'>Course Clash</Link>
           </div>
           <div className='md:hidden -mr-2 flex'>
             <button

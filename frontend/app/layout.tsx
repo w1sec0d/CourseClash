@@ -26,11 +26,14 @@ export default function RootLayout({
       <body className={clsx(inter.className, 'bg-white')}>
         <AuthProvider>
           <NavigationBar />
-          <div className='pl-64 lg:pl-64'>
-            <Sidebar />
+          <div className='flex pl-64 min-h-screen'>
+            <aside className="hidden lg:block w-64 fixed top-16 left-0 h-[calc(100vh-4rem)] z-40">
+              <Sidebar />
+            </aside>
             <SidebarOverlay />
-            <main>{children}</main>
+            <main>{children}
             <Footer />
+            </main>
           </div>  
         </AuthProvider>
       </body>

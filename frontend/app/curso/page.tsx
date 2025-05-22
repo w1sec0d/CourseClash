@@ -1,19 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import NavigationBar from '../../components/NavigationBar';
-import Sidebar from '../../components/Sidebar';
-import SidebarOverlay from '../../components/SidebarOverlay';
 import CourseHeader from './components/CourseHeader';
 import { AnunciosTab, MaterialesTab, TareasTab, DuelosTab, RankingTab, EstadisticasTab, LogrosTab } from './components/tabs';
 
 export default function Curso() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // Toggle sidebar
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
 
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
@@ -55,50 +47,6 @@ export default function Curso() {
     };
   }, [isSidebarOpen]);
 
-  // Sample data for important files
-  const importantFiles = [
-    {
-      icon: (
-        <svg
-          className='w-5 h-5 text-emerald-600'
-          fill='none'
-          stroke='currentColor'
-          viewBox='0 0 24 24'
-          xmlns='http://www.w3.org/2000/svg'
-        >
-          <path
-            strokeLinecap='round'
-            strokeLinejoin='round'
-            strokeWidth={2}
-            d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
-          />
-        </svg>
-      ),
-      title: 'Sílabo del Curso',
-      details: 'Actualizado el 15/03/2023',
-    },
-    {
-      icon: (
-        <svg
-          className='w-5 h-5 text-emerald-600'
-          fill='none'
-          stroke='currentColor'
-          viewBox='0 0 24 24'
-          xmlns='http://www.w3.org/2000/svg'
-        >
-          <path
-            strokeLinecap='round'
-            strokeLinejoin='round'
-            strokeWidth={2}
-            d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
-          />
-        </svg>
-      ),
-      title: 'Cronograma de Clases',
-      details: 'Actualizado el 10/03/2023',
-    },
-  ];
-
   // Sample data for the post feed
   const [posts] = useState([
     {
@@ -134,6 +82,46 @@ export default function Curso() {
   type TabId = 'Anuncios' | 'Materiales' | 'Tareas' | 'Duelos' | 'Ranking' | 'Estadísticas' | 'Logros';
   const [activeTab, setActiveTab] = useState<TabId>('Anuncios');
 
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const sidebar = document.getElementById('sidebar');
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      const target = event.target as HTMLElement;
+
+      if (
+        isSidebarOpen &&
+        !sidebar?.contains(target) &&
+        !sidebarToggle?.contains(target) &&
+        window.innerWidth < 1024
+      ) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    // Handle window resize
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    // Set initial state based on screen size
+    if (window.innerWidth >= 1024) {
+      setIsSidebarOpen(true);
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isSidebarOpen]);
+
   return (
     <div>
         <div className='mx-auto md:p-6 container p-4 relative'>
@@ -147,7 +135,6 @@ export default function Curso() {
               shields={8}
               totalShields={12}
               coins={500}
-              power={3}
               activeTab={activeTab}
               onTabChange={(tabId) => setActiveTab(tabId as TabId)}
               tabs={[
