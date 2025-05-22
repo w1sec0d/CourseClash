@@ -17,10 +17,21 @@ export default function ProtectedRoute({
 
   useEffect(() => {
     const checkAuth = async () => {
+      const token = localStorage.getItem('auth_token');
+
+      if (!token) {
+        // Guardar la URL actual para redirigir después del login
+        const currentPath = window.location.pathname;
+        router.push(`/login?from=${encodeURIComponent(currentPath)}`);
+        return;
+      }
+
       const currentUser = await fetchCurrentUser();
 
       if (!currentUser) {
-        // Guardar la URL actual para redirigir después del login
+        // Si no hay usuario, limpiar el token y redirigir al login
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('refresh_token');
         const currentPath = window.location.pathname;
         router.push(`/login?from=${encodeURIComponent(currentPath)}`);
         return;
