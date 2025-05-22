@@ -11,8 +11,16 @@ from datetime import datetime
 import httpx
 import os
 
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 # Environment variables
-COURSE_SERVICE_URL = os.getenv("COURSE_SERVICE_URL", "http://course_service:8003")
+COURSE_SERVICE_URL = os.getenv("COURSE_SERVICE_URL", "http://course_service:8001")
+
 
 
 @strawberry.type
@@ -25,7 +33,16 @@ class Course:
     is_active: int
     creator_name: str
 
-
+def transform_course_data(course: dict) -> Course:
+    return Course(
+        id = course.get("id"),
+        title = course.get("title"),
+        description = course.get("description"),
+        creator_id = course.get("creator_id"),
+        created_at = course.get("created_at"),
+        is_active =  course.get("is_active"),
+        creator_name = course.get("creator_name")
+    )
 
 @strawberry.type
 class Query:
@@ -42,7 +59,8 @@ class Query:
                     return None
 
                 course_data = response.json()
-                return Course(**course_data)
+                couse_data_all = [transform_course_data(course) for course in course_data]
+                return couse_data_all
         except Exception as e:
             print(f"Error getting course: {str(e)}")
             return None
@@ -57,12 +75,14 @@ class Query:
                 response = await client.get(f"{COURSE_SERVICE_URL}/courses")
 
                 if response.status_code != 200:
+                    logger.error(f"Error getting courses, status code: {response.status_code}")
                     return []
 
                 courses_data = response.json()
-                return [Course(**course) for course in courses_data]
+                
+                return [transform_course_data(course) for course in courses_data]
         except Exception as e:
-            print(f"Error getting courses: {str(e)}")
+            logger.exception(f"Error getting courses: {str(e)}")
             return []
 
 
