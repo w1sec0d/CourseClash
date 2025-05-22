@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { REQUEST_DUEL, ACCEPT_DUEL } from '../graphql/mutations/duel';
-import { RequestDuelResponse, AcceptDuelResponse } from '../types/duel';
+import { RequestDuelResponse } from '../types/duel';
 import { fetchGraphQL } from '@/lib/graphql-client';
 import QuizScreen from './components/quizScreen';
 import { useAuth } from '@/lib/auth-context';
@@ -14,20 +14,14 @@ export default function Duelos() {
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(
     null
   );
-  const [acceptResponse, setAcceptResponse] =
-    useState<AcceptDuelResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAccepting, setIsAccepting] = useState(false);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
   const [notificationWs, setNotificationWs] = useState<WebSocket | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
   const [formData, setFormData] = useState({
     duelId: '',
     playerId: user?.id || '',
-  });
-  const [acceptFormData, setAcceptFormData] = useState({
-    duelId: '',
   });
   const [opponentEmail, setOpponentEmail] = useState('');
   const [opponentUser, setOpponentUser] = useState<User | null>(null);
@@ -374,10 +368,6 @@ export default function Duelos() {
   };
 
   const handleChallengeAccept = (duelId: string) => {
-    setAcceptFormData({
-      duelId: duelId,
-    });
-
     // Auto-accept the challenge
     handleAcceptDuel(duelId);
 
@@ -388,44 +378,39 @@ export default function Duelos() {
   };
 
   const handleChallengeReject = (duelId: string) => {
-    // TODO: Send reject notification to backend if needed
-
     // Remove from pending challenges
     setPendingChallenges((prev) =>
       prev.filter((challenge) => challenge.duelId !== duelId)
     );
   };
 
-  const handleAcceptDuel = async (duelId?: string) => {
-    const duelIdToUse = duelId || acceptFormData.duelId;
-
-    if (!duelIdToUse) {
+  const handleAcceptDuel = async (duelId: string) => {
+    if (!duelId) {
       setError('Por favor, ingresa el ID del duelo');
       return;
     }
 
-    setIsAccepting(true);
     try {
       const data = await fetchGraphQL({
         query: ACCEPT_DUEL,
         variables: {
           input: {
-            duelId: duelIdToUse,
+            duelId: duelId,
           },
         },
       });
 
-      setAcceptResponse(data.acceptDuel);
+      setDuelResponse(data.acceptDuel);
       setError(null);
 
       // Establecer el ID del duelo en el formData
       setFormData((prev) => ({
         ...prev,
-        duelId: duelIdToUse,
+        duelId: duelId,
       }));
 
       // Establecer la conexión WebSocket inmediatamente después de aceptar
-      if (duelIdToUse && user?.id) {
+      if (duelId && user?.id) {
         // Cerrar conexión existente si hay una
         if (wsConnection) {
           wsConnection.close();
@@ -433,7 +418,7 @@ export default function Duelos() {
 
         // Crear nueva conexión WebSocket
         const ws = new WebSocket(
-          `ws://localhost:8002/ws/duels/${duelIdToUse}/${user.id}`
+          `ws://localhost:8002/ws/duels/${duelId}/${user.id}`
         );
 
         ws.onopen = () => {
@@ -458,62 +443,7 @@ export default function Duelos() {
       setError(
         err instanceof Error ? err.message : 'Error al aceptar el duelo'
       );
-      setAcceptResponse(null);
-    } finally {
-      setIsAccepting(false);
     }
-  };
-
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleAcceptFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setAcceptFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleConnectWebSocket = () => {
-    if (!formData.duelId || !formData.playerId) {
-      setError('Por favor, completa todos los campos');
-      return;
-    }
-
-    // Cerrar conexión existente si hay una
-    if (wsConnection) {
-      wsConnection.close();
-    }
-
-    // Crear nueva conexión WebSocket
-    const ws = new WebSocket(
-      `ws://localhost:8002/ws/duels/${formData.duelId}/${formData.playerId}`
-    );
-
-    ws.onopen = () => {
-      setError(null);
-      setShowQuiz(true);
-    };
-
-    ws.onerror = (error) => {
-      setError('Error en la conexión WebSocket');
-      console.error('WebSocket error:', error);
-    };
-
-    ws.onclose = () => {
-      // Only hide quiz if there's an error or if we're not showing results
-      if (error) {
-        setShowQuiz(false);
-      }
-    };
-
-    setWsConnection(ws);
   };
 
   return (
