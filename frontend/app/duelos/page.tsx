@@ -57,6 +57,13 @@ export default function Duelos() {
   // Establecer la conexión WebSocket para notificaciones de duelos al cargar la página
   useEffect(() => {
     let localWs: WebSocket | null = null;
+    let connectionAttempts = 0;
+    let errorGracePeriod = true; // Prevents showing errors during initial connection attempts
+
+    // Set a timer to disable the grace period after 5 seconds
+    const gracePeriodTimer = setTimeout(() => {
+      errorGracePeriod = false;
+    }, 5000);
 
     if (user?.id && !notificationWs) {
       console.log(
@@ -64,8 +71,11 @@ export default function Duelos() {
       );
 
       const connectWebSocket = () => {
+        connectionAttempts++;
         const wsUrl = `ws://localhost:8002/ws/notifications/${user.id}`;
-        console.log(`Connecting to WebSocket URL: ${wsUrl}`);
+        console.log(
+          `Connecting to WebSocket URL: ${wsUrl} (attempt ${connectionAttempts})`
+        );
 
         localWs = new WebSocket(wsUrl);
 
@@ -74,6 +84,7 @@ export default function Duelos() {
             'Notification WebSocket connection established successfully'
           );
           setError(null); // Clear any existing connection errors
+          connectionAttempts = 0; // Reset connection attempts on successful connection
         };
 
         localWs.onmessage = (event) => {
@@ -101,13 +112,15 @@ export default function Duelos() {
         };
 
         localWs.onerror = (error) => {
-          console.error('Notification WebSocket error:', error);
-          console.log(
-            'WebSocket connection failed. Will retry in 3 seconds...'
-          );
-
-          // Show error message to user
-          setError('Error de conexión con el servidor. Reintentando...');
+          // Only show error message to user if we're not in the grace period
+          // and we've tried connecting multiple times
+          if (!errorGracePeriod && connectionAttempts > 2) {
+            setError('Error de conexión con el servidor. Reintentando...');
+            console.error('Notification WebSocket error:', error);
+            console.log(
+              'WebSocket connection failed. Will retry in 3 seconds...'
+            );
+          }
         };
 
         localWs.onclose = (event) => {
@@ -134,6 +147,7 @@ export default function Duelos() {
 
       // Cleanup function for this specific effect
       return () => {
+        clearTimeout(gracePeriodTimer); // Clear the grace period timer
         console.log('Component unmounting, cleaning up WebSocket connection');
         try {
           localWs?.close();
