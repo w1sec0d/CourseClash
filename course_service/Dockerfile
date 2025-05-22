@@ -3,6 +3,7 @@ FROM python:3.10-slim
 WORKDIR /app
 
 ENV PYTHONPATH=/app
+# ENV DATABASE_URL=mysql+pymysql://root:password@localhost:3306/courseClash
 
 RUN pip install --upgrade pip
 

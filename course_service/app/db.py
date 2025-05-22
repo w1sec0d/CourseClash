@@ -1,10 +1,10 @@
 import os 
 from sqlalchemy  import create_engine
 from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import logging
 
-load_dotenv()
+#load_dotenv()
 
 #Configuración de looging
 logging.basicConfig(level=logging.INFO)

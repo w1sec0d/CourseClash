@@ -72,7 +72,8 @@ class Query:
         """
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(f"{COURSE_SERVICE_URL}/courses")
+                print(COURSE_SERVICE_URL)
+                response = await client.get(f"{COURSE_SERVICE_URL}/courses/")
 
                 if response.status_code != 200:
                     logger.error(f"Error getting courses, status code: {response.status_code}")
