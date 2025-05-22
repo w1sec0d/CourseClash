@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"courseclash/duel-service/internal/duelsync"
 	duelhandlers "courseclash/duel-service/internal/handlers"
@@ -9,6 +10,7 @@ import (
 	"courseclash/duel-service/internal/repositories"
 
 	"github.com/gin-gonic/gin"
+	"log"
 )
 
 // requestDuelHandler maneja la solicitud de un duelo.
@@ -37,7 +39,41 @@ func requestDuelHandler(c *gin.Context) {
 	}
 	duelsync.DuelRequests[duelID] = make(chan bool)
 	duelsync.Mu.Unlock()
-	c.JSON(http.StatusOK, gin.H{"duel_id": duelID})
+	message := "Duelo solicitado exitosamente"
+	
+	// Obtener información del solicitante para la notificación
+	playerRepo := repositories.NewPlayerRepository()
+	requesterData, err := playerRepo.GetPlayerByID(request.RequesterID)
+	
+	var requesterName string
+	if err != nil {
+		// Si no podemos obtener los datos del solicitante, usamos su ID como nombre
+		requesterName = request.RequesterID
+	} else {
+		// Si podemos obtener los datos, usamos su nombre o información relevante
+		requesterName = requesterData.PlayerID // Aquí podrías usar otro campo como el nombre completo
+	}
+	
+	// Enviar notificación al oponente si está conectado
+	notification := map[string]interface{}{
+		"type": "duel_request",
+		"duelId": duelID,
+		"requesterId": request.RequesterID,
+		"requesterName": requesterName,
+		"timestamp": time.Now().Format(time.RFC3339),
+	}
+	
+	// Intentar enviar la notificación (no bloqueante)
+	go func() {
+		sent := duelsync.SendNotification(request.OpponentID, notification)
+		if sent {
+			log.Printf("Notificación de duelo enviada a %s para el duelo %s", request.OpponentID, duelID)
+		} else {
+			log.Printf("No se pudo enviar notificación a %s (posiblemente no conectado)", request.OpponentID)
+		}
+	}()
+	
+	c.JSON(http.StatusOK, gin.H{"duel_id": duelID, "message": message})
 }
 
 // acceptDuelHandler maneja la aceptación de un duelo.
@@ -54,7 +90,7 @@ func requestDuelHandler(c *gin.Context) {
 func acceptDuelHandler(c *gin.Context) {
 	var accept models.AcceptDuelRequest
 	if err := c.ShouldBindJSON(&accept); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Peticion invalida"})
 		return
 	}
 	duelsync.Mu.Lock()
@@ -62,9 +98,12 @@ func acceptDuelHandler(c *gin.Context) {
 	duelsync.Mu.Unlock()
 	if exists {
 		channel <- true
-		c.JSON(http.StatusOK, gin.H{"message": "Duel accepted"})
+		c.JSON(http.StatusOK, gin.H{
+			"duel_id": accept.DuelID,
+			"message": "Duelo aceptado exitosamente",
+		})
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Duel not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Duelo no encontrado"})
 	}
 }
 
@@ -83,6 +122,19 @@ func wsDuelHandler(c *gin.Context) {
 	duelID := c.Param("duel_id")
 	playerID := c.Param("player_id")
 	duelhandlers.WsHandler(c.Writer, c.Request, duelID, playerID)
+}
+
+// wsNotificationHandler maneja la conexión WebSocket para notificaciones.
+// @Summary Conexión WebSocket para notificaciones
+// @Description Establece una conexión WebSocket para recibir notificaciones de duelos en tiempo real
+// @Tags notificaciones
+// @Produce json
+// @Param user_id path string true "ID del usuario" example:"player123"
+// @Success 101 {string} string "Conexión WebSocket establecida para recibir notificaciones"
+// @Router /ws/notifications/{user_id} [get]
+func wsNotificationHandler(c *gin.Context) {
+	userID := c.Param("user_id")
+	duelhandlers.NotificationHandler(c.Writer, c.Request, userID)
 }
 
 // getPlayerHandler obtiene la información de un jugador por su ID.
@@ -116,5 +168,6 @@ func RegisterRoutes(r *gin.Engine) {
 	r.POST("/api/duels/request", requestDuelHandler)
 	r.POST("/api/duels/accept", acceptDuelHandler)
 	r.GET("/ws/duels/:duel_id/:player_id", wsDuelHandler)
+	r.GET("/ws/notifications/:user_id", wsNotificationHandler)
 	r.GET("/api/players/:player_id", getPlayerHandler)
 }

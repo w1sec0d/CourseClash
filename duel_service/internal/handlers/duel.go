@@ -156,6 +156,8 @@ func endDuel(player1 *models.Player, player2 *models.Player, duelID string) {
 	finalMessage := map[string]interface{}{
 		"type": "duel_end",
 		"data": map[string]interface{}{
+			"player1_id": player1.ID,
+			"player2_id": player2.ID,
 			"player1_score": player1.Score,
 			"player2_score": player2.Score,
 			"player1_elo": map[string]interface{}{

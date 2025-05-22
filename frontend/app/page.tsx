@@ -59,10 +59,10 @@ export default function Page() {
                 </svg>
               </div>
               <div>
+                <p className='text-xs text-gray-500'>Nuestros estudiantes</p>
                 <p className='text-sm font-semibold text-gray-800'>
-                  +10,000 estudiantes
+                  Aprenden Jugando
                 </p>
-                <p className='text-xs text-gray-500'>aprenden jugando</p>
               </div>
             </div>
           </div>
@@ -1288,6 +1288,4 @@ export default function Page() {
       </section> */}
     </div>
   );
-};
-
-
+}

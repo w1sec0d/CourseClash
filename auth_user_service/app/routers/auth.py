@@ -665,3 +665,61 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
                 "code": AuthErrorCode.SERVER_ERROR,
             },
         )
+
+
+@router.get("/user/by-email/{email}")
+def get_user_by_email_endpoint(email: str, db: Session = Depends(get_db)) -> User:
+    """
+    Obtiene un usuario por su correo electrónico.
+
+    Args:
+        email (str): Correo electrónico del usuario
+        db (Session): Sesión de la base de datos
+
+    Returns:
+        User: Información del usuario
+
+    Raises:
+        HTTPException: Si el usuario no existe o hay un error en el servidor
+    """
+    try:
+        if USE_MOCK_DATA:
+            user_data = get_user_by_email_mock(email)
+            if not user_data.get("success", False):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Usuario no encontrado",
+                )
+            return user_data["user"]
+
+        # Si no estamos en modo mock, usar la base de datos real
+        query = text(""" SELECT * FROM users WHERE email = :email""")
+        result = db.execute(query, {"email": email}).fetchone()
+
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado"
+            )
+
+        # Create User object
+        user_obj = User(
+            id=result[0],
+            username=result[1],
+            email=result[2],
+            full_name=result[4],
+            is_active=bool(result[5]),
+            is_superuser=bool(result[6]),
+            created_at=str(result[7]),
+            avatar_url=result[8],
+            bio=result[9],
+            experience_points=result[10],
+        )
+
+        return user_obj
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error en el servidor {e}",
+        )

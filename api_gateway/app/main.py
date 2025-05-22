@@ -130,13 +130,13 @@ app.add_middleware(
 # Endpoint de GraphQL
 graphql_app = GraphQLRouter(
     schema,
-    path="/api/graphql",
+    path="/",  # Cambiado de "/api/graphql" a "/"
     graphiql=True,  # Habilita GraphiQL para desarrollo
 )
 
 app.include_router(
     graphql_app,
-    prefix="/api/graphql",
+    prefix="/api/graphql",  # El prefijo ya incluye la ruta completa
     tags=["GraphQL"],
     responses={
         200: {

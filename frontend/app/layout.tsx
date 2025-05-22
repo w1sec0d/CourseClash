@@ -7,6 +7,8 @@ import SidebarOverlay from '@/components/SidebarOverlay';
 import Footer from '../components/Footer';
 import clsx from 'clsx';
 import { AuthProvider } from '@/lib/auth-context';
+import { Suspense } from 'react';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -31,9 +33,11 @@ export default function RootLayout({
               <Sidebar />
             </aside>
             <SidebarOverlay />
-            <main>{children}
-            <Footer />
-            </main>
+            <Suspense fallback={<LoadingSpinner />}>
+              <main>{children}
+              <Footer />
+              </main>
+            </Suspense>
           </div>  
         </AuthProvider>
       </body>

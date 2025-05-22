@@ -4,6 +4,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import clsx from 'clsx';
+import {
+  HomeIcon,
+  SparklesIcon,
+  TrophyIcon,
+  CurrencyDollarIcon,
+  ArrowRightOnRectangleIcon,
+  UserPlusIcon,
+} from '@heroicons/react/24/outline';
 
 interface NavigationBarProps {
   toggleSidebar?: () => void;
@@ -90,37 +98,41 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
             <Link
               href='/#inicio'
               className={clsx(
-                'text-white px-3 py-2 rounded-md text-base font-medium block',
+                'text-white px-3 py-2 rounded-md text-base font-medium flex items-center gap-2',
                 'hover:bg-emerald-600'
               )}
             >
+              <HomeIcon className='h-5 w-5' />
               Inicio
             </Link>
             <Link
               href='/#caracteristicas'
               className={clsx(
-                'text-white px-3 py-2 rounded-md text-base font-medium block',
+                'text-white px-3 py-2 rounded-md text-base font-medium flex items-center gap-2',
                 'hover:bg-emerald-600'
               )}
             >
+              <SparklesIcon className='h-5 w-5' />
               Características
             </Link>
             <Link
               href='/duelos'
               className={clsx(
-                'text-white px-3 py-2 rounded-md text-base font-medium block',
+                'text-white px-3 py-2 rounded-md text-base font-medium flex items-center gap-2',
                 'hover:bg-emerald-600'
               )}
             >
+              <TrophyIcon className='h-5 w-5' />
               Duelos
             </Link>
             <Link
               href='/precios'
               className={clsx(
-                'text-white px-3 py-2 rounded-md text-base font-medium block',
+                'text-white px-3 py-2 rounded-md text-base font-medium flex items-center gap-2',
                 'hover:bg-emerald-600'
               )}
             >
+              <CurrencyDollarIcon className='h-5 w-5' />
               Precios
             </Link>
           </div>
@@ -129,10 +141,11 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
               <Link
                 href='/login'
                 className={clsx(
-                  'bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium',
+                  'bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2',
                   'w-full text-center hover:bg-emerald-400'
                 )}
               >
+                <ArrowRightOnRectangleIcon className='h-5 w-5' />
                 Iniciar Sesión
               </Link>
             </div>
@@ -140,10 +153,11 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ toggleSidebar }) =
               <Link
                 href='/registro'
                 className={clsx(
-                  'bg-white text-emerald-700 px-4 py-2 rounded-md text-sm font-medium',
+                  'bg-white text-emerald-700 px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2',
                   'w-full text-center hover:bg-gray-100 border border-emerald-700 block'
                 )}
               >
+                <UserPlusIcon className='h-5 w-5' />
                 Registrarse
               </Link>
             </div>
