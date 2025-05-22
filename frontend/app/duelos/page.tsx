@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { REQUEST_DUEL, ACCEPT_DUEL } from '../graphql/mutations/duel';
 import { RequestDuelResponse } from '../types/duel';
@@ -393,7 +392,7 @@ export default function Duelos() {
     }
 
     try {
-      const data = await fetchGraphQL({
+      await fetchGraphQL({
         query: ACCEPT_DUEL,
         variables: {
           input: {
@@ -403,6 +402,7 @@ export default function Duelos() {
       });
 
       setDuelResponse(data.acceptDuel);
+
       setError(null);
 
       // Establecer el ID del duelo en el formData

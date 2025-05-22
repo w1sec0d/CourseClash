@@ -27,7 +27,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Disable Next.js telemetry during build
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
 RUN npm run build
@@ -37,8 +37,8 @@ FROM base AS runner
 WORKDIR /app
 
 # Set production environment
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:8000
 ENV NEXT_PUBLIC_AUTH_SERVICE_URL=http://localhost:8001
 
@@ -61,7 +61,7 @@ USER nextjs
 EXPOSE 3000
 
 # Set runtime environment variables
-ENV PORT 3000
+ENV PORT=3000
 
 # Run the application
 CMD ["node", "server.js"]

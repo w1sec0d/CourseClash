@@ -12,6 +12,15 @@ export type User = {
   role: 'STUDENT' | 'TEACHER' | 'ADMIN';
   createdAt: string;
   updatedAt?: string;
+  coins?: number;
+  notifications?: number;
+  level?: number;
+  achievements?: number;
+  courses?: Array<{
+    id: string;
+    name: string;
+    image?: string;
+  }>;
 };
 
 export class AuthError extends Error {
