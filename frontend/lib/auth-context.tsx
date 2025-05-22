@@ -32,6 +32,7 @@ type AuthContextType = {
   user: User | null; // Usuario actual o null si no está autenticado
   isLoading: boolean; // Indica si hay operaciones de autenticación en curso
   isAuthenticated: boolean; // Indica si el usuario está autenticado
+  isInitialized: boolean; // Indica si el contexto de autenticación ha sido inicializado
   login: (email: string, password: string) => Promise<AuthResponse>; // Función para iniciar sesión
   register: (userData: {
     // Función para registrar un nuevo usuario
@@ -57,6 +58,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Proveedor del contexto de autenticación que envuelve la aplicación
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const { user, loading: userLoading, fetchCurrentUser } = useCurrentUser();
   const { login, loading: loginLoading } = useLogin();
   const { requestPasswordReset, updatePassword } = useForgotPassword();
@@ -132,9 +134,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // If token exists, fetch the current user
       fetchCurrentUser().then((userData) => {
         setIsAuthenticated(!!userData);
+        setIsInitialized(true);
+      })
+      .catch(() => {
+        setIsAuthenticated(false);
+        setIsInitialized(true);
       });
     } else {
       setIsAuthenticated(false);
+      setIsInitialized(true);
     }
   }, [fetchCurrentUser]);
 
@@ -193,6 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isLoading,
     isAuthenticated,
+    isInitialized,
     login: handleLogin,
     register: handleRegister,
     logout: handleLogout,
