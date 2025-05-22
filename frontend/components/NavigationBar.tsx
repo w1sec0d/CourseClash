@@ -9,15 +9,17 @@ import {
   TrophyIcon,
   ArrowRightOnRectangleIcon,
   UserPlusIcon,
-  ArrowLeftOnRectangleIcon,
+  ArrowRightStartOnRectangleIcon,
+  AcademicCapIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/lib/auth-context';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export const NavigationBar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAuthenticated, logout, isInitialized } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -31,6 +33,22 @@ export const NavigationBar = () => {
       console.error('Error al cerrar sesión:', error);
     }
   };
+
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return pathname === path;
+    }
+    return pathname.startsWith(path);
+  };
+
+  const linkClasses = (path: string) =>
+    clsx(
+      'px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2',
+      'transition-colors duration-200',
+      isActive(path)
+        ? 'bg-emerald-600 text-white'
+        : 'text-white hover:bg-emerald-600'
+    );
 
   if (!isInitialized) {
     return (
@@ -49,35 +67,24 @@ export const NavigationBar = () => {
               </div>
               <div className='md:block hidden'>
                 <div className='ml-10 items-baseline flex space-x-4'>
-                  <Link
-                    href='/'
-                    className={clsx(
-                      'text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                      'hover:bg-emerald-600'
-                    )}
-                  >
+                  <Link href='/' className={linkClasses('/')}>
                     <HomeIcon className='h-5 w-5' />
                     Inicio
                   </Link>
                   <Link
                     href='/#caracteristicas'
-                    className={clsx(
-                      'text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                      'hover:bg-emerald-600'
-                    )}
+                    className={linkClasses('/#caracteristicas')}
                   >
                     <SparklesIcon className='h-5 w-5' />
                     Características
                   </Link>
-                  <Link
-                    href='/duelos'
-                    className={clsx(
-                      'text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                      'hover:bg-emerald-600'
-                    )}
-                  >
+                  <Link href='/duelos' className={linkClasses('/duelos')}>
                     <TrophyIcon className='h-5 w-5' />
                     Duelos
+                  </Link>
+                  <Link href='/dashboard' className={linkClasses('/dashboard')}>
+                    <AcademicCapIcon className='h-5 w-5' />
+                    Mis Cursos
                   </Link>
                 </div>
               </div>
@@ -134,35 +141,24 @@ export const NavigationBar = () => {
             </div>
             <div className='md:block hidden'>
               <div className='ml-10 items-baseline flex space-x-4'>
-                <Link
-                  href='/'
-                  className={clsx(
-                    'text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                    'hover:bg-emerald-600'
-                  )}
-                >
+                <Link href='/' className={linkClasses('/')}>
                   <HomeIcon className='h-5 w-5' />
                   Inicio
                 </Link>
                 <Link
                   href='/#caracteristicas'
-                  className={clsx(
-                    'text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                    'hover:bg-emerald-600'
-                  )}
+                  className={linkClasses('/#caracteristicas')}
                 >
                   <SparklesIcon className='h-5 w-5' />
                   Características
                 </Link>
-                <Link
-                  href='/duelos'
-                  className={clsx(
-                    'text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2',
-                    'hover:bg-emerald-600'
-                  )}
-                >
+                <Link href='/duelos' className={linkClasses('/duelos')}>
                   <TrophyIcon className='h-5 w-5' />
                   Duelos
+                </Link>
+                <Link href='/dashboard' className={linkClasses('/dashboard')}>
+                  <AcademicCapIcon className='h-5 w-5' />
+                  Mis Cursos
                 </Link>
               </div>
             </div>
@@ -200,7 +196,7 @@ export const NavigationBar = () => {
                     'hover:bg-emerald-400 transition-colors duration-300 hover:cursor-pointer'
                   )}
                 >
-                  <ArrowLeftOnRectangleIcon className='h-5 w-5' />
+                  <ArrowRightStartOnRectangleIcon className='h-5 w-5' />
                   Cerrar Sesión
                 </button>
               )}
@@ -236,35 +232,24 @@ export const NavigationBar = () => {
       {mobileMenuOpen && (
         <div className='md:hidden bg-emerald-700'>
           <div className='px-2 pt-2 pb-3 sm:px-3 space-y-1'>
-            <Link
-              href='/#inicio'
-              className={clsx(
-                'text-white px-3 py-2 rounded-md text-base font-medium flex items-center gap-2',
-                'hover:bg-emerald-600'
-              )}
-            >
+            <Link href='/#inicio' className={linkClasses('/')}>
               <HomeIcon className='h-5 w-5' />
               Inicio
             </Link>
             <Link
               href='/#caracteristicas'
-              className={clsx(
-                'text-white px-3 py-2 rounded-md text-base font-medium flex items-center gap-2',
-                'hover:bg-emerald-600'
-              )}
+              className={linkClasses('/#caracteristicas')}
             >
               <SparklesIcon className='h-5 w-5' />
               Características
             </Link>
-            <Link
-              href='/duelos'
-              className={clsx(
-                'text-white px-3 py-2 rounded-md text-base font-medium flex items-center gap-2',
-                'hover:bg-emerald-600'
-              )}
-            >
+            <Link href='/duelos' className={linkClasses('/duelos')}>
               <TrophyIcon className='h-5 w-5' />
               Duelos
+            </Link>
+            <Link href='/dashboard' className={linkClasses('/dashboard')}>
+              <AcademicCapIcon className='h-5 w-5' />
+              Mis Cursos
             </Link>
           </div>
           <div className='pt-4 pb-3 border-t border-emerald-600'>
@@ -304,7 +289,7 @@ export const NavigationBar = () => {
                     'w-full text-center hover:bg-emerald-400'
                   )}
                 >
-                  <ArrowLeftOnRectangleIcon className='h-5 w-5' />
+                  <ArrowRightStartOnRectangleIcon className='h-5 w-5' />
                   Cerrar Sesión
                 </button>
               </div>
