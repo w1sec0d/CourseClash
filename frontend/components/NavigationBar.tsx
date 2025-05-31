@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import clsx from 'clsx';
+import Image from 'next/image';
 import {
   HomeIcon,
   SparklesIcon,
@@ -61,13 +62,14 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
           <div className='items-center justify-between h-16 flex'>
             <div className='items-center flex'>
               <div className='flex-shrink-0'>
-                {/* <Image
-                  alt='Logo de Course Clash - Espada insertada en un birrete de graduación'
-                  src='https://placehold.co/200x80/emerald/white?text=Course+Clash'
+                <Image
+                  alt='Logo de Course Clash'
+                  src='/logo_no_title.svg'
                   className='h-12 w-auto'
-                  width={200}
-                  height={80}
-                /> */}
+                  width={64}
+                  height={64}
+                  priority
+                />
               </div>
               <div className='md:block hidden'>
                 <div className='ml-10 items-baseline flex space-x-4'>
@@ -141,6 +143,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
                 className='h-21 w-auto mr-1'
                 width={200}
                 height={80}
+                priority
               />
               <span className='text-white font-bold text-xl tracking-tight'>CourseClash</span>
             </div>

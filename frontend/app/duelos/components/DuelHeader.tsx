@@ -10,7 +10,7 @@ export function DuelHeader({
   title,
   opponent,
   playerProgress,
-  opponentProgress,
+  // opponentProgress,
   totalQuestions,
 }: DuelHeaderProps) {
   return (
@@ -38,15 +38,15 @@ export function DuelHeader({
           </span>
         </div>
         <div className='items-center flex space-x-2 flex-1'>
-          <div className='h-3 bg-gray-200 rounded-full flex-grow'>
+          {/* <div className='h-3 bg-gray-200 rounded-full flex-grow'>
             <div
               style={{ width: `${(opponentProgress / totalQuestions) * 100}%` }}
               className='h-3 bg-gray-500 rounded-full'
             ></div>
-          </div>
-          <span className='font-medium text-gray-700'>
+          </div> */}
+          {/* <span className='font-medium text-gray-700'>
             {opponentProgress}/{totalQuestions}
-          </span>
+          </span> */}
         </div>
       </div>
     </div>

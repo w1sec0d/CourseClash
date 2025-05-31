@@ -22,13 +22,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang='es'>
-      <body className={clsx(inter.className, 'bg-white')}>
+      <body
+        className={clsx(inter.className, 'bg-white min-h-screen flex flex-col')}
+      >
         <AuthProvider>
           <NavigationBar />
-          <ConditionalLayout>
+          <Suspense fallback={<LoadingSpinner />}>
+            <ConditionalLayout>
             {children}
-          </ConditionalLayout>
-          <Footer />
+            </ConditionalLayout>
+            <Footer />
+          </Suspense>
         </AuthProvider>
       </body>
     </html>

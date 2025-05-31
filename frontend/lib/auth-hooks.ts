@@ -146,15 +146,13 @@ export function useLogin() {
       const authResponse = data.login as AuthResponse;
       console.log('🔑 Auth token', data.login);
 
-      // Set the token in an HTTP-only cookie
-      document.cookie = `auth_token=${authResponse.token}; path=/; secure; samesite=strict`;
-
-      // If you have a refresh token, set it in a separate cookie
+      // Store tokens in localStorage
+      localStorage.setItem('auth_token', authResponse.token);
       if (authResponse.refreshToken) {
-        document.cookie = `refresh_token=${authResponse.refreshToken}; path=/; secure; samesite=strict`;
+        localStorage.setItem('refresh_token', authResponse.refreshToken);
       }
 
-      console.log('🔑 Auth token stored in cookies');
+      console.log('🔑 Auth token stored in localStorage');
       setLoading(false);
       return { data: authResponse };
     } catch (err: unknown) {
@@ -275,15 +273,13 @@ export function useRegister() {
 
         const authResponse = data.register as AuthResponse;
 
-        // Store the token in an HTTP-only cookie
-        document.cookie = `auth_token=${authResponse.token}; path=/; secure; samesite=strict`;
-
-        // If you have a refresh token, set it in a separate cookie
+        // Store tokens in localStorage
+        localStorage.setItem('auth_token', authResponse.token);
         if (authResponse.refreshToken) {
-          document.cookie = `refresh_token=${authResponse.refreshToken}; path=/; secure; samesite=strict`;
+          localStorage.setItem('refresh_token', authResponse.refreshToken);
         }
 
-        console.log('🔑 Auth token stored in cookies for new user');
+        console.log('🔑 Auth token stored in localStorage for new user');
 
         setLoading(false);
         return authResponse;
@@ -335,13 +331,11 @@ export function useLogout() {
       });
       console.log('📥 Received logout response');
 
-      // Clear the cookies
-      document.cookie =
-        'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
-      document.cookie =
-        'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+      // Clear tokens from localStorage
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
 
-      console.log('🔓 Auth tokens cleared from cookies');
+      console.log('🔓 Auth tokens cleared from localStorage');
       setLoading(false);
       return true;
     } catch (err: unknown) {
@@ -350,12 +344,10 @@ export function useLogout() {
       console.error('❌ Logout error:', errorMessage);
       setError(errorMessage);
       setLoading(false);
-      // Even if the API call fails, we clear the cookies
-      document.cookie =
-        'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
-      document.cookie =
-        'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
-      console.log('🔓 Auth tokens cleared from cookies (after error)');
+      // Even if the API call fails, we clear the tokens
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
+      console.log('🔓 Auth tokens cleared from localStorage (after error)');
       return false;
     }
   }, []);

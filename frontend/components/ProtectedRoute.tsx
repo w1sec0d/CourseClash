@@ -17,17 +17,34 @@ export default function ProtectedRoute({
 
   useEffect(() => {
     const checkAuth = async () => {
-      const currentUser = await fetchCurrentUser();
+      const token = localStorage.getItem('auth_token');
 
-      if (!currentUser) {
-        // Guardar la URL actual para redirigir después del login
+      if (!token) {
         const currentPath = window.location.pathname;
         router.push(`/login?from=${encodeURIComponent(currentPath)}`);
         return;
       }
 
-      if (requiredRole && currentUser.role !== requiredRole) {
-        router.push('/dashboard');
+      try {
+        const currentUser = await fetchCurrentUser();
+
+        if (!currentUser) {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('refresh_token');
+          const currentPath = window.location.pathname;
+          router.push(`/login?from=${encodeURIComponent(currentPath)}`);
+          return;
+        }
+
+        if (requiredRole && currentUser.role !== requiredRole) {
+          router.push('/dashboard');
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('refresh_token');
+        const currentPath = window.location.pathname;
+        router.push(`/login?from=${encodeURIComponent(currentPath)}`);
       }
     };
 
@@ -47,11 +64,11 @@ export default function ProtectedRoute({
   }
 
   if (!user) {
-    return null; // No renderizar nada mientras se redirige
+    return null;
   }
 
   if (requiredRole && user.role !== requiredRole) {
-    return null; // No renderizar nada mientras se redirige
+    return null;
   }
 
   return <>{children}</>;

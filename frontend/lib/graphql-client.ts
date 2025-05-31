@@ -134,10 +134,10 @@ export const clearAuthToken = () => {
 };
 
 // Añade el token de autenticación a las cabeceras si está disponible
-export const getAuthHeaders = (): Record<string, string> => {
-  const token = getAuthToken();
-  if (token) {
-    return { Authorization: `Bearer ${token}` };
-  }
-  return {};
-};
+export function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem('auth_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}

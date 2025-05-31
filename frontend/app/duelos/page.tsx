@@ -9,8 +9,9 @@ import { User } from '@/lib/auth-hooks';
 import Button from '@/components/Button';
 import { TrophyIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
-export default function Duelos() {
+function DuelosContent() {
   const { user } = useAuth();
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(
     null
@@ -677,5 +678,13 @@ export default function Duelos() {
         />
       )}
     </div>
+  );
+}
+
+export default function Duelos() {
+  return (
+    <ProtectedRoute>
+      <DuelosContent />
+    </ProtectedRoute>
   );
 }
