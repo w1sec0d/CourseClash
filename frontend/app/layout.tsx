@@ -3,8 +3,9 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import NavigationBar from '../components/NavigationBar';
 import clsx from 'clsx';
-import { AuthProvider } from '@/lib/auth-context';
+import { AuthProviderApollo } from '@/lib/auth-context-apollo';
 import { ConditionalLayout } from '@/components/ConditionalLayout';
+import { ApolloProviderWrapper } from '@/lib/apollo-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -24,10 +25,12 @@ export default function RootLayout({
       <body
         className={clsx(inter.className, 'bg-white min-h-screen flex flex-col')}
       >
-        <AuthProvider>
-          <NavigationBar />
-          <ConditionalLayout>{children}</ConditionalLayout>
-        </AuthProvider>
+        <ApolloProviderWrapper>
+          <AuthProviderApollo>
+            <NavigationBar />
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </AuthProviderApollo>
+        </ApolloProviderWrapper>
       </body>
     </html>
   );

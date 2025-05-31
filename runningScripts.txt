@@ -18,3 +18,9 @@ docker stop auth-user
 docker rm auth-user
 docker build -t courseclash-auth-user:1.0 .
 docker run --name auth-user -p 8001:8001 courseclash-auth-user:1.0
+
+
+-- MYSQL DB --
+conectarse a bd:
+docker exec -it cc_authcourses_db mysql -u root -p
+(la contraseña puede configurarse en dockercompose)

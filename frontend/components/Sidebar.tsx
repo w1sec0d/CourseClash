@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
-import { useAuth } from '@/lib/auth-context';
+import { useAuthApollo } from '@/lib/auth-context-apollo';
+import { useRouter } from 'next/navigation';
 
 // Componentes modularizados del sidebar
 import UserProfile from './sidebar/UserProfile';
@@ -9,8 +10,36 @@ import CommonMenu from './sidebar/CommonMenu';
 import AuthenticatedMenu from './sidebar/AuthenticatedMenu';
 import CourseList from './sidebar/CourseList';
 
-const Sidebar: React.FC = () => {
-  const { user, logout } = useAuth();
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ onClose }: SidebarProps) {
+  const { user, logout } = useAuthApollo();
+  const router = useRouter();
+
+  const handleLogout = async (): Promise<boolean> => {
+    try {
+      console.log('🚪 Sidebar logout attempt with Apollo');
+      await logout();
+      console.log('✅ Sidebar logout successful with Apollo');
+      router.push('/');
+      onClose();
+      return true;
+    } catch (error) {
+      console.error('❌ Sidebar logout error:', error);
+
+      // Fallback cleanup
+      const { clearAuthTokens } = await import('@/lib/cookie-utils');
+      clearAuthTokens();
+      console.log('🧹 Cleaned cookies manually after logout error');
+
+      router.push('/');
+      onClose();
+      return false;
+    }
+  };
 
   // Función para cerrar el sidebar en móvil
   // const closeSidebar = () => {
@@ -28,7 +57,7 @@ const Sidebar: React.FC = () => {
     >
       <div className='p-4'>
         {/* Sección de perfil */}
-        <UserProfile user={user} onLogout={logout} />
+        <UserProfile user={user} onLogout={handleLogout} />
 
         {/* Métricas del usuario (monedas, notificaciones) */}
         <UserMetrics />
@@ -47,6 +76,4 @@ const Sidebar: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default Sidebar;
+}

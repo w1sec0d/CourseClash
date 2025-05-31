@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCurrentUser } from '@/lib/auth-hooks';
+import { useAuthApollo } from '@/lib/auth-context-apollo';
 import LoadingSpinner from './LoadingSpinner';
 
 interface ProtectedRouteProps {
@@ -13,60 +13,49 @@ export default function ProtectedRoute({
   requiredRole,
 }: ProtectedRouteProps) {
   const router = useRouter();
-  const { user, loading, error, fetchCurrentUser } = useCurrentUser();
+  const { user, isLoading, isAuthenticated, isInitialized } = useAuthApollo();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('auth_token');
+    // Solo verificar cuando se haya inicializado
+    if (!isInitialized) return;
 
-      if (!token) {
+    const checkAuth = async () => {
+      console.log('🔒 ProtectedRoute: Checking authentication with Apollo');
+
+      if (!isAuthenticated || !user) {
+        console.log(
+          '❌ ProtectedRoute: User not authenticated, redirecting to login'
+        );
         const currentPath = window.location.pathname;
         router.push(`/login?from=${encodeURIComponent(currentPath)}`);
         return;
       }
 
-      try {
-        const currentUser = await fetchCurrentUser();
-
-        if (!currentUser) {
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('refresh_token');
-          const currentPath = window.location.pathname;
-          router.push(`/login?from=${encodeURIComponent(currentPath)}`);
-          return;
-        }
-
-        if (requiredRole && currentUser.role !== requiredRole) {
-          router.push('/dashboard');
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('refresh_token');
-        const currentPath = window.location.pathname;
-        router.push(`/login?from=${encodeURIComponent(currentPath)}`);
+      if (requiredRole && user.role !== requiredRole) {
+        console.log(
+          `🚫 ProtectedRoute: User role ${user.role} doesn't match required role ${requiredRole}`
+        );
+        router.push('/dashboard');
+        return;
       }
+
+      console.log('✅ ProtectedRoute: Authentication check passed');
     };
 
     checkAuth();
-  }, [fetchCurrentUser, router, requiredRole]);
+  }, [isInitialized, isAuthenticated, user, router, requiredRole]);
 
-  if (loading) {
+  // Mostrar loading mientras se inicializa o está cargando
+  if (!isInitialized || isLoading) {
     return <LoadingSpinner />;
   }
 
-  if (error) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-red-500'>Error: {error}</div>
-      </div>
-    );
-  }
-
-  if (!user) {
+  // Si no está autenticado, no mostrar nada (se redirigirá)
+  if (!isAuthenticated || !user) {
     return null;
   }
 
+  // Si requiere un rol específico y no lo tiene, no mostrar nada
   if (requiredRole && user.role !== requiredRole) {
     return null;
   }

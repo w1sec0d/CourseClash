@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useAuth } from '@/lib/auth-context';
+import { useAuthApollo } from '@/lib/auth-context-apollo';
 import Swal from 'sweetalert2';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 function DashboardContent() {
-  const { user } = useAuth();
+  const { user } = useAuthApollo();
   const hasShownWelcome = useRef(false);
 
   useEffect(() => {

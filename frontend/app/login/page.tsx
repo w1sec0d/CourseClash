@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useAuth } from '@/lib/auth-context';
+import { useAuthApollo } from '@/lib/auth-context-apollo';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '@/lib/form-schemas';
 import Swal from 'sweetalert2';
-import { AuthError } from '@/lib/auth-hooks';
+import { AuthError } from '@/lib/auth-types';
 
 interface LoginFormValues {
   email: string;
@@ -31,7 +31,7 @@ export default function Login() {
     },
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { login, resetPassword, updatePassword } = useAuth();
+  const { login, resetPassword, updatePassword } = useAuthApollo();
   const router = useRouter();
 
   const handleForgotPassword = async () => {
@@ -177,7 +177,7 @@ export default function Login() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      // Call the login function from auth context
+      // Call the login function from Apollo auth context
       await login(data.email, data.password);
 
       // Redirect to dashboard after successful login
@@ -185,14 +185,38 @@ export default function Login() {
     } catch (error) {
       // Set form error to display to the user
       if (error instanceof AuthError) {
-        setError('root', {
+        console.log('🔍 Error details:', {
           message: error.message,
-          type: error.code,
+          code: error.code,
+          isServerError: error.isServerError,
         });
+
+        // Diferenciar entre errores de servidor y errores de autenticación
+        if (error.isServerError) {
+          // 🚨 Error de servidor (500, timeout, network, etc.)
+          setError('root', {
+            message: `🔧 ${error.message}`,
+            type: error.code,
+          });
+
+          console.warn('🚨 Server error detected - might need retry logic');
+        } else {
+          // ❌ Error de autenticación (credenciales incorrectas, usuario no encontrado)
+          setError('root', {
+            message: error.message,
+            type: error.code,
+          });
+
+          // Limpiar campos si es error de credenciales
+          if (error.code === 'INVALID_CREDENTIALS') {
+            console.log('🔐 Invalid credentials detected');
+          }
+        }
       } else {
-        console.log({ error });
+        console.error('❌ Unexpected error type:', error);
         setError('root', {
-          message: 'Error al iniciar sesión. Por favor, intenta de nuevo.',
+          message:
+            'Error inesperado al iniciar sesión. Por favor, intenta de nuevo.',
           type: 'UNKNOWN_ERROR',
         });
       }
