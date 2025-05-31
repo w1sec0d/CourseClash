@@ -12,12 +12,12 @@ import {
   UserPlusIcon,
   AcademicCapIcon,
 } from '@heroicons/react/24/outline';
-import { useAuth } from '@/lib/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
+import { useAuthApollo } from '@/lib/auth-context-apollo';
 
 export const NavigationBar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, logout, isInitialized } = useAuth();
+  const { isAuthenticated, logout, isInitialized } = useAuthApollo();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -27,10 +27,22 @@ export const NavigationBar: React.FC = () => {
 
   const handleLogout = async () => {
     try {
+      console.log('🚪 Logout attempt with Apollo');
       await logout();
+      console.log('✅ Logout successful with Apollo');
       router.push('/');
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      console.error('❌ Logout error:', error);
+
+      // En caso de error, intentar limpiar localStorage manualmente
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('refresh_token');
+        console.log('🧹 Cleaned localStorage manually after logout error');
+      }
+
+      // Redirigir de todas formas
+      router.push('/');
     }
   };
 
