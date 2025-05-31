@@ -35,7 +35,7 @@ func InitMongo() {
         log.Fatal("Error al hacer ping a MongoDB Atlas:", err)
     }
 
-    fmt.Println("✅ Conectado a MongoDB Atlas")
+    fmt.Println("✅ Conectado a MongoDB")
     MongoClient = client
 }
 

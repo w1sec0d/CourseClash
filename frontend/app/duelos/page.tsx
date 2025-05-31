@@ -1,11 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { REQUEST_DUEL, ACCEPT_DUEL } from '../graphql/mutations/duel';
 import { RequestDuelResponse } from '../types/duel';
-import { fetchGraphQL } from '@/lib/graphql-client';
 import QuizScreen from './components/quizScreen';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
-import { User } from '@/lib/auth-hooks';
+import { useDuels } from '@/lib/duel-hooks-apollo';
 import Button from '@/components/Button';
 import { TrophyIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
@@ -13,11 +11,24 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 
 function DuelosContent() {
   const { user } = useAuthApollo();
+  const {
+    searchUserByEmail,
+    foundUser,
+    searchLoading,
+    searchError,
+    requestDuel,
+    requestLoading,
+    requestError,
+    acceptDuel,
+    acceptLoading,
+    acceptError,
+    error: apolloError,
+  } = useDuels();
+
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(
     null
   );
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
   const [notificationWs, setNotificationWs] = useState<WebSocket | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
@@ -26,8 +37,6 @@ function DuelosContent() {
     playerId: user?.id || '',
   });
   const [opponentEmail, setOpponentEmail] = useState('');
-  const [opponentUser, setOpponentUser] = useState<User | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
   const [pendingChallenges, setPendingChallenges] = useState<
     Array<{
       duelId: string;
@@ -36,6 +45,13 @@ function DuelosContent() {
       timestamp: string;
     }>
   >([]);
+
+  // Set combined error state
+  useEffect(() => {
+    const combinedError =
+      apolloError || searchError || requestError || acceptError;
+    setError(combinedError);
+  }, [apolloError, searchError, requestError, acceptError]);
 
   useEffect(() => {
     if (user?.id) {
@@ -169,39 +185,17 @@ function DuelosContent() {
       return;
     }
 
-    setIsSearching(true);
     try {
-      const searchUserQuery = `
-        query SearchUserByEmail($email: String!) {
-          getUserByEmail(email: $email) {
-            id
-            username
-            email
-            fullName
-            role
-          }
-        }
-      `;
-
-      const data = await fetchGraphQL({
-        query: searchUserQuery,
-        variables: { email: opponentEmail },
-      });
-
-      if (data.getUserByEmail) {
-        setOpponentUser(data.getUserByEmail);
-        setError(null);
-      } else {
+      const foundUser = await searchUserByEmail(opponentEmail);
+      if (!foundUser) {
         setError('No se encontró ningún usuario con ese correo');
-        setOpponentUser(null);
+      } else {
+        setError(null);
       }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Error al buscar el usuario'
       );
-      setOpponentUser(null);
-    } finally {
-      setIsSearching(false);
     }
   };
 
@@ -234,57 +228,53 @@ function DuelosContent() {
         }
       }
 
-      if (alternativeId && opponentUser) {
+      if (alternativeId && foundUser) {
         // Use the alternative ID if found
-        const data = await fetchGraphQL({
-          query: REQUEST_DUEL,
-          variables: {
-            input: {
-              requesterId: String(alternativeId),
-              opponentId: opponentUser.id,
-            },
-          },
-        });
+        try {
+          const response = await requestDuel(alternativeId, foundUser.id);
+          setDuelResponse(response);
+          setError(null);
 
-        setDuelResponse(data.requestDuel);
-        setError(null);
+          // Rest of the successful duel request handling...
+          setFormData((prev) => ({
+            ...prev,
+            duelId: response.duelId,
+          }));
 
-        // Rest of the successful duel request handling...
-        setFormData((prev) => ({
-          ...prev,
-          duelId: data.requestDuel.duelId,
-        }));
-
-        if (data.requestDuel.duelId) {
-          // Establish WebSocket connection...
-          if (wsConnection) {
-            wsConnection.close();
-          }
-
-          const ws = new WebSocket(
-            `ws://localhost:8002/ws/duels/${data.requestDuel.duelId}/${alternativeId}`
-          );
-
-          ws.onopen = () => {
-            setError(null);
-            setShowQuiz(true);
-          };
-
-          ws.onerror = (error) => {
-            setError('Error en la conexión WebSocket');
-            console.error('WebSocket error:', error);
-          };
-
-          ws.onclose = () => {
-            if (error) {
-              setShowQuiz(false);
+          if (response.duelId) {
+            // Establish WebSocket connection...
+            if (wsConnection) {
+              wsConnection.close();
             }
-          };
 
-          setWsConnection(ws);
+            const ws = new WebSocket(
+              `ws://localhost:8002/ws/duels/${response.duelId}/${alternativeId}`
+            );
+
+            ws.onopen = () => {
+              setError(null);
+              setShowQuiz(true);
+            };
+
+            ws.onerror = (error) => {
+              setError('Error en la conexión WebSocket');
+              console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = () => {
+              if (error) {
+                setShowQuiz(false);
+              }
+            };
+
+            setWsConnection(ws);
+          }
+        } catch (err) {
+          setError(
+            err instanceof Error ? err.message : 'Error al solicitar el duelo'
+          );
+          setDuelResponse(null);
         }
-
-        setIsLoading(false);
         return;
       }
 
@@ -300,37 +290,27 @@ function DuelosContent() {
       return;
     }
 
-    if (!opponentUser) {
+    if (!foundUser) {
       setError('Debes buscar y seleccionar un oponente primero');
       return;
     }
 
-    setIsLoading(true);
     try {
       // Ensure we have a valid ID, use an explicit string to avoid type issues
       const requesterId = String(user.id);
 
-      const data = await fetchGraphQL({
-        query: REQUEST_DUEL,
-        variables: {
-          input: {
-            requesterId: requesterId,
-            opponentId: opponentUser.id,
-          },
-        },
-      });
-
-      setDuelResponse(data.requestDuel);
+      const response = await requestDuel(requesterId, foundUser.id);
+      setDuelResponse(response);
       setError(null);
 
       // Establecer el ID del duelo en el formData
       setFormData((prev) => ({
         ...prev,
-        duelId: data.requestDuel.duelId,
+        duelId: response.duelId,
       }));
 
       // Establecer la conexión WebSocket inmediatamente después de una solicitud exitosa
-      if (data.requestDuel.duelId && user?.id) {
+      if (response.duelId && user?.id) {
         // Cerrar conexión existente si hay una
         if (wsConnection) {
           wsConnection.close();
@@ -338,7 +318,7 @@ function DuelosContent() {
 
         // Crear nueva conexión WebSocket
         const ws = new WebSocket(
-          `ws://localhost:8002/ws/duels/${data.requestDuel.duelId}/${user.id}`
+          `ws://localhost:8002/ws/duels/${response.duelId}/${user.id}`
         );
 
         ws.onopen = () => {
@@ -364,8 +344,6 @@ function DuelosContent() {
         err instanceof Error ? err.message : 'Error al solicitar el duelo'
       );
       setDuelResponse(null);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -393,17 +371,8 @@ function DuelosContent() {
     }
 
     try {
-      const data = await fetchGraphQL({
-        query: ACCEPT_DUEL,
-        variables: {
-          input: {
-            duelId: duelId,
-          },
-        },
-      });
-
-      setDuelResponse(data.acceptDuel);
-
+      const response = await acceptDuel(duelId);
+      setDuelResponse(response);
       setError(null);
 
       // Establecer el ID del duelo en el formData
@@ -489,17 +458,6 @@ function DuelosContent() {
                       <li>Refuerza tu aprendizaje mientras juegas</li>
                     </ul>
                   </div>
-                  {/* <div className='items-center mb-4 flex space-x-2'>
-                    <div className='bg-emerald-900/40 rounded-full px-3 py-1 text-sm'>
-                      Nivel 3 requerido
-                    </div>
-                    <div className='bg-emerald-900/40 rounded-full px-3 py-1 text-sm'>
-                      +125 XP por victoria
-                    </div>
-                  </div> */}
-                  {/* <p className='text-emerald-100 italic'>
-                    Tu estadística actual: 8 victorias - 3 derrotas
-                  </p> */}
                 </div>
               </div>
             </div>
@@ -570,30 +528,30 @@ function DuelosContent() {
                 <div className='pt-2'>
                   <Button
                     type='submit'
-                    disabled={isSearching}
+                    disabled={searchLoading}
                     className='hover:bg-emerald-700 transition duration-300 hover:shadow-lg transform hover:-translate-y-1 w-full bg-emerald-600 text-white font-bold py-3 rounded-lg shadow-md'
                   >
-                    {isSearching ? 'Buscando...' : 'Buscar Estudiante'}
+                    {searchLoading ? 'Buscando...' : 'Buscar Estudiante'}
                   </Button>
                 </div>
               </form>
 
-              {opponentUser && (
+              {foundUser && (
                 <div className='mt-6 p-4 bg-emerald-50 rounded-lg'>
                   <h3 className='font-bold text-emerald-800 mb-2'>
                     Oponente Encontrado:
                   </h3>
                   <p className='text-gray-700'>
-                    Nombre: {opponentUser.fullName || opponentUser.username}
+                    Nombre: {foundUser.fullName || foundUser.username}
                   </p>
-                  <p className='text-gray-700'>Correo: {opponentUser.email}</p>
-                  <p className='text-gray-700'>Rol: {opponentUser.role}</p>
+                  <p className='text-gray-700'>Correo: {foundUser.email}</p>
+                  <p className='text-gray-700'>Rol: {foundUser.role}</p>
                   <Button
                     onClick={handleRequestDuel}
-                    disabled={isLoading}
+                    disabled={requestLoading}
                     className='mt-4 hover:bg-emerald-700 transition duration-300 hover:shadow-lg transform hover:-translate-y-1 w-full bg-emerald-600 text-white font-bold py-3 rounded-lg shadow-md'
                   >
-                    {isLoading ? 'Solicitando...' : 'Solicitar Duelo'}
+                    {requestLoading ? 'Solicitando...' : 'Solicitar Duelo'}
                   </Button>
                 </div>
               )}
@@ -642,9 +600,10 @@ function DuelosContent() {
                             onClick={() =>
                               handleChallengeAccept(challenge.duelId)
                             }
-                            className='hover:bg-emerald-600 bg-emerald-500 text-white px-3 py-1 rounded-md text-sm'
+                            disabled={acceptLoading}
+                            className='hover:bg-emerald-600 bg-emerald-500 text-white px-3 py-1 rounded-md text-sm disabled:opacity-50'
                           >
-                            Aceptar
+                            {acceptLoading ? 'Aceptando...' : 'Aceptar'}
                           </button>
                           <button
                             onClick={() =>
@@ -674,7 +633,7 @@ function DuelosContent() {
         <QuizScreen
           wsConnection={wsConnection}
           playerId={formData.playerId}
-          opponentId={opponentUser?.id || 'user_002'}
+          opponentId={foundUser?.id || 'user_002'}
         />
       )}
     </div>
