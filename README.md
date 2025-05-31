@@ -4,7 +4,7 @@ CourseClash es una plataforma educativa gamificada que busca motivar el aprendiz
 
 ## Arquitectura
 
-Este proyecto implementa una Arquitectura Orientada a Servicios (SOA) con los siguientes componentes:
+Este proyecto implementa una arquitectura de microservicios con los siguientes componentes:
 
 ### Servicios
 
