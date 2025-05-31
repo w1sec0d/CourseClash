@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, gql } from '@apollo/client';
 import { useState } from 'react';
-import { User, AuthError, AuthErrorCode } from './auth-hooks';
+import { User, AuthError, AuthErrorCode } from '@/lib/auth-types';
 
 // Definir las queries y mutations con gql
 const LOGIN_MUTATION = gql`

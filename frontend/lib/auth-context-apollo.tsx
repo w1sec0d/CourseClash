@@ -14,7 +14,7 @@ import {
   PasswordResetResponse,
   UpdatePasswordResponse,
   AuthError,
-} from './auth-hooks';
+} from '@/lib/auth-types';
 import {
   useLoginApollo,
   useCurrentUserApollo,

@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '@/lib/form-schemas';
 import Swal from 'sweetalert2';
-import { AuthError } from '@/lib/auth-hooks';
+import { AuthError } from '@/lib/auth-types';
 
 interface LoginFormValues {
   email: string;

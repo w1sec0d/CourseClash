@@ -8,7 +8,7 @@ import { registerSchema } from '@/lib/form-schemas';
 import { useState } from 'react';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
 import { useRouter } from 'next/navigation';
-import { AuthError } from '@/lib/auth-hooks';
+import { AuthError } from '@/lib/auth-types';
 
 interface RegisterFormValues {
   firstName: string;

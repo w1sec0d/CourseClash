@@ -7,8 +7,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Swal from 'sweetalert2';
-import { AuthError } from '@/lib/auth-hooks';
-import { useForgotPassword } from '@/lib/auth-hooks';
+import { AuthError } from '@/lib/auth-types';
+import { useAuthApollo } from '@/lib/auth-context-apollo';
 
 // Schema for password reset validation
 const resetPasswordSchema = z
@@ -54,7 +54,7 @@ function ResetPasswordForm() {
   const token = searchParams.get('token');
   const code = searchParams.get('code');
   const email = searchParams.get('email');
-  const { updatePassword } = useForgotPassword();
+  const { updatePassword } = useAuthApollo();
 
   const onSubmit = async (data: ResetPasswordFormValues) => {
     setIsLoading(true);
