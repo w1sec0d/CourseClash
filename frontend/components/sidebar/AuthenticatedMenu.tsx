@@ -6,7 +6,7 @@ import Link from 'next/link';
 const AuthenticatedMenu: React.FC = () => {
   return (
     <>
-      <Link
+      {/* <Link
         href='/mis-cursos'
         className='items-center px-4 py-2 rounded-lg flex space-x-3 hover:bg-emerald-50
         transition'
@@ -68,7 +68,7 @@ const AuthenticatedMenu: React.FC = () => {
           ></path>
         </svg>
         <span className='font-medium'>Logros</span>
-      </Link>
+      </Link> */}
       <Link
         href='/duelos'
         className='items-center px-4 py-2 rounded-lg flex space-x-3 hover:bg-emerald-50

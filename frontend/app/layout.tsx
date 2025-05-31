@@ -2,13 +2,10 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import NavigationBar from '../components/NavigationBar';
-// import Sidebar from '../components/Sidebar';
-// import SidebarOverlay from '@/components/SidebarOverlay';
 import Footer from '../components/Footer';
 import clsx from 'clsx';
 import { AuthProvider } from '@/lib/auth-context';
-import { Suspense } from 'react';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { ConditionalLayout } from '@/components/ConditionalLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -31,10 +28,10 @@ export default function RootLayout({
         <AuthProvider>
           <NavigationBar />
           <Suspense fallback={<LoadingSpinner />}>
-            <main className='flex-1 flex flex-col'>
-              {children}
-              <Footer />
-            </main>
+            <ConditionalLayout>
+            {children}
+            </ConditionalLayout>
+            <Footer />
           </Suspense>
         </AuthProvider>
       </body>
