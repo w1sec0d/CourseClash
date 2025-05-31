@@ -8,26 +8,27 @@ import SidebarOverlay from './SidebarOverlay';
 import clsx from 'clsx';
 import { Suspense } from 'react';
 import LoadingSpinner from './LoadingSpinner';
+import Footer from './Footer';
 
 // Componente para manejar el sidebar condicionalmente
 export function ConditionalSidebar() {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
-  
+
   // Verificar si la ruta actual debe mostrar el sidebar
-  const showSidebar = isAuthenticated && (
-    pathname?.startsWith('/curso') || 
-    pathname?.startsWith('/dashboard') || 
-    pathname?.startsWith('/perfil')
-  );
-  
+  const showSidebar =
+    isAuthenticated &&
+    (pathname?.startsWith('/curso') ||
+      pathname?.startsWith('/dashboard') ||
+      pathname?.startsWith('/perfil'));
+
   if (!showSidebar) {
     return null;
   }
-  
+
   return (
     <>
-      <aside className="hidden lg:block w-64 fixed top-16 left-0 h-[calc(100vh-4rem)] z-40">
+      <aside className='hidden lg:block w-64 fixed top-16 left-0 h-[calc(100vh-4rem)] z-40'>
         <Sidebar />
       </aside>
       <SidebarOverlay />
@@ -39,19 +40,25 @@ export function ConditionalSidebar() {
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
-  
+
   // Verificar si la ruta actual debe mostrar el sidebar
-  const showSidebar = isAuthenticated && (
-    pathname?.startsWith('/curso') || 
-    pathname?.startsWith('/dashboard') || 
-    pathname?.startsWith('/perfil')
-  );
-  
+  const showSidebar =
+    isAuthenticated &&
+    (pathname?.startsWith('/curso') ||
+      pathname?.startsWith('/dashboard') ||
+      pathname?.startsWith('/perfil'));
+
   return (
-    <div className={clsx('flex min-h-screen', showSidebar ? 'lg:pl-64' : '')}>
+    <div
+      className={clsx(
+        'flex min-h-screen flex-col',
+        showSidebar ? 'lg:pl-64' : ''
+      )}
+    >
       <ConditionalSidebar />
       <Suspense fallback={<LoadingSpinner />}>
-        <main className="w-full">{children}</main>
+        <main className='w-full'>{children}</main>
+        <Footer />
       </Suspense>
     </div>
   );
