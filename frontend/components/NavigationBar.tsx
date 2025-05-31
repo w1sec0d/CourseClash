@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import clsx from 'clsx';
-import Image from 'next/image';
 import {
   HomeIcon,
   SparklesIcon,
@@ -16,15 +15,11 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
 
-interface NavigationBarProps {}
-
-export const NavigationBar: React.FC<NavigationBarProps> = ({
-}) => {
+export const NavigationBar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAuthenticated, logout, isInitialized } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [showSidebar, setShowSidebar] = useState(true);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -145,7 +140,9 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
                 height={80}
                 priority
               />
-              <span className='text-white font-bold text-xl tracking-tight'>CourseClash</span>
+              <span className='text-white font-bold text-xl tracking-tight'>
+                CourseClash
+              </span>
             </div>
             <div className='md:block hidden'>
               <div className='ml-10 items-baseline flex space-x-4'>

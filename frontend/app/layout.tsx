@@ -6,6 +6,8 @@ import Footer from '../components/Footer';
 import clsx from 'clsx';
 import { AuthProvider } from '@/lib/auth-context';
 import { ConditionalLayout } from '@/components/ConditionalLayout';
+import { Suspense } from 'react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -28,9 +30,7 @@ export default function RootLayout({
         <AuthProvider>
           <NavigationBar />
           <Suspense fallback={<LoadingSpinner />}>
-            <ConditionalLayout>
-            {children}
-            </ConditionalLayout>
+            <ConditionalLayout>{children}</ConditionalLayout>
             <Footer />
           </Suspense>
         </AuthProvider>
