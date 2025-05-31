@@ -16,7 +16,7 @@ interface LoginFormValues {
   rememberMe: boolean;
 }
 
-export default function Login() {
+export default function LoginApollo() {
   const {
     register,
     handleSubmit,
@@ -49,7 +49,6 @@ export default function Login() {
         if (!value) {
           return 'Necesitas ingresar tu correo electrónico';
         }
-        // Basic email validation
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
           return 'Por favor ingresa un correo electrónico válido';
         }
@@ -62,12 +61,10 @@ export default function Login() {
       try {
         const result = await resetPassword(email);
 
-        // Mostrar el código de verificación en modo desarrollo
         if (process.env.NODE_ENV === 'development') {
           console.log('🔑 Verification code:', result.code);
         }
 
-        // Pedir el código de verificación
         const { value: code } = await Swal.fire({
           title: 'Código de verificación',
           input: 'text',
@@ -90,7 +87,6 @@ export default function Login() {
         });
 
         if (code && code.length === 6 && code === result.code) {
-          // Pedir la nueva contraseña
           const { value: newPassword } = await Swal.fire({
             title: 'Nueva contraseña',
             input: 'password',
@@ -142,7 +138,7 @@ export default function Login() {
             case 'USER_NOT_FOUND':
               title = 'Usuario no encontrado';
               message =
-                'El correo electrónico no está registrado en nuestra plataforma. Por favor, verifica tu correo electrónico o regístrate.';
+                'El correo electrónico no está registrado en nuestra plataforma.';
               break;
             case 'SERVER_ERROR':
               title = 'Error del servidor';
@@ -151,8 +147,7 @@ export default function Login() {
               break;
             case 'INVALID_CODE':
               title = 'Código inválido';
-              message =
-                'El código de verificación es inválido o ha expirado. Por favor solicita un nuevo código.';
+              message = 'El código de verificación es inválido o ha expirado.';
               break;
           }
 
@@ -177,13 +172,10 @@ export default function Login() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      // Call the login function from Apollo auth context
       await login(data.email, data.password);
-
-      // Redirect to dashboard after successful login
+      console.log('✅ Login successful with Apollo Client!');
       router.push('/dashboard');
     } catch (error) {
-      // Set form error to display to the user
       if (error instanceof AuthError) {
         setError('root', {
           message: error.message,
@@ -203,12 +195,16 @@ export default function Login() {
 
   return (
     <div className='mx-auto my-12 container bg-white rounded-xl shadow-2xl md:flex-row max-w-7xl overflow-hidden flex flex-col'>
+      {/* Header indicando que usa Apollo */}
+      <div className='w-full bg-blue-50 border-b border-blue-200 p-4 text-center'>
+        <span className='bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full'>
+          🚀 Powered by Apollo Client
+        </span>
+      </div>
+
       {/* Sección de ilustración */}
       <div className='w-full md:w-1/2 bg-emerald-600 items-center justify-center flex p-8'>
         <div className='text-center'>
-          <div className='justify-center mb-6 flex'>
-            {/* <img alt="Logo de Course Clash: Una espada insertada en un birrete de graduación" src="https://placehold.co/200x200/emerald/white?text=CC" className="object-contain w-32 h-32"> */}
-          </div>
           <p className='text-white text-3xl font-bold mb-4'>Course Clash</p>
           <p className='text-emerald-100 mb-6'>
             ¡Aprende, compite y conquista el conocimiento!
@@ -222,7 +218,6 @@ export default function Login() {
                   fill='none'
                   viewBox='0 0 24 24'
                   stroke='currentColor'
-                  id='Windframe_UrXOQxH9O'
                 >
                   <path
                     strokeLinecap='round'
@@ -233,7 +228,7 @@ export default function Login() {
                 </svg>
               </div>
               <p className='text-white text-sm'>
-                Duelos académicos emocionantes
+                ⚡ Apollo Client Cache inteligente
               </p>
             </div>
             <div className='items-center bg-emerald-700 rounded-lg flex p-3'>
@@ -244,7 +239,6 @@ export default function Login() {
                   fill='none'
                   viewBox='0 0 24 24'
                   stroke='currentColor'
-                  id='Windframe_h43ZSvfQZ'
                 >
                   <path
                     strokeLinecap='round'
@@ -255,7 +249,7 @@ export default function Login() {
                 </svg>
               </div>
               <p className='text-white text-sm'>
-                Insignias y logros exclusivos
+                🔄 Estados de loading automáticos
               </p>
             </div>
             <div className='items-center bg-emerald-700 rounded-lg flex p-3'>
@@ -266,7 +260,6 @@ export default function Login() {
                   fill='none'
                   viewBox='0 0 24 24'
                   stroke='currentColor'
-                  id='Windframe_zcDmNuzsr'
                 >
                   <path
                     strokeLinecap='round'
@@ -277,12 +270,13 @@ export default function Login() {
                 </svg>
               </div>
               <p className='text-white text-sm'>
-                Tienda de bonificaciones con ventajas
+                🛡️ Manejo centralizado de errores
               </p>
             </div>
           </div>
         </div>
       </div>
+
       {/* Sección de formulario */}
       <div className='w-full md:w-1/2 p-8'>
         <div className='text-center mb-10'>
@@ -292,6 +286,7 @@ export default function Login() {
           <p className='text-gray-600'>
             Inicia sesión para continuar tu aventura académica
           </p>
+          <p className='text-sm text-blue-600 mt-2'>(Versión Apollo Client)</p>
         </div>
         {errors.root && (
           <div className='p-4 text-white bg-red-500 rounded-lg mb-6'>
@@ -378,33 +373,27 @@ export default function Login() {
               justify-center py-3 px-4 rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600'
               disabled={isLoading}
             >
-              {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+              {isLoading
+                ? 'Iniciando sesión con Apollo...'
+                : 'Iniciar sesión con Apollo'}
             </button>
           </div>
         </form>
-        {/* <div className='mt-8'>
-          <div className='relative'>
-            <div className='items-center absolute inset-0 flex'>
-              <div className='w-full border-t border-gray-300'></div>
-            </div>
-            <div className='justify-center text-sm relative flex'>
-              <span className='px-2 bg-white text-gray-500'>
-                O continúa con
-              </span>
-            </div>
-          </div>
-          <div className='mt-6 grid grid-cols-2 gap-3'>
-            <SocialIcon icon='google' showText={false} />
-            <SocialIcon icon='facebook' showText={false} />
-          </div>
-        </div> */}
         <p className='mt-8 text-center text-sm text-gray-600'>
           ¿No tienes una cuenta?{' '}
           <Link
-            href='/registro'
+            href='/registro-apollo'
             className='font-medium text-emerald-600 hover:text-emerald-500'
           >
-            Regístrate
+            Regístrate con Apollo
+          </Link>
+        </p>
+        <p className='mt-4 text-center text-sm text-gray-500'>
+          <Link
+            href='/login'
+            className='font-medium text-blue-600 hover:text-blue-500'
+          >
+            ← Volver a login original (fetch)
           </Link>
         </p>
       </div>
