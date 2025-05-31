@@ -31,11 +31,9 @@ export default function Sidebar({ onClose }: SidebarProps) {
       console.error('❌ Sidebar logout error:', error);
 
       // Fallback cleanup
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('refresh_token');
-        console.log('🧹 Cleaned localStorage manually after logout error');
-      }
+      const { clearAuthTokens } = await import('@/lib/cookie-utils');
+      clearAuthTokens();
+      console.log('🧹 Cleaned cookies manually after logout error');
 
       router.push('/');
       onClose();

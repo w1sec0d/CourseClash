@@ -111,16 +111,25 @@ class Query:
             Optional[User]: Información del usuario o None si no está autenticado
         """
         request = info.context["request"]
-        auth_header = request.headers.get("authorization")
 
-        if not auth_header:
+        # Intentar obtener el token desde el header Authorization
+        auth_header = request.headers.get("authorization")
+        token = None
+
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+        else:
+            # Si no hay header Authorization, intentar obtener desde cookies
+            token = request.cookies.get("auth_token")
+
+        if not token:
             return None
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
                     f"{AUTH_SERVICE_URL}/auth/me",
-                    headers={"Authorization": auth_header},
+                    headers={"Authorization": f"Bearer {token}"},
                 )
 
                 print("🔑 Response!!!:", response)
@@ -422,16 +431,25 @@ class Mutation:
             bool: Siempre retorna True indicando éxito
         """
         request = info.context["request"]
-        auth_header = request.headers.get("authorization")
 
-        if not auth_header:
+        # Intentar obtener el token desde el header Authorization
+        auth_header = request.headers.get("authorization")
+        token = None
+
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+        else:
+            # Si no hay header Authorization, intentar obtener desde cookies
+            token = request.cookies.get("auth_token")
+
+        if not token:
             return False
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.post(
                     f"{AUTH_SERVICE_URL}/auth/logout",
-                    headers={"Authorization": auth_header},
+                    headers={"Authorization": f"Bearer {token}"},
                 )
 
                 return response.status_code == 200
@@ -469,26 +487,21 @@ class Mutation:
             auth_service_url = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000")
             update_password_url = f"{auth_service_url}/auth/update-password"
 
-            # Get the token from the Authorization header
-            auth_header = info.context["request"].headers.get("authorization")
-            if not auth_header:
-                print("❌ No authorization header found")
+            # Intentar obtener el token desde el header Authorization o cookies
+            request = info.context["request"]
+            auth_header = request.headers.get("authorization")
+            token = None
+
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header.split(" ")[1]
+            else:
+                # Si no hay header Authorization, intentar obtener desde cookies
+                token = request.cookies.get("auth_token")
+
+            if not token:
+                print("❌ No authorization token found")
                 return UpdatePasswordError(
                     message="No authorization token provided", code="INVALID_TOKEN"
-                )
-
-            # Extract the token from the Bearer header
-            try:
-                scheme, token = auth_header.split()
-                if scheme.lower() != "bearer":
-                    print("❌ Invalid authorization scheme:", scheme)
-                    return UpdatePasswordError(
-                        message="Invalid authorization scheme", code="INVALID_TOKEN"
-                    )
-            except ValueError as e:
-                print("❌ Error parsing authorization header:", str(e))
-                return UpdatePasswordError(
-                    message="Invalid authorization header format", code="INVALID_TOKEN"
                 )
 
             print(

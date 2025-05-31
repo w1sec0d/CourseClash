@@ -6,12 +6,14 @@ Incluye:
 - Manejo de tiempo de respuesta
 - Filtrado de rutas sensibles
 - Logging de cuerpos de request y response para depuración
+- Manejo de cookies de autenticación
 """
 
 import time
 import json
 from typing import Callable, Awaitable, List, Set, Dict, Any
 from fastapi import Request, Response
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.types import ASGIApp
 import os
@@ -263,8 +265,161 @@ class ExtendedLoggingMiddleware(BaseHTTPMiddleware):
             raise
 
 
+class AuthCookieMiddleware(BaseHTTPMiddleware):
+    """Middleware para manejar cookies de autenticación."""
+
+    def __init__(self, app: ASGIApp):
+        super().__init__(app)
+
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
+        response = await call_next(request)
+
+        # Si la respuesta es un GraphQL response y contiene datos de autenticación exitosa
+        if (
+            hasattr(response, "body")
+            and response.headers.get("content-type", "").startswith("application/json")
+            and request.url.path.endswith("/graphql")
+        ):
+            try:
+                # Solo procesar si no se ha establecido ya una cookie
+                if "Set-Cookie" not in response.headers:
+                    body = getattr(response, "body", b"")
+                    if body:
+                        response_data = json.loads(body.decode("utf-8"))
+
+                        # Verificar si hay datos de login exitoso
+                        if (
+                            "data" in response_data
+                            and response_data["data"]
+                            and "login" in response_data["data"]
+                        ):
+                            login_data = response_data["data"]["login"]
+
+                            # Si es un AuthSuccess, establecer cookies
+                            if (
+                                isinstance(login_data, dict)
+                                and login_data.get("__typename") == "AuthSuccess"
+                                and "token" in login_data
+                            ):
+                                # Establecer cookie para el token de acceso
+                                cookie_settings = {
+                                    "path": "/",
+                                    "max_age": 30 * 24 * 60 * 60,  # 30 días
+                                    "httponly": True,
+                                    "samesite": "strict",
+                                }
+
+                                # Solo secure en producción
+                                if os.getenv("NODE_ENV") == "production":
+                                    cookie_settings["secure"] = True
+
+                                # Establecer cookie de token de acceso
+                                response.set_cookie(
+                                    key="auth_token",
+                                    value=login_data["token"],
+                                    **cookie_settings,
+                                )
+
+                                # Establecer cookie de refresh token si existe
+                                if (
+                                    "refreshToken" in login_data
+                                    and login_data["refreshToken"]
+                                ):
+                                    response.set_cookie(
+                                        key="refresh_token",
+                                        value=login_data["refreshToken"],
+                                        **cookie_settings,
+                                    )
+
+                                logger.info("🍪 Cookies de autenticación establecidas")
+
+                        # Verificar si hay datos de register exitoso
+                        elif (
+                            "data" in response_data
+                            and response_data["data"]
+                            and "register" in response_data["data"]
+                        ):
+                            register_data = response_data["data"]["register"]
+
+                            # Si es un AuthSuccess, establecer cookies
+                            if (
+                                isinstance(register_data, dict)
+                                and register_data.get("__typename") == "AuthSuccess"
+                                and "token" in register_data
+                            ):
+                                # Establecer cookie para el token de acceso
+                                cookie_settings = {
+                                    "path": "/",
+                                    "max_age": 30 * 24 * 60 * 60,  # 30 días
+                                    "httponly": True,
+                                    "samesite": "strict",
+                                }
+
+                                # Solo secure en producción
+                                if os.getenv("NODE_ENV") == "production":
+                                    cookie_settings["secure"] = True
+
+                                # Establecer cookie de token de acceso
+                                response.set_cookie(
+                                    key="auth_token",
+                                    value=register_data["token"],
+                                    **cookie_settings,
+                                )
+
+                                # Establecer cookie de refresh token si existe
+                                if (
+                                    "refreshToken" in register_data
+                                    and register_data["refreshToken"]
+                                ):
+                                    response.set_cookie(
+                                        key="refresh_token",
+                                        value=register_data["refreshToken"],
+                                        **cookie_settings,
+                                    )
+
+                                logger.info("🍪 Cookies de registro establecidas")
+
+                        # Verificar si es una operación de logout exitosa
+                        elif (
+                            "data" in response_data
+                            and response_data["data"]
+                            and "logout" in response_data["data"]
+                            and response_data["data"]["logout"] is True
+                        ):
+                            # Limpiar cookies en logout
+                            response.set_cookie(
+                                key="auth_token",
+                                value="",
+                                path="/",
+                                expires="Thu, 01 Jan 1970 00:00:00 GMT",
+                                httponly=True,
+                                samesite="strict",
+                            )
+                            response.set_cookie(
+                                key="refresh_token",
+                                value="",
+                                path="/",
+                                expires="Thu, 01 Jan 1970 00:00:00 GMT",
+                                httponly=True,
+                                samesite="strict",
+                            )
+                            logger.info(
+                                "🧹 Cookies de autenticación limpiadas en logout"
+                            )
+
+            except (json.JSONDecodeError, KeyError, AttributeError) as e:
+                # Si hay error parseando, no afectar la respuesta
+                logger.debug(f"Error procesando respuesta para cookies: {e}")
+                pass
+
+        return response
+
+
 def setup_middlewares(app: ASGIApp) -> None:
     """Configura los middlewares de la aplicación."""
     # Configurar el tamaño máximo del cuerpo a registrar (por defecto 10KB)
     max_body_size = int(os.getenv("LOG_MAX_BODY_SIZE", "10000"))
     app.add_middleware(ExtendedLoggingMiddleware, max_body_size=max_body_size)
+    app.add_middleware(AuthCookieMiddleware)

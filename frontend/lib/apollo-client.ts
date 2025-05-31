@@ -6,6 +6,7 @@ import {
 } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
+import { getAuthToken, clearAuthTokens } from '@/lib/cookie-utils';
 
 // HTTP Link base
 const httpLink = createHttpLink({
@@ -15,11 +16,11 @@ const httpLink = createHttpLink({
   credentials: 'include',
 });
 
-// Auth Link - Añade automáticamente el token a las peticiones
+// Auth Link - Añade automáticamente el token a las peticiones desde cookies
 const authLink = setContext((_, { headers }) => {
   // Solo en el cliente
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('auth_token');
+    const token = getAuthToken();
     return {
       headers: {
         ...headers,
@@ -47,8 +48,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     if ('statusCode' in networkError && networkError.statusCode === 401) {
       // Token expirado o inválido
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('refresh_token');
+        clearAuthTokens(); // Usar utilidad de cookies
         window.location.href = '/login';
       }
     }

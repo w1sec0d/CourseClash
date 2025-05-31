@@ -34,12 +34,10 @@ export const NavigationBar: React.FC = () => {
     } catch (error) {
       console.error('❌ Logout error:', error);
 
-      // En caso de error, intentar limpiar localStorage manualmente
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('refresh_token');
-        console.log('🧹 Cleaned localStorage manually after logout error');
-      }
+      // En caso de error, intentar limpiar cookies manualmente
+      const { clearAuthTokens } = await import('@/lib/cookie-utils');
+      clearAuthTokens();
+      console.log('🧹 Cleaned cookies manually after logout error');
 
       // Redirigir de todas formas
       router.push('/');

@@ -21,6 +21,11 @@ import {
   useLogoutApollo,
 } from './auth-hooks-apollo';
 import { useMutation, gql } from '@apollo/client';
+import {
+  setAuthToken,
+  setRefreshToken,
+  getAuthToken,
+} from '@/lib/cookie-utils';
 
 // Mutations adicionales que necesitamos
 const REGISTER_MUTATION = gql`
@@ -148,10 +153,10 @@ function useRegisterApollo() {
         );
       }
 
-      // Almacenar tokens
-      localStorage.setItem('auth_token', data.register.token);
+      // Almacenar tokens en cookies
+      setAuthToken(data.register.token);
       if (data.register.refreshToken) {
-        localStorage.setItem('refresh_token', data.register.refreshToken);
+        setRefreshToken(data.register.refreshToken);
       }
 
       return data.register;
@@ -325,7 +330,7 @@ export function AuthProviderApollo({ children }: { children: ReactNode }) {
 
   // Inicialización
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
+    const token = getAuthToken();
 
     if (token) {
       // Si hay token, intentar obtener el usuario

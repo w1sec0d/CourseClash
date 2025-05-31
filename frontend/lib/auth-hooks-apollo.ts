@@ -3,6 +3,12 @@
 import { useMutation, useQuery, gql } from '@apollo/client';
 import { useState } from 'react';
 import { User, AuthError, AuthErrorCode } from '@/lib/auth-types';
+import {
+  setAuthToken,
+  setRefreshToken,
+  getAuthToken,
+  clearAuthTokens,
+} from '@/lib/cookie-utils';
 
 // Definir las queries y mutations con gql
 const LOGIN_MUTATION = gql`
@@ -84,11 +90,11 @@ export function useLoginApollo() {
         return { error };
       }
 
-      // ✅ Login exitoso
+      // ✅ Login exitoso - Usar cookies en lugar de localStorage
       console.log('✅ Login successful');
-      localStorage.setItem('auth_token', data.login.token);
+      setAuthToken(data.login.token);
       if (data.login.refreshToken) {
-        localStorage.setItem('refresh_token', data.login.refreshToken);
+        setRefreshToken(data.login.refreshToken);
       }
 
       return { data: data.login };
@@ -164,7 +170,7 @@ export function useLoginApollo() {
 // Hook para obtener usuario actual
 export function useCurrentUserApollo() {
   const { data, loading, error, refetch } = useQuery(ME_QUERY, {
-    skip: typeof window === 'undefined' || !localStorage.getItem('auth_token'),
+    skip: typeof window === 'undefined' || !getAuthToken(),
     errorPolicy: 'all',
     notifyOnNetworkStatusChange: true,
   });
@@ -188,9 +194,8 @@ export function useLogoutApollo() {
     try {
       await logoutMutation();
 
-      // Limpiar tokens
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('refresh_token');
+      // Limpiar tokens de cookies
+      clearAuthTokens();
 
       return true;
     } catch (err) {
@@ -199,8 +204,7 @@ export function useLogoutApollo() {
       setError(errorMessage);
 
       // Limpiar tokens incluso si falla la petición
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('refresh_token');
+      clearAuthTokens();
 
       return false;
     }
