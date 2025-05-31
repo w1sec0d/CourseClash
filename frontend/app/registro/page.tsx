@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema } from '@/lib/form-schemas';
 import { useState } from 'react';
-import { useAuth } from '@/lib/auth-context';
+import { useAuthApollo } from '@/lib/auth-context-apollo';
 import { useRouter } from 'next/navigation';
 import { AuthError } from '@/lib/auth-hooks';
 
@@ -39,7 +39,7 @@ export default function Register() {
     },
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { register: registerUser } = useAuth();
+  const { register: registerUser } = useAuthApollo();
   const router = useRouter();
 
   const onSubmit = async (data: RegisterFormValues) => {
@@ -60,25 +60,55 @@ export default function Register() {
             : ('STUDENT' as const),
       };
 
+      console.log('📝 Registration attempt with Apollo:', {
+        username: userData.username,
+        email: userData.email,
+        fullName: userData.fullName,
+        role: userData.role,
+        timestamp: new Date().toISOString(),
+      });
+
       const result = await registerUser(userData);
-      console.log('✅ Registration successful:', result);
+      console.log('✅ Registration successful with Apollo:', result);
 
       // Redirect to dashboard after successful registration
       router.push('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
+
       if (error instanceof AuthError) {
-        setError('root', {
+        console.log('🔍 Registration error details:', {
           message: error.message,
-          type: error.code,
+          code: error.code,
+          isServerError: error.isServerError,
         });
+
+        // Diferenciar entre errores de servidor y errores de registro
+        if (error.isServerError) {
+          // 🚨 Error de servidor (500, timeout, network, etc.)
+          setError('root', {
+            message: `🔧 ${error.message}`,
+            type: error.code,
+          });
+
+          console.warn('🚨 Server error detected during registration');
+        } else {
+          // ❌ Error de registro (email duplicado, datos inválidos, etc.)
+          setError('root', {
+            message: error.message,
+            type: error.code,
+          });
+
+          // Limpiar campos si es error de email duplicado
+          if (error.code === 'EMAIL_EXISTS') {
+            console.log('📧 Registration validation error detected');
+          }
+        }
       } else {
-        console.error('Registration error:', error);
+        console.error('❌ Unexpected registration error type:', error);
         setError('root', {
           message:
-            error instanceof Error
-              ? error.message
-              : 'Error al crear la cuenta. Intenta de nuevo.',
+            'Error inesperado al crear la cuenta. Por favor, intenta de nuevo.',
           type: 'UNKNOWN_ERROR',
         });
       }
