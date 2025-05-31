@@ -4,7 +4,7 @@ import { REQUEST_DUEL, ACCEPT_DUEL } from '../graphql/mutations/duel';
 import { RequestDuelResponse } from '../types/duel';
 import { fetchGraphQL } from '@/lib/graphql-client';
 import QuizScreen from './components/quizScreen';
-import { useAuth } from '@/lib/auth-context';
+import { useAuthApollo } from '@/lib/auth-context-apollo';
 import { User } from '@/lib/auth-hooks';
 import Button from '@/components/Button';
 import { TrophyIcon } from '@heroicons/react/24/outline';
@@ -12,7 +12,7 @@ import Image from 'next/image';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 function DuelosContent() {
-  const { user } = useAuth();
+  const { user } = useAuthApollo();
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(
     null
   );
