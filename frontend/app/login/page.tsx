@@ -185,14 +185,38 @@ export default function Login() {
     } catch (error) {
       // Set form error to display to the user
       if (error instanceof AuthError) {
-        setError('root', {
+        console.log('🔍 Error details:', {
           message: error.message,
-          type: error.code,
+          code: error.code,
+          isServerError: error.isServerError,
         });
+
+        // Diferenciar entre errores de servidor y errores de autenticación
+        if (error.isServerError) {
+          // 🚨 Error de servidor (500, timeout, network, etc.)
+          setError('root', {
+            message: `🔧 ${error.message}`,
+            type: error.code,
+          });
+
+          console.warn('🚨 Server error detected - might need retry logic');
+        } else {
+          // ❌ Error de autenticación (credenciales incorrectas, usuario no encontrado)
+          setError('root', {
+            message: error.message,
+            type: error.code,
+          });
+
+          // Limpiar campos si es error de credenciales
+          if (error.code === 'INVALID_CREDENTIALS') {
+            console.log('🔐 Invalid credentials detected');
+          }
+        }
       } else {
-        console.log({ error });
+        console.error('❌ Unexpected error type:', error);
         setError('root', {
-          message: 'Error al iniciar sesión. Por favor, intenta de nuevo.',
+          message:
+            'Error inesperado al iniciar sesión. Por favor, intenta de nuevo.',
           type: 'UNKNOWN_ERROR',
         });
       }

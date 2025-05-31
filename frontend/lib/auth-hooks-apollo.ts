@@ -53,7 +53,7 @@ const LOGOUT_MUTATION = gql`
   }
 `;
 
-// Hook de login usando Apollo
+// Hook de login usando Apollo con manejo mejorado de errores
 export function useLoginApollo() {
   const [loginMutation, { loading, error }] = useMutation(LOGIN_MUTATION);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -66,28 +66,88 @@ export function useLoginApollo() {
         variables: { email, password },
       });
 
+      // ✅ Caso 1: Respuesta exitosa del servidor, pero error de autenticación
+      // (credenciales incorrectas, usuario no encontrado, etc.)
       if (data.login.__typename === 'AuthError') {
+        console.log(
+          '🔐 Authentication error:',
+          data.login.code,
+          data.login.message
+        );
+
         const error = new AuthError(
           data.login.message || 'Error de autenticación',
           data.login.code as AuthErrorCode,
-          true
+          false // ❌ NO es error de servidor, es error de autenticación
         );
         setAuthError(error.message);
         return { error };
       }
 
-      // Almacenar tokens
+      // ✅ Login exitoso
+      console.log('✅ Login successful');
       localStorage.setItem('auth_token', data.login.token);
       if (data.login.refreshToken) {
         localStorage.setItem('refresh_token', data.login.refreshToken);
       }
 
       return { data: data.login };
-    } catch (err) {
+    } catch (err: unknown) {
+      // ✅ Caso 2: Error del servidor (network, 500, timeout, etc.)
+      console.error('🚨 Server/Network error:', err);
+
+      let errorCode: AuthErrorCode = 'SERVER_ERROR';
+      let errorMessage = 'Error del servidor. Intenta de nuevo más tarde.';
+
+      // Clasificar el tipo de error de servidor
+      if (err && typeof err === 'object' && 'networkError' in err) {
+        const apolloError = err as {
+          networkError?: { statusCode?: number; code?: string };
+        };
+        const networkError = apolloError.networkError;
+
+        if (networkError?.statusCode) {
+          switch (networkError.statusCode) {
+            case 500:
+              errorCode = 'SERVER_ERROR';
+              errorMessage =
+                'Error interno del servidor. Contacta al soporte técnico.';
+              break;
+            case 503:
+              errorCode = 'SERVER_ERROR';
+              errorMessage =
+                'Servicio temporalmente no disponible. Intenta más tarde.';
+              break;
+            case 404:
+              errorCode = 'SERVER_ERROR';
+              errorMessage = 'Servicio de autenticación no encontrado.';
+              break;
+            case 401:
+              // Este caso raro donde 401 viene como network error
+              errorCode = 'INVALID_CREDENTIALS';
+              errorMessage = 'Credenciales inválidas.';
+              break;
+            default:
+              errorCode = 'SERVER_ERROR';
+              errorMessage = `Error de servidor (${networkError.statusCode}). Intenta más tarde.`;
+          }
+        } else if (networkError?.code === 'NETWORK_ERROR') {
+          errorMessage = 'Error de conexión. Verifica tu internet.';
+        } else if (networkError?.code === 'TIMEOUT') {
+          errorMessage = 'Tiempo de espera agotado. Intenta de nuevo.';
+        }
+      } else if (err && typeof err === 'object' && 'graphQLErrors' in err) {
+        const apolloError = err as { graphQLErrors?: Array<unknown> };
+        if (apolloError.graphQLErrors && apolloError.graphQLErrors.length > 0) {
+          // Error GraphQL que no se manejó en el campo union
+          errorMessage = 'Error en la consulta GraphQL.';
+        }
+      }
+
       const error = new AuthError(
-        err instanceof Error ? err.message : 'Error de autenticación',
-        'UNKNOWN_ERROR',
-        true
+        errorMessage,
+        errorCode,
+        true // ✅ SÍ es error de servidor
       );
       setAuthError(error.message);
       return { error };
