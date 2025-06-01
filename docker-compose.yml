@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=mysql+pymysql://root:password@cc_authcourses_db:3306/courseClash
+      - DATABASE_URL=mysql+pymysql://root:password@cc_authcourses_db:3306/authcourses_db
       - SECRET=Arquisoft
       - ALGORITM=HS256
       - MAIL_USERNAME=courseclasheducation@gmail.com
@@ -133,7 +133,7 @@ services:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=courseClash
+      - MYSQL_DATABASE=authcourses_db
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql:/docker-entrypoint-initdb.d
