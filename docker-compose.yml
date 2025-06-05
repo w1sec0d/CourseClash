@@ -5,7 +5,7 @@ services:
     build:
       context: ./auth_user_service
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - DATABASE_URL=mysql+pymysql://root:password@cc_authcourses_db:3306/courseClash
       - SECRET=Arquisoft
@@ -29,7 +29,7 @@ services:
     build:
       context: ./course_service
     ports:
-      - "8001:8001"
+      - '8001:8001'
     environment:
       - DATABASE_URL=mysql+pymysql://root:password@cc_authcourses_db:3306/courseClash
       - JWT_SECRET=your_jwt_secret_key
@@ -48,7 +48,7 @@ services:
       dockerfile: Dockerfile
     container_name: cc_duels_ms
     ports:
-      - "8002:8002"
+      - '8002:8002'
     restart: unless-stopped
     environment:
       - GIN_MODE=debug
@@ -60,12 +60,12 @@ services:
     healthcheck:
       test:
         [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:8002/swagger/index.html",
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:8002/swagger/index.html',
         ]
       interval: 30s
       timeout: 10s
@@ -78,7 +78,7 @@ services:
     build:
       context: ./api_gateway
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       - AUTH_SERVICE_URL=http://cc_auth_ms:8000
       - COURSE_SERVICE_URL=http://cc_courses_ms:8001
@@ -95,13 +95,13 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 
   # Frontend
-  cc_fe:
-    container_name: cc_fe
+  cc_fe_web:
+    container_name: cc_fe_web
     build:
-      context: ./frontend
+      context: ./frontend_web
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - API_URL=http://cc_ag:8080
@@ -113,12 +113,12 @@ services:
     healthcheck:
       test:
         [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://0.0.0.0:3000",
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://0.0.0.0:3000',
         ]
       interval: 30s
       timeout: 10s
@@ -130,7 +130,7 @@ services:
     container_name: cc_authcourses_db
     image: mysql:8.0
     ports:
-      - "3306:3306"
+      - '3306:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=courseClash
@@ -146,7 +146,7 @@ services:
     image: mongo:latest
     container_name: cc_duels_db
     ports:
-      - "27018:27017"
+      - '27018:27017'
     volumes:
       - mongo_data:/data/db
       - ./mongo_service/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
