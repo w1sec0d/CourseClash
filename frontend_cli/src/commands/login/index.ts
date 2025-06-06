@@ -1,3 +1,4 @@
+import {password} from '@inquirer/prompts'
 import {Command, Flags} from '@oclif/core'
 import {gql, GraphQLClient} from 'graphql-request'
 
@@ -75,8 +76,8 @@ interface NetworkError extends Error {
 export default class AuthLogin extends Command {
   static description = 'Iniciar sesión en CourseClash'
   static examples = [
-    '<%= config.bin %> auth:login -e user@example.com -p mypassword',
-    '<%= config.bin %> auth:login --email=user@example.com --password=mypassword --api=http://localhost:8080',
+    '<%= config.bin %> auth:login -e user@example.com',
+    '<%= config.bin %> auth:login --email=user@example.com --api=http://localhost:8080',
   ]
   static flags = {
     api: Flags.string({
@@ -90,13 +91,21 @@ export default class AuthLogin extends Command {
     }),
     password: Flags.string({
       char: 'p',
-      description: 'Contraseña',
-      required: true,
+      description: 'Contraseña (opcional, se pedirá de forma segura)',
+      required: false,
     }),
   }
 
   async run(): Promise<void> {
     const {flags} = await this.parse(AuthLogin)
+
+    // 🔒 Pedir contraseña de forma segura si no se proporcionó
+    const inputPassword =
+      flags.password ||
+      (await password({
+        mask: '*',
+        message: 'Ingresa tu contraseña:',
+      }))
 
     try {
       // 🚀 Cliente GraphQL para API Gateway
@@ -105,7 +114,7 @@ export default class AuthLogin extends Command {
       // 🔗 Ejecutar mutation de login
       const data: LoginResponse = await client.request(LOGIN_MUTATION, {
         email: flags.email,
-        password: flags.password,
+        password: inputPassword,
       })
 
       // ✅ Manejar respuesta union type

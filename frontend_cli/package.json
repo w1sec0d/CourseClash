@@ -8,6 +8,7 @@
   },
   "bugs": "https://github.com/w1sec0d/CourseClash/issues",
   "dependencies": {
+    "@inquirer/prompts": "^7.5.3",
     "@oclif/core": "^4",
     "@oclif/plugin-help": "^6",
     "@oclif/plugin-plugins": "^5",
