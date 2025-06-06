@@ -141,6 +141,7 @@ services:
       - courseclash-network
     command: --default-authentication-plugin=mysql_native_password
 
+  # Base de datos MySQL (para courses service)
   cc_courses_db:
     container_name: cc_courses_db
     image: mysql:8.0
@@ -152,6 +153,21 @@ services:
     volumes:
       - courses_mysql_data:/var/lib/mysql
       - ./mysql_courses:/docker-entrypoint-initdb.d
+    networks:
+      - courseclash-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  cc_activities_db:
+    container_name: cc_activities_db
+    image: mysql:8.0
+    ports:
+      - "3308:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=activities_db
+    volumes:
+      - activities_mysql_data:/var/lib/mysql
+      - ./mysql_activities:/docker-entrypoint-initdb.d
     networks:
       - courseclash-network
     command: --default-authentication-plugin=mysql_native_password
@@ -171,6 +187,7 @@ services:
 volumes:
   auth_mysql_data:
   courses_mysql_data:
+  activities_mysql_data:
   mongo_data:
 
 networks:
