@@ -41,6 +41,24 @@ services:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
+ # Servicio de actividades
+  cc_activities_ms:
+    container_name: cc_activities_ms
+    build:
+      context: ./activities_service
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:password@cc_activities_db:3306/activities_db
+      - JWT_SECRET=your_jwt_secret_key12
+    volumes:
+      - ./activities_service:/app
+    depends_on:
+      - cc_activities_db
+    networks:
+      - courseclash-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
+
   # Servicio de Duelos
   cc_duels_ms:
     build:
