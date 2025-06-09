@@ -24,7 +24,7 @@ class ActivityBase(BaseModel):
 
     @validator('file_url')
     def validate_file_url(cls, v):
-        if v and not v.startswith(('http://', 'https://', '/files/')):
+        if v and not v.startswith(('http://', 'https://', '/api/v1/files/', '/files/')):
             raise ValueError('La URL del archivo debe ser válida')
         return v
 
@@ -48,7 +48,7 @@ class ActivityUpdate(BaseModel):
 
     @validator('file_url')
     def validate_file_url(cls, v):
-        if v and not v.startswith(('http://', 'https://', '/files/')):
+        if v and not v.startswith(('http://', 'https://', '/api/v1/files/', '/files/')):
             raise ValueError('La URL del archivo debe ser válida')
         return v
 

@@ -161,10 +161,13 @@ class ActivityService:
             activity = self.db.query(Activity).filter(Activity.id == activity_id).first()
             
             if not activity:
+                logger.error(f"Actividad {activity_id} no encontrada")
                 return None
             
             # Verificar permisos
-            if user_role != "admin" and activity.created_by != user_id:
+            logger.info(f"Verificando permisos: user_role={user_role}, user_id={user_id} (type: {type(user_id)}), created_by={activity.created_by} (type: {type(activity.created_by)})")
+            if user_role != "admin" and activity.created_by != int(user_id):
+                logger.error(f"Sin permisos: user_role={user_role}, user_id={user_id}, created_by={activity.created_by}")
                 return None
             
             # Actualizar campos proporcionados

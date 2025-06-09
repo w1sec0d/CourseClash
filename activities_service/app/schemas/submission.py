@@ -9,7 +9,7 @@ class SubmissionBase(BaseModel):
 
     @validator('file_url')
     def validate_file_url(cls, v):
-        if v and not v.startswith(('http://', 'https://', '/files/')):
+        if v and not v.startswith(('http://', 'https://', '/api/v1/files/', '/files/')):
             raise ValueError('La URL del archivo debe ser válida')
         return v
 
@@ -17,7 +17,7 @@ class SubmissionBase(BaseModel):
     def validate_additional_files(cls, v):
         if v:
             for file_url in v:
-                if not file_url.startswith(('http://', 'https://', '/files/')):
+                if not file_url.startswith(('http://', 'https://', '/api/v1/files/', '/files/')):
                     raise ValueError('Todas las URLs de archivos deben ser válidas')
         return v
 

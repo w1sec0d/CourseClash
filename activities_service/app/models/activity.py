@@ -18,7 +18,7 @@ class Activity(Base):
     course_id = Column(Integer, nullable=False, index=True)
     title = Column(String(100), nullable=False)
     description = Column(Text)
-    activity_type = Column(Enum(ActivityType), nullable=False)
+    activity_type = Column(String(20), nullable=False)
     due_date = Column(DateTime, nullable=True)
     file_url = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)
