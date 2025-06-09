@@ -112,11 +112,11 @@ class ActivityService:
             logger.error(f"Error obteniendo actividades: {e}")
             raise
     
+    # Obtiene una actividad por su id
     def get_activity_by_id(
         self, 
         activity_id: int, 
-        user_id: Optional[int] = None,
-        user_role: str = "student"
+        user_id: Optional[int] = None
     ) -> Optional[Activity]:
         """
         Obtener una actividad por ID
@@ -127,22 +127,7 @@ class ActivityService:
             if not activity:
                 return None
             
-            # Verificar permisos de acceso
-            # Los estudiantes pueden ver actividades de cursos en los que están inscritos
-            # Los profesores pueden ver actividades que crearon o de cursos que enseñan
-            # Los administradores pueden ver todas las actividades
-            
-            if user_role == "admin":
-                return activity
-            elif user_role == "teacher":
-                # Los profesores pueden ver actividades que crearon
-                # Aquí podrías agregar lógica para verificar si enseñan el curso
-                return activity
-            else:  # student
-                # Los estudiantes pueden ver actividades de cursos en los que están inscritos
-                # Aquí podrías agregar lógica para verificar inscripción al curso
-                return activity
-            
+            return activity
         except Exception as e:
             logger.error(f"Error obteniendo actividad {activity_id}: {e}")
             raise

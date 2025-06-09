@@ -79,20 +79,15 @@ async def get_activities(
 @router.get("/{activity_id}", response_model=ActivityResponse)
 async def get_activity(
     activity_id: int,
-    request: Request,
     db: Session = Depends(get_db)
 ):
     """
     Obtener una actividad específica por ID
     """
     try:
-        current_user = get_current_user(request)
-        
         service = ActivityService(db)
         activity = service.get_activity_by_id(
-            activity_id,
-            user_id=current_user["user_id"],
-            user_role=current_user["role"]
+            activity_id
         )
         
         if not activity:
