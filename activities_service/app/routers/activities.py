@@ -24,11 +24,6 @@ async def create_activity(
     Solo disponible para profesores y administradores
     """
     try:
-        # Verificar permisos
-            #require_teacher_or_admin(request)
-        
-        # Obtener información del usuario
-        # current_user = get_current_user(request)
         
         # Crear la actividad
         service = ActivityService(db)

@@ -38,12 +38,12 @@ app.add_middleware(
 )
 
 # Custom auth middleware
-app.add_middleware(AuthMiddleware)
+#app.add_middleware(AuthMiddleware)
 
 # Include routers
-app.include_router(activities.router, prefix="/api/v1/activities", tags=["Activities"])
-app.include_router(submissions.router, prefix="/api/v1/submissions", tags=["Submissions"])
-app.include_router(files.router, prefix="/api/v1/files", tags=["Files"])
+app.include_router(activities.router, prefix="/api/activities", tags=["Activities"])
+app.include_router(submissions.router, prefix="/api/submissions", tags=["Submissions"])
+app.include_router(files.router, prefix="/api/files", tags=["Files"])
 
 @app.on_event("startup")
 async def startup_event():

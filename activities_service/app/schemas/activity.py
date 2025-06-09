@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 class ActivityType(str, Enum):
@@ -18,8 +18,15 @@ class ActivityBase(BaseModel):
 
     @validator('due_date')
     def validate_due_date(cls, v):
+
+        # Convierte de aware a naive 
+        if v:
+            if v.tzinfo is not None: 
+                v = v.astimezone(timezone.utc).replace(tzinfo=None)
+        
         if v and v <= datetime.now():
             raise ValueError('La fecha límite debe ser futura')
+            
         return v
 
     @validator('file_url')
