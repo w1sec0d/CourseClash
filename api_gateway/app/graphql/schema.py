@@ -22,6 +22,7 @@ from app.graphql.resolvers.courses import (
     Mutation as CourseMutation,
 )
 from app.graphql.resolvers.duels import Query as DuelQuery, Mutation as DuelMutation
+from app.graphql.resolvers.activities import Mutation as ActivitiesMutation
 
 
 # Definición de la Query raíz
@@ -41,7 +42,7 @@ class Query(AuthQuery, CourseQuery, DuelQuery):
 
 # Definición de la Mutation raíz
 @strawberry.type
-class Mutation(AuthMutation, CourseMutation, DuelMutation):
+class Mutation(AuthMutation, CourseMutation, DuelMutation, ActivitiesMutation):
     """
     Punto de entrada para todas las mutaciones GraphQL.
 
