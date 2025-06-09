@@ -7,12 +7,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://root:password@localhost:3308/activities_db")
+DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://root:123@localhost:3306/activities_db")
 
 # Create engine
 engine = create_engine(
     DATABASE_URL,
-    echo=False,  # Set to True for SQL logging in development
+    echo=True,  # Set to True for SQL logging in development
     pool_pre_ping=True,
     pool_recycle=300,
     connect_args={"charset": "utf8mb4"}
