@@ -15,7 +15,6 @@ class ActivityBase(BaseModel):
     activity_type: ActivityType = Field(..., description="Tipo de actividad")
     due_date: Optional[datetime] = Field(None, description="Fecha límite de entrega")
     file_url: Optional[str] = Field(None, max_length=255, description="URL del archivo adjunto")
-    created_by: int = Field(..., ge=0, description="ID del creador de la actividad")
 
     @validator('due_date')
     def validate_due_date(cls, v):

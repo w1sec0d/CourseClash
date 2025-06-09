@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Query, Header
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import logging
@@ -16,7 +16,7 @@ router = APIRouter()
 @router.post("/", response_model=ActivityResponse, status_code=status.HTTP_201_CREATED)
 async def create_activity(
     activity_data: ActivityCreate,
-    request: Request,
+    user_id : int = Header(..., alias = "User_id"),
     db: Session = Depends(get_db)
 ):
     """
@@ -25,16 +25,16 @@ async def create_activity(
     """
     try:
         # Verificar permisos
-        require_teacher_or_admin(request)
+            #require_teacher_or_admin(request)
         
         # Obtener información del usuario
-        current_user = get_current_user(request)
+        # current_user = get_current_user(request)
         
         # Crear la actividad
         service = ActivityService(db)
-        activity = service.create_activity(activity_data, current_user["user_id"])
+        activity = service.create_activity(activity_data, user_id)
         
-        logger.info(f"Actividad creada: {activity.id} por usuario {current_user['user_id']}")
+        logger.info(f"Actividad creada: {activity.id} por usuario {user_id}")
         
         return ActivityResponse.from_orm(activity)
         
