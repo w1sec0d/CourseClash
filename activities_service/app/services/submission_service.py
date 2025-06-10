@@ -58,7 +58,7 @@ class SubmissionService:
             
         except Exception as e:
             self.db.rollback()
-            logger.error(f"Error creando entrega: {e}")
+            logger.error(f"Error creando entrega 1: {e}")
             raise
     
     def get_submissions(

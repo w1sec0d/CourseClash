@@ -23,7 +23,7 @@ class SubmissionBase(BaseModel):
 
 class SubmissionCreate(SubmissionBase):
     """Schema for creating a new submission"""
-    activity_id: int = Field(..., gt=0, description="ID de la actividad")
+    activity_id: int = Field(..., ge=0, description="ID de la actividad")
 
 class SubmissionUpdate(SubmissionBase):
     """Schema for updating an existing submission"""
@@ -37,7 +37,7 @@ class SubmissionResponse(SubmissionBase):
     submitted_at: datetime
     is_graded: bool
     can_edit: bool
-    latest_grade: Optional[Any] = None  # Will be GradeResponse when imported
+    latest_grade: Optional[float] = None  # Will be GradeResponse when imported
 
     class Config:
         from_attributes = True

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Query, Header
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import logging
@@ -17,7 +17,7 @@ router = APIRouter()
 @router.post("/", response_model=SubmissionResponse, status_code=status.HTTP_201_CREATED)
 async def create_submission(
     submission_data: SubmissionCreate,
-    request: Request,
+    user_id: int = Header(..., alias = "User_id"),
     db: Session = Depends(get_db)
 ):
     """
@@ -25,12 +25,12 @@ async def create_submission(
     Solo disponible para estudiantes dentro del plazo límite
     """
     try:
-        current_user = get_current_user(request)
+        
         
         service = SubmissionService(db)
-        submission = service.create_submission(submission_data, current_user["user_id"])
+        submission = service.create_submission(submission_data, user_id)
         
-        logger.info(f"Entrega creada: {submission.id} por usuario {current_user['user_id']}")
+        logger.info(f"Entrega creada: {submission.id} por usuario {user_id}")
         
         return SubmissionResponse.from_orm(submission)
         
@@ -40,7 +40,7 @@ async def create_submission(
         logger.error(f"Error creando entrega: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
+            detail=f"Error interno del servidor: {e}"
         )
 
 @router.get("/", response_model=SubmissionList)
