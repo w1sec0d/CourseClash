@@ -5,7 +5,7 @@ import logging
 
 from app.database import get_db
 from app.models import Activity
-from app.schemas.activity import ActivityCreate, ActivityUpdate, ActivityResponse, ActivityList
+from app.schemas.activity import ActivityCreate, ActivityUpdate, ActivityResponse, ActivityList, ActivitySchema
 from app.middleware.auth import get_current_user, require_teacher_or_admin
 from app.services.activity_service import ActivityService
 
@@ -76,7 +76,7 @@ async def get_activities(
             detail="Error interno del servidor"
         )
 
-@router.get("/{activity_id}", response_model=ActivityResponse)
+@router.get("/{activity_id}", response_model=ActivitySchema)
 async def get_activity(
     activity_id: int,
     db: Session = Depends(get_db)
@@ -89,14 +89,14 @@ async def get_activity(
         activity = service.get_activity_by_id(
             activity_id
         )
-        
+
         if not activity:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Actividad no encontrada"
             )
         
-        return ActivityResponse.from_orm(activity)
+        return ActivitySchema.from_orm(activity)
         
     except HTTPException:
         raise

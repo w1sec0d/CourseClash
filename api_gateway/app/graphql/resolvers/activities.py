@@ -55,6 +55,7 @@ class ActivityError:
 ActivityResult = strawberry.union("ActivityResult", (ActivitySuccess, ActivityError))
 
 
+
 @strawberry.type
 class Mutation: 
     @strawberry.mutation

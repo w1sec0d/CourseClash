@@ -77,3 +77,26 @@ class ActivityList(BaseModel):
     page: int
     size: int
     pages: int 
+
+# Esquemas de volver una actividad
+class CommentSchema(BaseModel):
+    id: int
+    user_id: int
+    content: str
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
+class ActivitySchema(BaseModel):
+    id: int
+    course_id: int
+    title: str
+    description: Optional[str] = None
+    activity_type: ActivityType
+    due_date: Optional[datetime] = None
+    file_url: Optional[str] = None
+    created_at: datetime
+    created_by: int
+    comments: List[CommentSchema] = []
+    class Config:
+        from_attributes = True

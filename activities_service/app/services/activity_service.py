@@ -1,11 +1,11 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_
 from typing import Optional, List
 from datetime import datetime
 import logging
 
 from app.models.activity import Activity, ActivityType
-from app.schemas.activity import ActivityCreate, ActivityUpdate, ActivityList, ActivityResponse
+from app.schemas.activity import ActivityCreate, ActivityUpdate, ActivityList, ActivityResponse, ActivitySchema, CommentSchema
 import math
 
 logger = logging.getLogger(__name__)
@@ -117,15 +117,43 @@ class ActivityService:
         self, 
         activity_id: int, 
         user_id: Optional[int] = None
-    ) -> Optional[Activity]:
+    ) -> Optional[ActivitySchema]:
         """
         Obtener una actividad por ID
         """
         try:
-            activity = self.db.query(Activity).filter(Activity.id == activity_id).first()
+            #activity = self.db.query(Activity).filter(Activity.id == activity_id).first()
+            activity_query = (
+                self.db.query(Activity)
+                .options(joinedload(Activity.comments))  # Carga los comentarios en la misma consulta
+                .filter(Activity.id == activity_id)
+                .first()
+            )
             
-            if not activity:
+            if not activity_query:
                 return None
+            
+            activity = ActivitySchema(
+                id=activity_query.id,
+                course_id=activity_query.course_id,
+                title=activity_query.title,
+                description=activity_query.description,
+                activity_type=activity_query.activity_type,
+                due_date=activity_query.due_date,
+                file_url=activity_query.file_url,
+                created_at=activity_query.created_at,
+                created_by=activity_query.created_by,
+                comments=[
+                    CommentSchema(
+                        id=c.id,
+                        user_id=c.user_id,
+                        content=c.content,
+                        created_at=c.created_at
+                    )
+                    for c in activity_query.comments
+                ]
+            )
+
             
             return activity
         except Exception as e:
