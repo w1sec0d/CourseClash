@@ -49,6 +49,27 @@ class Activity:
     comments: Optional[List[Comment]] = None
 
 @strawberry.type
+class Submissions:
+    id: int
+    activity_id: int
+    submitted_at: Optional[datetime] = None
+    content: Optional[str] = None
+    file_url: Optional[str] = None
+    additional_files: Optional[List[str]] = None
+    is_graded: bool
+    can_edit: bool
+    latest_grade: Optional[float] = None 
+
+@strawberry.type
+class SubmissionsSuccess: 
+    submission: Submissions 
+
+@strawberry.type
+class SubmissionsError: 
+    message: str
+    code: str
+
+@strawberry.type
 class ActivitySuccess: 
     activity: Activity
 
@@ -59,6 +80,10 @@ class ActivityError:
 
 #Union para la respuesta de la creación de la actividad
 ActivityResult = strawberry.union("ActivityResult", (ActivitySuccess, ActivityError))
+
+#Union para la respuesta de la creación de la submision
+SubmissionResult = strawberry.union("SubmissionResult", (SubmissionsSuccess, SubmissionsError))
+
 
 @strawberry.type
 class Query:
@@ -224,6 +249,115 @@ class Mutation:
         except Exception as e: 
             print("❌ Error al crear la actividad:", str(e))
             return ActivityError(message="Error al registrar la actividad", code="ACT002")
+        
+    @strawberry.mutation
+    async def createSubmissions(
+        self,
+        info,
+        activity_id: int,
+        content: Optional[str] = None,
+        file_url: Optional[str] = None,
+        additional_files: Optional[List[str]] = None
+    ) -> SubmissionResult:
+        """
+        Registra una submission o envio por parte de un estudiante.
+
+        Args:
+            activity_id (int): Identificador de la actividad
+            content (str): Contenido del envio o la submision
+            file_url (Optional[str]): Url del archivo
+            additional_files (Optional[List[str]]): Lista de archivos adicionales
+
+        Returns:
+            Submissions Resultado de la actividad creada
+        
+        Adicional: Se debe enviar el token de autenticación en el header 
+        """      
+        #Obtenemos el token enviado en el header
+        request = info.context["request"]
+
+        # Intentar obtener el token desde el header Authorization
+        auth_header = request.headers.get("authorization")
+        token = None
+
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+        else:
+            # Si no hay header Authorization, intentar obtener desde cookies
+            token = request.cookies.get("auth_token")
+
+        if not token:
+            return SubmissionsError(message = "Token no proporcionado", code = "401")
+        
+        #Verifica el token
+        try: 
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{AUTH_SERVICE_URL}/auth/me",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+
+                if response.status_code != 200:
+                    return SubmissionsError(message = "Token invalido o expirado", code = "401")
+            user_data = response.json()
+        except Exception as e: 
+            print("❌ Error in la verificación del token :", str(e))
+            return SubmissionsError(message = "Error al verificar el token ", code = "401")
+        
+        #Creación de la submisión del envio
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                submission_payload = {
+                    "activity_id": activity_id,
+                    "content": content,
+                    "file_url": file_url,
+                    "additional_files": additional_files
+                }
+
+                submission_response = await client.post(
+                    f"{ACTIVITIES_SERVICE_URL}/api/submissions/",
+                    json = submission_payload,
+                    headers={"User_id": str(user_data["id"])}
+                )
+
+                if submission_response.status_code != 201: 
+                    error_data = submission_response.json()
+                    error_detail = "Credenciales inválidas"
+                    error_code = "AUTHENTICATION_ERROR"
+
+                    if "detail" in error_data:
+                        if isinstance(error_data["detail"], dict):
+                            error_detail = error_data["detail"].get(
+                                "message", error_detail
+                            )
+                            error_code = error_data["detail"].get("code", error_code)
+                        else:
+                            error_detail = error_data["detail"]
+                    return SubmissionsError(message=error_detail, code=error_code)
+                
+                submission_data = submission_response.json()
+                created_submission = Submissions(
+                    id = submission_data["id"],
+                    activity_id = submission_data["activity_id"],
+                    submitted_at = datetime.fromisoformat(submission_data["submitted_at"].replace("Z", "+00:00"))
+                        if submission_data.get("submitted_at") else None,
+                    content = submission_data["content"],
+                    file_url = submission_data["file_url"],
+                    additional_files = submission_data["additional_files"],
+                    is_graded = submission_data["is_graded"],
+                    can_edit = submission_data["can_edit"],
+                    latest_grade = submission_data["latest_grade"]
+                )
+
+                return SubmissionsSuccess(submission = created_submission)
+
+        except Exception as e: 
+            print("❌ Error al crear la submision:", str(e))
+            return SubmissionsError(message="Error al registrar la Submision", code="ACT002")
+
+        
+
+        
 
 
 
