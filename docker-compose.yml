@@ -202,6 +202,17 @@ services:
     networks:
       - courseclash-network
 
+  cc_file_ms:
+    build: ./File_service
+    container_name: cc_file_ms
+    ports:
+      - "8004:8004"
+    volumes:
+      - ./File_service/uploaded_files:/app/uploaded_files
+    networks:
+      - courseclash-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload
+
 volumes:
   auth_mysql_data:
   courses_mysql_data:
