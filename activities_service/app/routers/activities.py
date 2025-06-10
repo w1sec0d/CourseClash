@@ -76,6 +76,7 @@ async def get_activities(
             detail="Error interno del servidor"
         )
 
+#Obtiene una actividad y sus comentarios por su id
 @router.get("/{activity_id}", response_model=ActivitySchema)
 async def get_activity(
     activity_id: int,

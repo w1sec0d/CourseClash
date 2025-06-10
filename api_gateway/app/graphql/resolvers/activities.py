@@ -27,7 +27,12 @@ class TypeActivity(Enum):
     QUIZ = "quiz"
     ANNOUNCEMENT = "announcement"
 
-
+@strawberry.type
+class Comment:
+    id: int
+    user_id: int
+    content: str
+    created_at: datetime
 
 #Añade esquema para de volver al front-end
 @strawberry.type
@@ -41,6 +46,7 @@ class Activity:
     file_url: Optional[str] = None
     created_at: datetime
     created_by: int
+    comments: Optional[List[Comment]] = None
 
 @strawberry.type
 class ActivitySuccess: 
@@ -54,7 +60,58 @@ class ActivityError:
 #Union para la respuesta de la creación de la actividad
 ActivityResult = strawberry.union("ActivityResult", (ActivitySuccess, ActivityError))
 
+@strawberry.type
+class Query:
+    @strawberry.field
+    async def activity(self, id: str) -> Optional[Activity]:
+        """
+        Obtiene la información de una actividad en especifico. 
+        Se requiere el id de la actividad
 
+        Returns:
+            Optional[Activity]: De vuelve la información de la actividad junto con sus comentarios
+        """
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{ACTIVITIES_SERVICE_URL}/api/activities/{id}"
+                )
+
+                if response.status_code != 200:
+                    return None
+                
+                data = response.json()
+
+                #Mapeo de los comentarios a una instancia de Comment
+                comments = [
+                    Comment(
+                        id=comment["id"],
+                        user_id=comment["user_id"],
+                        content=comment["content"],
+                        created_at=datetime.fromisoformat(comment["created_at"])
+                    )
+                    for comment in data.get("comments",[])
+                ]
+
+                activity_obj = Activity(
+                    id=data["id"],
+                    course_id=data["course_id"],
+                    title=data["title"],
+                    description=data.get("description"),
+                    activity_type=TypeActivity(data["activity_type"]),
+                    due_date=datetime.fromisoformat(data["due_date"]) if data.get("due_date") else None,
+                    file_url=data.get("file_url"),
+                    created_at=datetime.fromisoformat(data["created_at"]),
+                    created_by=data["created_by"],
+                    comments=comments
+                )
+
+                return activity_obj
+                
+
+        except Exception as e:
+            print("❌ Error in me query:", str(e))
+            return None
 
 @strawberry.type
 class Mutation: 
