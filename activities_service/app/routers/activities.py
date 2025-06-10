@@ -42,29 +42,18 @@ async def create_activity(
             detail="Error interno del servidor"
         )
 
-@router.get("/", response_model=ActivityList)
+@router.get("/{course_id}", response_model=ActivityList)
 async def get_activities(
-    request: Request,
-    course_id: Optional[int] = Query(None, description="Filtrar por ID del curso"),
-    activity_type: Optional[str] = Query(None, description="Filtrar por tipo de actividad"),
-    page: int = Query(1, ge=1, description="Número de página"),
-    size: int = Query(10, ge=1, le=100, description="Tamaño de página"),
+    course_id: int,
     db: Session = Depends(get_db)
 ):
     """
-    Obtener lista de actividades con filtros opcionales
+    Obtener lista de actividades asociada a un curso
     """
     try:
-        current_user = get_current_user(request)
-        
         service = ActivityService(db)
         result = service.get_activities(
-            course_id=course_id,
-            activity_type=activity_type,
-            page=page,
-            size=size,
-            user_id=current_user["user_id"],
-            user_role=current_user["role"]
+            course_id=course_id
         )
         
         return result

@@ -73,10 +73,7 @@ class ActivityResponse(ActivityBase):
 class ActivityList(BaseModel):
     """Schema for paginated activity list"""
     activities: List[ActivityResponse]
-    total: int
-    page: int
-    size: int
-    pages: int 
+
 
 # Esquemas de volver una actividad
 class CommentSchema(BaseModel):

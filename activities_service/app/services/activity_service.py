@@ -48,12 +48,7 @@ class ActivityService:
     
     def get_activities(
         self, 
-        course_id: Optional[int] = None,
-        activity_type: Optional[str] = None,
-        page: int = 1,
-        size: int = 10,
-        user_id: Optional[int] = None,
-        user_role: str = "student"
+        course_id: int
     ) -> ActivityList:
         """
         Obtener lista paginada de actividades con filtros
@@ -61,51 +56,15 @@ class ActivityService:
         try:
             query = self.db.query(Activity)
             
-            # Aplicar filtros
-            if course_id:
-                query = query.filter(Activity.course_id == course_id)
-            
-            if activity_type:
-                try:
-                    activity_type_enum = ActivityType(activity_type)
-                    query = query.filter(Activity.activity_type == activity_type_enum)
-                except ValueError:
-                    # Tipo de actividad inválido, devolver lista vacía
-                    return ActivityList(
-                        activities=[],
-                        total=0,
-                        page=page,
-                        size=size,
-                        pages=0
-                    )
-            
-            # Los estudiantes solo ven actividades no vencidas o sus propias entregas
-            if user_role == "student":
-                # Aquí podrías agregar lógica adicional para filtrar por curso del estudiante
-                pass
-            
-            # Ordenar por fecha de creación (más recientes primero)
-            query = query.order_by(Activity.created_at.desc())
-            
-            # Contar total de registros
-            total = query.count()
-            
-            # Aplicar paginación
-            offset = (page - 1) * size
-            activities = query.offset(offset).limit(size).all()
-            
-            # Calcular número de páginas
-            pages = math.ceil(total / size) if total > 0 else 0
+            #Obtine todas las actividades por el id del curso
+            activities = query.filter(Activity.course_id == course_id).all()
+
             
             # Convertir a esquemas de respuesta
             activity_responses = [ActivityResponse.from_orm(activity) for activity in activities]
             
             return ActivityList(
-                activities=activity_responses,
-                total=total,
-                page=page,
-                size=size,
-                pages=pages
+                activities=activity_responses
             )
             
         except Exception as e:
