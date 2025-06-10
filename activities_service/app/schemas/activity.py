@@ -64,8 +64,6 @@ class ActivityResponse(ActivityBase):
     id: int
     created_at: datetime
     created_by: int
-    is_past_due: bool
-    submissions_count: int
 
     class Config:
         from_attributes = True

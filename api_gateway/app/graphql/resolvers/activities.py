@@ -48,6 +48,7 @@ class Activity:
     created_by: int
     comments: Optional[List[Comment]] = None
 
+
 @strawberry.type
 class Submissions:
     id: int
@@ -77,6 +78,20 @@ class ActivitySuccess:
 class ActivityError: 
     message: str
     code: str
+
+#Resul para lista de actividades
+@strawberry.type
+class ActivitiesSuccess:
+    activities: List[Activity]
+
+@strawberry.type
+class ActivitiesError:
+    message: str
+    code: str
+
+
+#Unio para la respuesta de actividades
+ActivitiesResult = strawberry.union("ActivitiesResult", (ActivitiesSuccess, ActivitiesError))
 
 #Union para la respuesta de la creación de la actividad
 ActivityResult = strawberry.union("ActivityResult", (ActivitySuccess, ActivityError))
@@ -137,6 +152,60 @@ class Query:
         except Exception as e:
             print("❌ Error in me query:", str(e))
             return None
+
+    @strawberry.field
+    async def activities(self, id_course: str) -> ActivitiesResult:
+        """
+            Obtiene la información de las actividades asociadas a un curso. 
+            Se requiere el id del curso
+
+            Returns:
+                Optional[Activity]: De vuelve una lista de actividades asociadas a un curso
+        """
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{ACTIVITIES_SERVICE_URL}/api/activities/list/{id_course}"
+                )
+
+                if response.status_code != 200:
+                    error_data = response.json()
+                    error_detail = "Ocurrio un problema en el servidor"
+                    error_code = "INTERNAL_SERVER_ERROR"
+
+                    if "detail" in error_data:
+                        if isinstance(error_data["detail"], dict):
+                            error_detail = error_data["detail"].get(
+                                "message", error_detail
+                            )
+                            error_code = error_data["detail"].get("code", error_code)
+                        else:
+                            error_detail = error_data["detail"]
+                    return ActivitiesError(message=error_detail, code=error_code)
+                
+                data = response.json()
+                activities_data = data.get("activities", [])
+                activities_list = []
+                for activity in activities_data:
+
+                    due_date_str = activity.get("due_date")
+                    created_at_str = activity.get("created_at")
+            
+                    due_date = datetime.fromisoformat(due_date_str.replace("Z", "+00:00")) if due_date_str else None
+                    created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00")) if created_at_str else None
+
+                    activity["due_date"] = due_date
+                    activity["created_at"] = created_at
+
+                    activity_instance = Activity(**activity)
+                    activities_list.append(activity_instance)
+
+                return ActivitiesSuccess(activities = activities_list)
+
+        except Exception as e:
+            print("❌ Error in me query:", str(e))
+            return ActivitiesError(message = "Error interno en el servidor", code = "500")
+        
 
 @strawberry.type
 class Mutation: 
