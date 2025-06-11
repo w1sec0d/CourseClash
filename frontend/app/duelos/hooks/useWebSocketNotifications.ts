@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface PendingChallenge {
   duelId: string;
@@ -19,6 +19,7 @@ interface UseWebSocketNotificationsReturn {
   addChallenge: (challenge: Omit<PendingChallenge, "timestamp">) => void;
   removeChallenge: (duelId: string) => void;
   connectionError: string | null;
+  isConnected: boolean;
 }
 
 export const useWebSocketNotifications = (
@@ -28,10 +29,18 @@ export const useWebSocketNotifications = (
     PendingChallenge[]
   >([]);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [notificationWs, setNotificationWs] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+
+  // Usar useRef para evitar re-renders
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const connectionAttemptsRef = useRef(0);
+  const isConnectingRef = useRef(false);
 
   const addChallenge = useCallback(
     (challenge: Omit<PendingChallenge, "timestamp">) => {
+      console.log("Adding challenge:", challenge);
       setPendingChallenges((prev) => [
         ...prev,
         {
@@ -44,131 +53,189 @@ export const useWebSocketNotifications = (
   );
 
   const removeChallenge = useCallback((duelId: string) => {
+    console.log("Removing challenge:", duelId);
     setPendingChallenges((prev) =>
       prev.filter((challenge) => challenge.duelId !== duelId)
     );
   }, []);
 
+  // Effect principal - solo depende de userId
   useEffect(() => {
-    if (!userId || notificationWs) return;
+    if (!userId) {
+      // Cleanup si no hay userId
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
 
-    let localWs: WebSocket | null = null;
-    let connectionAttempts = 0;
-    let errorGracePeriod = true;
-    let reconnectTimeoutId: NodeJS.Timeout | null = null;
-    let isComponentMounted = true;
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current);
+        heartbeatIntervalRef.current = null;
+      }
 
-    const gracePeriodTimer = setTimeout(() => {
-      errorGracePeriod = false;
-    }, 5000);
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.close(1000, "No user ID");
+      }
+
+      wsRef.current = null;
+      setIsConnected(false);
+      isConnectingRef.current = false;
+      return;
+    }
 
     const connectWebSocket = () => {
-      if (!isComponentMounted) return;
+      if (
+        isConnectingRef.current ||
+        wsRef.current?.readyState === WebSocket.OPEN
+      ) {
+        return;
+      }
 
-      connectionAttempts++;
+      isConnectingRef.current = true;
+      connectionAttemptsRef.current++;
       const wsUrl = `ws://localhost:8002/ws/notifications/${userId}`;
+      console.log(
+        `🔗 Conectando WebSocket notificaciones (intento ${connectionAttemptsRef.current}): ${wsUrl}`
+      );
 
       try {
-        localWs = new WebSocket(wsUrl);
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
 
-        localWs.onopen = () => {
-          if (!isComponentMounted) {
-            localWs?.close();
-            return;
-          }
-          console.log("Notification WebSocket connected successfully");
+        ws.onopen = () => {
+          console.log("✅ WebSocket notificaciones conectado exitosamente");
           setConnectionError(null);
-          connectionAttempts = 0;
-          setNotificationWs(localWs);
+          setIsConnected(true);
+          connectionAttemptsRef.current = 0; // Reset counter on successful connection
+          isConnectingRef.current = false;
+
+          // Configurar heartbeat para mantener la conexión viva
+          heartbeatIntervalRef.current = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: "heartbeat" }));
+            }
+          }, 30000);
         };
 
-        localWs.onmessage = (event) => {
-          if (!isComponentMounted) return;
-
+        ws.onmessage = (event) => {
           try {
+            console.log("📩 Mensaje WebSocket recibido:", event.data);
             const data: WebSocketMessage = JSON.parse(event.data);
 
-            if (
+            if (data.type === "welcome") {
+              console.log("👋 Mensaje de bienvenida recibido");
+            } else if (
               data.type === "duel_request" &&
               data.duelId &&
               data.requesterId &&
               data.requesterName
             ) {
-              addChallenge({
-                duelId: data.duelId,
-                requesterId: data.requesterId,
-                requesterName: data.requesterName,
-              });
+              console.log("⚔️ Solicitud de duelo recibida:", data);
+              setPendingChallenges((prev) => [
+                ...prev,
+                {
+                  duelId: data.duelId as string,
+                  requesterId: data.requesterId as string,
+                  requesterName: data.requesterName as string,
+                  timestamp: new Date().toISOString(),
+                },
+              ]);
+            } else if (data.type === "heartbeat") {
+              // Ignorar heartbeat responses silenciosamente
+            } else {
+              console.log("❓ Tipo de mensaje desconocido:", data.type);
             }
           } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
+            console.error("❌ Error parsing WebSocket message:", error);
           }
         };
 
-        localWs.onerror = (error) => {
-          if (!isComponentMounted) return;
-          console.error("Notification WebSocket error:", error);
+        ws.onerror = (error) => {
+          console.error("❌ Error WebSocket notificaciones:", error);
+          setIsConnected(false);
+          isConnectingRef.current = false;
 
-          if (!errorGracePeriod && connectionAttempts > 2) {
+          if (connectionAttemptsRef.current > 2) {
             setConnectionError(
               "Error de conexión con el servidor. Reintentando..."
             );
           }
         };
 
-        localWs.onclose = (event) => {
-          if (!isComponentMounted) return;
+        ws.onclose = (event) => {
+          console.log(
+            `🔌 WebSocket notificaciones cerrado. Code: ${event.code}, Reason: ${event.reason}`
+          );
+          setIsConnected(false);
+          isConnectingRef.current = false;
 
-          console.log(`Notification WebSocket closed. Code: ${event.code}`);
-          setNotificationWs(null);
+          // Limpiar heartbeat
+          if (heartbeatIntervalRef.current) {
+            clearInterval(heartbeatIntervalRef.current);
+            heartbeatIntervalRef.current = null;
+          }
 
+          // Solo reconectar si no fue un cierre normal y no hemos intentado demasiadas veces
           if (
-            event.code !== 1000 &&
-            connectionAttempts < 5 &&
-            isComponentMounted
+            event.code !== 1000 && // No fue cierre normal
+            event.code !== 1001 && // No fue "going away"
+            connectionAttemptsRef.current < 5
           ) {
-            reconnectTimeoutId = setTimeout(() => {
-              if (isComponentMounted && userId) {
-                connectWebSocket();
-              }
+            console.log(
+              `🔄 Reintentando conexión en 5 segundos (intento ${
+                connectionAttemptsRef.current + 1
+              }/5)`
+            );
+            reconnectTimeoutRef.current = setTimeout(() => {
+              connectWebSocket();
             }, 5000);
-          } else if (connectionAttempts >= 5) {
+          } else if (connectionAttemptsRef.current >= 5) {
+            console.error("❌ Máximo de reintentos alcanzado");
             setConnectionError(
               "No se pudo establecer conexión con el servidor de notificaciones."
             );
           }
         };
       } catch (error) {
-        console.error("Error creating WebSocket:", error);
-        if (!errorGracePeriod && isComponentMounted) {
-          setConnectionError("Error al crear conexión WebSocket");
-        }
+        console.error("❌ Error creando WebSocket:", error);
+        setIsConnected(false);
+        isConnectingRef.current = false;
+        setConnectionError("Error al crear conexión WebSocket");
       }
     };
 
-    connectWebSocket();
+    // Pequeño delay para evitar conexiones múltiples rápidas
+    const connectTimer = setTimeout(connectWebSocket, 200);
 
     return () => {
-      isComponentMounted = false;
-      clearTimeout(gracePeriodTimer);
-      if (reconnectTimeoutId) {
-        clearTimeout(reconnectTimeoutId);
+      console.log("🧹 Limpiando conexión WebSocket");
+      clearTimeout(connectTimer);
+
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
 
-      try {
-        if (localWs && localWs.readyState === WebSocket.OPEN) {
-          localWs.close(1000, "Component unmounting");
-        }
-      } catch (error) {
-        console.error("Error closing WebSocket:", error);
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current);
+        heartbeatIntervalRef.current = null;
       }
+
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.close(1000, "Component cleanup");
+      }
+
+      wsRef.current = null;
+      setIsConnected(false);
+      isConnectingRef.current = false;
     };
-  }, [userId, notificationWs, addChallenge]);
+  }, [userId]); // SOLO userId en dependencias
 
   return {
     pendingChallenges,
     addChallenge,
     removeChallenge,
     connectionError,
+    isConnected,
   };
 };

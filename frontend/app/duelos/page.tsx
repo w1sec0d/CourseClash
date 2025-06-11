@@ -30,6 +30,7 @@ function DuelosContent() {
     pendingChallenges,
     removeChallenge,
     connectionError: notificationError,
+    isConnected: notificationConnected,
   } = useWebSocketNotifications(user?.id);
 
   const {
@@ -159,10 +160,30 @@ function DuelosContent() {
   return (
     <div className="container mx-auto p-4">
       <div className="mx-auto px-4 py-8 container">
-        <p className="text-3xl font-bold text-emerald-700 mb-6 text-center flex items-center justify-center gap-2">
-          <TrophyIcon className="w-8 h-8" />
-          Duelos Académicos
-        </p>
+        <div className="text-center mb-6">
+          <p className="text-3xl font-bold text-emerald-700 flex items-center justify-center gap-2">
+            <TrophyIcon className="w-8 h-8" />
+            Duelos Académicos
+          </p>
+
+          {/* Indicador de conexión WebSocket */}
+          <div className="mt-2 flex items-center justify-center gap-2">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                notificationConnected ? "bg-green-500" : "bg-red-500"
+              }`}
+            ></div>
+            <span
+              className={`text-sm ${
+                notificationConnected ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {notificationConnected
+                ? "Conectado a notificaciones"
+                : "Desconectado de notificaciones"}
+            </span>
+          </div>
+        </div>
 
         <div className="lg:flex-row flex flex-col gap-8">
           <DuelLanding />
