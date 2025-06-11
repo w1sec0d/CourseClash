@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+#Ya
 @router.post("/", response_model=ActivityResponse, status_code=status.HTTP_201_CREATED)
 async def create_activity(
     activity_data: ActivityCreate,
@@ -42,6 +43,7 @@ async def create_activity(
             detail="Error interno del servidor"
         )
 
+#Ya
 @router.get("/list/{course_id}", response_model=ActivityList)
 async def get_activities(
     course_id: int,
@@ -65,6 +67,7 @@ async def get_activities(
             detail="Error interno del servidor"
         )
 
+#Ya
 #Obtiene una actividad y sus comentarios por su id
 @router.get("/{activity_id}", response_model=ActivitySchema)
 async def get_activity(

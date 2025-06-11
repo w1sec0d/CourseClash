@@ -132,7 +132,7 @@ class SubmissionService:
         self,
         submission_id: int,
         submission_data: SubmissionUpdate,
-        current_user_id: int
+        user_id: int
     ) -> Optional[Submission]:
         """
         Actualizar una entrega existente
@@ -142,7 +142,7 @@ class SubmissionService:
             submission = self.db.query(Submission).filter(
                 and_(
                     Submission.id == submission_id,
-                    Submission.user_id == current_user_id
+                    Submission.user_id == user_id
                 )
             ).first()
             

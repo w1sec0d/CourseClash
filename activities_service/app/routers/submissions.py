@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+#Ya
 @router.post("/", response_model=SubmissionResponse, status_code=status.HTTP_201_CREATED)
 async def create_submission(
     submission_data: SubmissionCreate,
@@ -43,6 +44,7 @@ async def create_submission(
             detail=f"Error interno del servidor: {e}"
         )
 
+#Ya
 #Obtener las submisiones para el estudiante solo ve sus propias entregas 
 # y el profesor ve todas las entregas de sus actividades
 @router.get("/", response_model=SubmissionList)
@@ -111,11 +113,12 @@ async def get_submission(
             detail="Error interno del servidor"
         )
 
+#Actualizar una entrega existente
 @router.put("/{submission_id}", response_model=SubmissionResponse)
 async def update_submission(
     submission_id: int,
     submission_data: SubmissionUpdate,
-    request: Request,
+    user_id : int = Query(..., description="Identificador del usuario"),
     db: Session = Depends(get_db)
 ):
     """
@@ -123,13 +126,12 @@ async def update_submission(
     Solo disponible para el estudiante que la creó y antes de la fecha límite
     """
     try:
-        current_user = get_current_user(request)
         
         service = SubmissionService(db)
         submission = service.update_submission(
             submission_id,
             submission_data,
-            current_user_id=current_user["user_id"]
+            user_id=user_id
         )
         
         if not submission:
@@ -138,7 +140,7 @@ async def update_submission(
                 detail="Entrega no encontrada o no se puede editar"
             )
         
-        logger.info(f"Entrega {submission_id} actualizada por usuario {current_user['user_id']}")
+        logger.info(f"Entrega {submission_id} actualizada por usuario {user_id}")
         
         return SubmissionResponse.from_orm(submission)
         
