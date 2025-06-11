@@ -153,10 +153,8 @@ class Query:
                     "role": (
                         "ADMIN" if user_data.get("is_superuser") else "STUDENT"
                     ),  # Transform is_superuser to role
-                    "createdAt": user_data.get(
-                        "created_at"
-                    ),  # Transform created_at to createdAt
-                    "updatedAt": None,  # Set to None since backend doesn't provide it
+                    "createdAt": user_data.get("created_at", ""),  # Asegurar que existe
+                    "updatedAt": user_data.get("updated_at"),
                 }
 
                 print("👤 Transformed user data:", graphql_user_data)  # Debug log
@@ -222,8 +220,8 @@ class Query:
                     "fullName": user_data.get("full_name"),
                     "avatar": user_data.get("avatar_url"),
                     "role": "ADMIN" if user_data.get("is_superuser") else "STUDENT",
-                    "createdAt": user_data.get("created_at"),
-                    "updatedAt": None,
+                    "createdAt": user_data.get("created_at", ""),  # Asegurar que existe
+                    "updatedAt": user_data.get("updated_at"),
                 }
 
                 return User(**graphql_user_data)
@@ -294,7 +292,7 @@ class Mutation:
                     "role": user_data.get(
                         "role", "STUDENT"
                     ),  # Default to STUDENT if not specified
-                    "createdAt": user_data.get("created_at"),
+                    "createdAt": user_data.get("created_at", ""),  # Asegurar que existe
                     "updatedAt": user_data.get("updated_at"),
                 }
 

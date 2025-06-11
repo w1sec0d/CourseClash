@@ -27,10 +27,10 @@ const LOGIN_MUTATION = gql`
   }
 `
 
-// Types para la respuesta del login
+// Types para la respuesta del login - ACTUALIZADOS
 interface User {
   avatar?: string
-  createdAt: string
+  createdAt?: string // Opcional ya que puede no venir del backend
   email: string
   fullName?: string
   id: string
@@ -53,6 +53,7 @@ interface AuthError {
   message: string
 }
 
+// Tipo para la respuesta completa de GraphQL
 interface LoginResponse {
   login: AuthError | AuthSuccess
 }
@@ -65,7 +66,7 @@ interface GraphQLError {
 }
 
 interface GraphQLResponse {
-  data?: unknown
+  data?: LoginResponse
   errors?: GraphQLError[]
 }
 
@@ -107,31 +108,30 @@ export default class AuthLogin extends Command {
         message: 'Ingresa tu contraseña:',
       }))
 
-    try {
-      // 🚀 Cliente GraphQL para API Gateway
-      const client = new GraphQLClient(`${flags.api}/api/graphql`)
+    // 🚀 Cliente GraphQL para API Gateway
+    const client = new GraphQLClient(`${flags.api}/api/graphql`)
 
-      // 🔗 Ejecutar mutation de login
-      const data: LoginResponse = await client.request(LOGIN_MUTATION, {
-        email: flags.email,
-        password: inputPassword,
-      })
+    // 🔗 Ejecutar mutation de login
+    const response = await client.request<LoginResponse>(LOGIN_MUTATION, {
+      email: flags.email,
+      password: inputPassword,
+    })
 
-      // ✅ Manejar respuesta union type
-      if (data.login.__typename === 'AuthSuccess') {
-        this.log(`✅ Login exitoso!`)
-        this.log(`👤 Usuario: ${data.login.user.username} (${data.login.user.email})`)
-        this.log(`🔑 Token: ${data.login.token.slice(0, 20)}...`)
-      } else if (data.login.__typename === 'AuthError') {
-        this.error(`❌ Error de autenticación: ${data.login.message} (${data.login.code})`)
-      }
-    } catch (error: unknown) {
-      const networkError = error as NetworkError
-      if (networkError.response?.errors) {
-        this.error(`❌ Error GraphQL: ${networkError.response.errors[0].message}`)
-      } else {
-        this.error(`❌ Error de conexión: ${networkError.message}`)
-      }
+    // 🐛 Debug: Ver toda la respuesta raw
+    // console.log('Raw response:', JSON.stringify(response, null, 2))
+
+    // Acceder correctamente a la estructura de la respuesta
+    const loginData = response.login
+
+    if (loginData.__typename === 'AuthSuccess') {
+      this.log(`✅ Login exitoso!`)
+      this.log(`👤 Usuario: ${loginData.user.username} (${loginData.user.email})`)
+      this.log(`🔑 Token: ${loginData.token.slice(0, 20)}...`)
+      this.log()
+    } else if (loginData.__typename === 'AuthError') {
+      this.error(`❌ Error de autenticación: ${loginData.message} (${loginData.code})`)
+    } else {
+      this.error(`❌ Respuesta inesperada del servidor`)
     }
   }
 }
