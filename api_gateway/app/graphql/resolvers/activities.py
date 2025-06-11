@@ -89,6 +89,16 @@ class ActivitiesError:
     message: str
     code: str
 
+#Result para listar las submisiones 
+@strawberry.type
+class SubmissionsSuccessList: 
+    submission: List[Submissions] 
+
+@strawberry.type
+class SubmissionsErrorList: 
+    message: str
+    code: str
+
 
 #Unio para la respuesta de actividades
 ActivitiesResult = strawberry.union("ActivitiesResult", (ActivitiesSuccess, ActivitiesError))
@@ -98,6 +108,9 @@ ActivityResult = strawberry.union("ActivityResult", (ActivitySuccess, ActivityEr
 
 #Union para la respuesta de la creación de la submision
 SubmissionResult = strawberry.union("SubmissionResult", (SubmissionsSuccess, SubmissionsError))
+
+#Union para la respuesta de la creación de la submision
+SubmissionsResult = strawberry.union("SubmissionsResult", (SubmissionsSuccessList, SubmissionsErrorList))
 
 
 @strawberry.type
@@ -205,8 +218,9 @@ class Query:
         except Exception as e:
             print("❌ Error in me query:", str(e))
             return ActivitiesError(message = "Error interno en el servidor", code = "500")
-    
-    async def submissions(self, activity_id: str, user_id: str, user_role: str) -> SubmissionResult:
+        
+    @strawberry.field
+    async def submissions(self, activity_id: str, user_id: str, user_role: str) -> SubmissionsResult:
         """
         Obtiene la lista de envios o submisiones de una actividad en especifico.
         Se requiere el id de la actividad, el id del usuario y el rol del usuario (student o teacher o admin).
@@ -239,7 +253,7 @@ class Query:
                             error_code = error_data["detail"].get("code", error_code)
                         else:
                             error_detail = error_data["detail"]
-                    return SubmissionsError(message=error_detail, code=error_code)
+                    return SubmissionsErrorList(message=str(error_detail), code=error_code)
 
                 data = response.json()
                 submissions_data = data.get("submissions", [])
@@ -256,11 +270,18 @@ class Query:
                     submission_instance = Submissions(**submission)
                     submissions_list.append(submission_instance)
 
-                return SubmissionsSuccess(submission=submissions_list)
+                return SubmissionsSuccessList(submission=submissions_list)
 
         except Exception as e:
             print("❌ Error in me query:", str(e))
-            return SubmissionsError(message="Error interno en el servidor", code="500")
+            # Ejemplo: si e es un error de validación de Pydantic
+            try:
+                errors = e.errors()  # Esto retorna una lista de errores, si es que e tiene ese método.
+                error_msg = "; ".join([f"{'.'.join(map(str, err.get('loc', [])))}: {err.get('msg')}" for err in errors])
+            except Exception:
+                error_msg = str(e)
+            return SubmissionsErrorList(message=str(error_msg), code="SERVICE_ERROR")
+            #return SubmissionsErrorList(message="Error interno en el servidor", code="500")
 
         
 

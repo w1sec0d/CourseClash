@@ -47,7 +47,9 @@ async def create_submission(
 # y el profesor ve todas las entregas de sus actividades
 @router.get("/", response_model=SubmissionList)
 async def get_submissions(
-    data: SubmissionDetail,
+    activity_id: int = Query(..., description="Identificador de la actividad"),
+    user_id: int = Query(..., description="Identificador del usuario"),
+    user_role: str = Query(..., description="Rol del usuario (student, teacher o admin)"),
     db: Session = Depends(get_db)
 ):
     """
@@ -59,9 +61,9 @@ async def get_submissions(
         
         service = SubmissionService(db)
         result = service.get_submissions(
-            activity_id=data.activity_id,
-            user_id=data.user_id,
-            user_role=data.user_role.lower()
+            activity_id=activity_id,
+            user_id=user_id,
+            user_role=user_role.lower()
         )
         
         return result
