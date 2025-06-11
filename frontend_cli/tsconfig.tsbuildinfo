@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/commands/hello/index.ts","./src/commands/login/index.ts","./src/commands/logout/index.ts","./src/commands/menu/index.ts","./src/lib/config.ts","./src/lib/duel-service.ts","./src/lib/menu.ts"],"version":"5.8.3"}
