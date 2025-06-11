@@ -90,7 +90,11 @@ function DuelosContent() {
 
       // Connect to duel WebSocket
       if (response.duelId) {
+        console.log(
+          `[REQUESTER ${userId}] Connecting to duel: ${response.duelId}`
+        );
         await connectToDuel(response.duelId, userId);
+        console.log(`[REQUESTER ${userId}] Connected, showing quiz screen`);
         setShowQuiz(true);
       }
     } catch (err) {
@@ -114,10 +118,13 @@ function DuelosContent() {
         }
 
         const userId = getUserId(user)!;
+        console.log(`[ACCEPTOR ${userId}] Accepting duel: ${duelId}`);
         await acceptDuel(duelId);
 
         // Connect to duel WebSocket
+        console.log(`[ACCEPTOR ${userId}] Connecting to duel: ${duelId}`);
         await connectToDuel(duelId, userId);
+        console.log(`[ACCEPTOR ${userId}] Connected, showing quiz screen`);
         setShowQuiz(true);
 
         // Remove from pending challenges
