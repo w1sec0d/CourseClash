@@ -97,6 +97,7 @@ async def get_activity(
             detail="Error interno del servidor"
         )
 
+#Actualizar una actividad existente mientras que este en el tiempo de entrega
 @router.put("/{activity_id}", response_model=ActivityResponse)
 async def update_activity(
     activity_id: int,

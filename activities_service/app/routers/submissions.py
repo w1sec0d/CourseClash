@@ -4,7 +4,7 @@ from typing import List, Optional
 import logging
 
 from app.database import get_db
-from app.schemas.submission import SubmissionCreate, SubmissionUpdate, SubmissionResponse, SubmissionList
+from app.schemas.submission import SubmissionCreate, SubmissionUpdate, SubmissionResponse, SubmissionList, SubmissionDetail
 from app.schemas.grade import GradeCreate, GradeResponse
 from app.middleware.auth import get_current_user, require_teacher_or_admin
 from app.services.submission_service import SubmissionService
@@ -43,13 +43,11 @@ async def create_submission(
             detail=f"Error interno del servidor: {e}"
         )
 
+#Obtener las submisiones para el estudiante solo ve sus propias entregas 
+# y el profesor ve todas las entregas de sus actividades
 @router.get("/", response_model=SubmissionList)
 async def get_submissions(
-    request: Request,
-    activity_id: Optional[int] = Query(None, description="Filtrar por ID de actividad"),
-    user_id: Optional[int] = Query(None, description="Filtrar por ID de usuario"),
-    page: int = Query(1, ge=1, description="Número de página"),
-    size: int = Query(10, ge=1, le=100, description="Tamaño de página"),
+    data: SubmissionDetail,
     db: Session = Depends(get_db)
 ):
     """
@@ -58,16 +56,12 @@ async def get_submissions(
     Los profesores pueden ver todas las entregas de sus actividades
     """
     try:
-        current_user = get_current_user(request)
         
         service = SubmissionService(db)
         result = service.get_submissions(
-            activity_id=activity_id,
-            user_id=user_id,
-            page=page,
-            size=size,
-            current_user_id=current_user["user_id"],
-            current_user_role=current_user["role"]
+            activity_id=data.activity_id,
+            user_id=data.user_id,
+            user_role=data.user_role.lower()
         )
         
         return result

@@ -63,57 +63,40 @@ class SubmissionService:
     
     def get_submissions(
         self,
-        activity_id: Optional[int] = None,
-        user_id: Optional[int] = None,
-        page: int = 1,
-        size: int = 10,
-        current_user_id: int = None,
-        current_user_role: str = "student"
+        activity_id: int,
+        user_id: int,
+        user_role: str = "student"
     ) -> SubmissionList:
         """
         Obtener lista paginada de entregas con filtros
         """
         try:
             query = self.db.query(Submission)
+
+            # Filtra las submisions por actividad
+            query = query.filter(Submission.activity_id == activity_id)
+
             
             # Aplicar filtros de seguridad según el rol
-            if current_user_role == "student":
+            if user_role == "student":
                 # Los estudiantes solo pueden ver sus propias entregas
-                query = query.filter(Submission.user_id == current_user_id)
-            elif current_user_role == "teacher":
-                # Los profesores pueden ver entregas de actividades que crearon
-                query = query.join(Activity).filter(Activity.created_by == current_user_id)
-            # Los administradores pueden ver todas las entregas
-            
-            # Aplicar filtros adicionales
-            if activity_id:
-                query = query.filter(Submission.activity_id == activity_id)
-            
-            if user_id and current_user_role in ["teacher", "admin"]:
+
+                #Ahora se filtra por el id del usuario
                 query = query.filter(Submission.user_id == user_id)
+
+
+            elif user_role == "teacher" or user_role == "admin":
+                # Los profesores pueden ver entregas de actividades que crearon
+                pass
             
-            # Ordenar por fecha de entrega (más recientes primero)
-            query = query.order_by(Submission.submitted_at.desc())
-            
-            # Contar total de registros
-            total = query.count()
-            
-            # Aplicar paginación
-            offset = (page - 1) * size
-            submissions = query.offset(offset).limit(size).all()
-            
-            # Calcular número de páginas
-            pages = math.ceil(total / size) if total > 0 else 0
-            
+            # Obtener el total de entregas
+            submissions = query.order_by(Submission.submitted_at.desc()).all()
+
             # Convertir a esquemas de respuesta
             submission_responses = [SubmissionResponse.from_orm(submission) for submission in submissions]
             
             return SubmissionList(
                 submissions=submission_responses,
-                total=total,
-                page=page,
-                size=size,
-                pages=pages
             )
             
         except Exception as e:

@@ -45,7 +45,9 @@ class SubmissionResponse(SubmissionBase):
 class SubmissionList(BaseModel):
     """Schema for paginated submission list"""
     submissions: List[SubmissionResponse]
-    total: int
-    page: int
-    size: int
-    pages: int 
+
+
+class SubmissionDetail(BaseModel):
+    activity_id: int
+    user_id: int
+    user_role: str
