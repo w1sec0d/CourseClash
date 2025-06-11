@@ -279,6 +279,7 @@ class Mutation:
 
                 auth_data = response.json()
                 user_data = auth_data.get("user", {})
+                print("🔑 Auth data:", auth_data)  # Debug log
 
                 # Create a new dictionary with only the fields we need for the GraphQL User type
                 graphql_user_data = {
@@ -291,9 +292,7 @@ class Mutation:
                     "avatar": user_data.get(
                         "avatar_url"
                     ),  # Convert avatar_url to avatar
-                    "role": user_data.get(
-                        "role", "STUDENT"
-                    ),  # Default to STUDENT if not specified
+                    "role": "TEACHER" if user_data.get("is_superuser",0) == 1 else "STUDENT",
                     "createdAt": user_data.get("created_at"),
                     "updatedAt": user_data.get("updated_at"),
                 }

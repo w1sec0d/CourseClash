@@ -205,6 +205,63 @@ class Query:
         except Exception as e:
             print("❌ Error in me query:", str(e))
             return ActivitiesError(message = "Error interno en el servidor", code = "500")
+    
+    async def submissions(self, activity_id: str, user_id: str, user_role: str) -> SubmissionResult:
+        """
+        Obtiene la lista de envios o submisiones de una actividad en especifico.
+        Se requiere el id de la actividad, el id del usuario y el rol del usuario (student o teacher o admin).
+
+        Args:
+            activity_id (str): Identificador de la actividad
+            user_id (str): Identificador del usuario
+            user_role (str): Rol del usuario (student o teacher o admin)
+
+        Returns:
+            SubmissionResult: Resultado de las submisiones obtenidas
+        """
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{ACTIVITIES_SERVICE_URL}/api/submissions/",
+                    params={"activity_id": activity_id, "user_id": user_id, "user_role": user_role}
+                )
+
+                if response.status_code != 200:
+                    error_data = response.json()
+                    error_detail = "Ocurrio un problema en el servidor"
+                    error_code = "INTERNAL_SERVER_ERROR"
+
+                    if "detail" in error_data:
+                        if isinstance(error_data["detail"], dict):
+                            error_detail = error_data["detail"].get(
+                                "message", error_detail
+                            )
+                            error_code = error_data["detail"].get("code", error_code)
+                        else:
+                            error_detail = error_data["detail"]
+                    return SubmissionsError(message=error_detail, code=error_code)
+
+                data = response.json()
+                submissions_data = data.get("submissions", [])
+                submissions_list = []
+                for submission in submissions_data:
+
+                    submitted_at_str = submission.get("submitted_at")
+            
+                    submitted_at = datetime.fromisoformat(submitted_at_str.replace("Z", "+00:00")) if submitted_at_str else None
+
+                    submission["submitted_at"] = submitted_at
+                    submission.pop("user_id", None)  # Elimina el campo user_id si existe
+
+                    submission_instance = Submissions(**submission)
+                    submissions_list.append(submission_instance)
+
+                return SubmissionsSuccess(submission=submissions_list)
+
+        except Exception as e:
+            print("❌ Error in me query:", str(e))
+            return SubmissionsError(message="Error interno en el servidor", code="500")
+
         
 
 @strawberry.type
