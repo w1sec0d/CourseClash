@@ -277,7 +277,7 @@ class Mutation:
 
                 if response.status_code == 500:
                     error_data = response.json()
-                    error_detail = "Error al procesar la solicitud"
+                    error_detail = "Error de conexión con el servidor, intenta nuevamente más tarde"
                     error_code = "SERVER_ERROR"
                     return AuthError(message=error_detail, code=error_code)
 
