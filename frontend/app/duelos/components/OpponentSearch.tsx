@@ -34,7 +34,7 @@ export default function OpponentSearch({
   };
 
   return (
-    <div className="lg:w-1/2 bg-white rounded-xl shadow-lg border border-emerald-100 p-6 flex flex-col justify-center">
+    <div className="lg:w-full bg-white rounded-xl shadow-lg border border-emerald-100 p-6 flex flex-col justify-center">
       <div className="items-center mb-6 flex">
         <div className="bg-emerald-100 rounded-full mr-3 p-2">
           <svg

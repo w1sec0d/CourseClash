@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useAuthApollo } from '@/lib/auth-context-apollo';
-import { usePathname } from 'next/navigation';
-import Sidebar from './Sidebar';
-import SidebarOverlay from './SidebarOverlay';
-import clsx from 'clsx';
-import { Suspense } from 'react';
-import LoadingSpinner from './LoadingSpinner';
-import Footer from './Footer';
+import React from "react";
+import { useAuthApollo } from "@/lib/auth-context-apollo";
+import { usePathname } from "next/navigation";
+import Sidebar from "./Sidebar";
+import SidebarOverlay from "./SidebarOverlay";
+import clsx from "clsx";
+import { Suspense } from "react";
+import LoadingSpinner from "./LoadingSpinner";
+import Footer from "./Footer";
 
 // Componente para manejar el sidebar condicionalmente
 export function ConditionalSidebar() {
@@ -18,9 +18,9 @@ export function ConditionalSidebar() {
   // Verificar si la ruta actual debe mostrar el sidebar
   const showSidebar =
     isAuthenticated &&
-    (pathname?.startsWith('/curso') ||
-      pathname?.startsWith('/dashboard') ||
-      pathname?.startsWith('/perfil'));
+    (pathname?.startsWith("/curso") ||
+      pathname?.startsWith("/dashboard") ||
+      pathname?.startsWith("/perfil"));
 
   if (!showSidebar) {
     return null;
@@ -28,7 +28,7 @@ export function ConditionalSidebar() {
 
   return (
     <>
-      <aside className='hidden lg:block w-64 fixed top-16 left-0 h-[calc(100vh-4rem)] z-40'>
+      <aside className="hidden lg:block w-64 fixed top-16 left-0 h-[calc(100vh-4rem)] z-40">
         <Sidebar isOpen={true} onClose={() => {}} />
       </aside>
       <SidebarOverlay />
@@ -43,27 +43,28 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
 
   // Lista de rutas que NO deben mostrar el sidebar
   const routesWithoutSidebar = [
-    '/',
-    '/login',
-    '/registro',
-    '/login-apollo',
-    '/ejemplo-ssr',
-    '/reset-password',
+    "/",
+    "/login",
+    "/registro",
+    "/login-apollo",
+    "/ejemplo-ssr",
+    "/reset-password",
+    "/duelos",
   ];
 
   const shouldShowSidebar =
-    isAuthenticated && !routesWithoutSidebar.includes(pathname || '');
+    isAuthenticated && !routesWithoutSidebar.includes(pathname || "");
 
   return (
     <div
       className={clsx(
-        'flex min-h-screen flex-col',
-        shouldShowSidebar ? 'lg:pl-64' : ''
+        "flex min-h-screen flex-col",
+        shouldShowSidebar ? "lg:pl-64" : ""
       )}
     >
       <ConditionalSidebar />
       <Suspense fallback={<LoadingSpinner />}>
-        <main className='w-full'>{children}</main>
+        <main className="w-full">{children}</main>
         <Footer />
       </Suspense>
     </div>
@@ -73,10 +74,10 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
 function LoadingOverlay() {
   const { isAuthenticated } = useAuthApollo();
   return isAuthenticated ? (
-    <div className='fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50'>
-      <div className='text-center'>
-        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600 mx-auto'></div>
-        <p className='mt-4 text-lg text-gray-600'>Cargando...</p>
+    <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600 mx-auto"></div>
+        <p className="mt-4 text-lg text-gray-600">Cargando...</p>
       </div>
     </div>
   ) : null;
