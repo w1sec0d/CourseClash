@@ -501,6 +501,113 @@ class Mutation:
         except Exception as e: 
             print("❌ Error al crear la submision:", str(e))
             return SubmissionsError(message="Error al registrar la Submision", code="ACT002")
+    
+
+    @strawberry.mutation
+    async def updateSubmission(
+        self,
+        info,
+        submission_id: int,
+        content: Optional[str] = None,
+        file_url: Optional[str] = None,
+        additional_files: Optional[List[str]] = None
+    ) -> SubmissionResult:
+        """
+        Actualiza una submission o envio por parte de un estudiante.
+
+        Args:
+            submission_id (int): Identificador de la submission
+            content (str): Contenido del envio o la submision
+            file_url (Optional[str]): Url del archivo
+            additional_files (Optional[List[str]]): Lista de archivos adicionales
+
+        Returns:
+            Submissions Resultado de la actividad actualizada
+
+        Adicional: Se debe enviar el token de autenticación en el header
+        """
+
+        #Obtenemos el token enviado en el header
+        request = info.context["request"]
+
+        # Intentar obtener el token desde el header Authorization
+        auth_header = request.headers.get("authorization")
+        token = None
+
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+        else:
+            # Si no hay header Authorization, intentar obtener desde cookies
+            token = request.cookies.get("auth_token")
+
+        if not token:
+            return SubmissionsError(message = "Token no proporcionado", code = "401")
+        
+        #Verifica el token
+        try: 
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{AUTH_SERVICE_URL}/auth/me",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+
+                if response.status_code != 200:
+                    return SubmissionsError(message = "Token invalido o expirado", code = "401")
+            user_data = response.json()
+        except Exception as e: 
+            print("❌ Error in la verificación del token :", str(e))
+            return SubmissionsError(message = "Error al verificar el token ", code = "401")
+        
+        #Actualización de la submisión del envio
+        try: 
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                submission_payload = {
+                    "content": content,
+                    "file_url": file_url,
+                    "additional_files": additional_files
+                }
+
+                submission_response = await client.put(
+                    f"{ACTIVITIES_SERVICE_URL}/api/submissions/{submission_id}",
+                    params={"user_id": user_data["id"]},
+                    json = submission_payload
+                )
+
+                if submission_response.status_code != 200: 
+                    error_data = submission_response.json()
+                    error_detail = "Credenciales inválidas"
+                    error_code = "AUTHENTICATION_ERROR"
+
+                    if "detail" in error_data:
+                        if isinstance(error_data["detail"], dict):
+                            error_detail = error_data["detail"].get(
+                                "message", error_detail
+                            )
+                            error_code = error_data["detail"].get("code", error_code)
+                        else:
+                            error_detail = error_data["detail"]
+                    return SubmissionsError(message=error_detail, code=str(submission_response.status_code))
+
+                submission_data = submission_response.json()
+                updated_submission = Submissions(
+                    id = submission_data["id"],
+                    activity_id = submission_data["activity_id"],
+                    submitted_at = datetime.fromisoformat(submission_data["submitted_at"].replace("Z", "+00:00"))
+                        if submission_data.get("submitted_at") else None,
+                    content = submission_data["content"],
+                    file_url = submission_data["file_url"],
+                    additional_files = submission_data["additional_files"],
+                    is_graded = submission_data["is_graded"],
+                    can_edit = submission_data["can_edit"],
+                    latest_grade = submission_data["latest_grade"]
+                )
+
+                return SubmissionsSuccess(submission=updated_submission)
+
+        except Exception as e: 
+            print("❌ Problemas en el servidor:", str(e))
+            return SubmissionsError(message = "Error en el servidor", code = "501")
+
 
         
 
