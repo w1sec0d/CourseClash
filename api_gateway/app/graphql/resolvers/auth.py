@@ -259,7 +259,7 @@ class Mutation:
                     json={"username": email, "password": password},
                 )
 
-                if response.status_code != 200:
+                if response.status_code == 401:
                     error_data = response.json()
                     error_detail = "Credenciales inválidas"
                     error_code = "AUTHENTICATION_ERROR"
@@ -273,6 +273,12 @@ class Mutation:
                         else:
                             error_detail = error_data["detail"]
 
+                    return AuthError(message=error_detail, code=error_code)
+
+                if response.status_code == 500:
+                    error_data = response.json()
+                    error_detail = "Error al procesar la solicitud"
+                    error_code = "SERVER_ERROR"
                     return AuthError(message=error_detail, code=error_code)
 
                 auth_data = response.json()

@@ -129,7 +129,11 @@ export default class AuthLogin extends Command {
       this.log(`🔑 Token: ${loginData.token.slice(0, 20)}...`)
       this.log()
     } else if (loginData.__typename === 'AuthError') {
-      this.error(`❌ Error de autenticación: ${loginData.message} (${loginData.code})`)
+      if (loginData.code === 'SERVER_ERROR') {
+        this.error(`❌ Error en la conexión con el servidor, intentalo nuevamente más tarde`)
+      } else {
+        this.error(`❌ Error de autenticación: ${loginData.message} (${loginData.code})`)
+      }
     } else {
       this.error(`❌ Respuesta inesperada del servidor`)
     }
