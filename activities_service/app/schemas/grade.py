@@ -15,7 +15,8 @@ class GradeBase(BaseModel):
 
 class GradeCreate(GradeBase):
     """Schema for creating a new grade"""
-    submission_id: int = Field(..., gt=0, description="ID de la entrega")
+    #submission_id: int = Field(..., gt=0, description="ID de la entrega")
+    pass
 
 class GradeUpdate(BaseModel):
     """Schema for updating an existing grade"""

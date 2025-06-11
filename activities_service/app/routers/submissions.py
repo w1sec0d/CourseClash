@@ -113,6 +113,7 @@ async def get_submission(
             detail="Error interno del servidor"
         )
 
+#Ya
 #Actualizar una entrega existente
 @router.put("/{submission_id}", response_model=SubmissionResponse)
 async def update_submission(
@@ -194,7 +195,8 @@ async def delete_submission(
 async def grade_submission(
     submission_id: int,
     grade_data: GradeCreate,
-    request: Request,
+    user_id: int = Header(..., alias = "User_id"),
+    user_role: str = Query(..., description="Rol del usuario (teacher o admin)"),
     db: Session = Depends(get_db)
 ):
     """
@@ -202,18 +204,18 @@ async def grade_submission(
     Solo disponible para profesores y administradores después de la fecha límite
     """
     try:
-        # Verificar permisos
-        require_teacher_or_admin(request)
-        
-        current_user = get_current_user(request)
-        
-        # Asegurar que el submission_id coincida
-        grade_data.submission_id = submission_id
-        
+
+        # Verificando permisos
+        if user_role.lower() not in ["teacher", "admin"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Acceso denegado: solo profesores y administradores pueden calificar"
+            )
+
         service = GradeService(db)
-        grade = service.create_grade(grade_data, current_user["user_id"])
+        grade = service.create_grade(grade_data, graded_by=user_id, submission_id=submission_id)
         
-        logger.info(f"Calificación creada para entrega {submission_id} por usuario {current_user['user_id']}")
+        logger.info(f"Calificación creada para entrega {submission_id} por usuario {user_id}")
         
         return GradeResponse.from_orm(grade)
         

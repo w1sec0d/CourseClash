@@ -15,32 +15,34 @@ class GradeService:
     def __init__(self, db: Session):
         self.db = db
     
-    def create_grade(self, grade_data: GradeCreate, graded_by: int) -> Grade:
+    def create_grade(self, grade_data: GradeCreate, graded_by: int, submission_id: int) -> Grade:
         """
         Crear una nueva calificación para una entrega
         """
         try:
             # Verificar que la entrega existe
             submission = self.db.query(Submission).filter(
-                Submission.id == grade_data.submission_id
+                Submission.id == submission_id
             ).first()
             
             if not submission:
                 raise ValueError("La entrega no existe")
             
-            # Verificar que la actividad ha pasado su fecha límite
+            # Obtener la actividad asociada a la entrega
             activity = submission.activity
+
             # Comentado para permitir calificación en cualquier momento durante las pruebas
             # if activity.due_date and datetime.now() < activity.due_date:
             #     raise ValueError("No se puede calificar antes de la fecha límite de la actividad")
             
             # Verificar que no existe ya una calificación
             existing_grade = self.db.query(Grade).filter(
-                Grade.submission_id == grade_data.submission_id
+                Grade.submission_id == submission_id
             ).first()
             
             if existing_grade:
                 raise ValueError("Esta entrega ya ha sido calificada. Use la función de actualización.")
+            
             
             # Verificar permisos: solo el profesor que creó la actividad puede calificar
             if activity.created_by != int(graded_by):
@@ -48,7 +50,7 @@ class GradeService:
             
             # Crear la calificación
             db_grade = Grade(
-                submission_id=grade_data.submission_id,
+                submission_id=submission_id,
                 graded_by=graded_by,
                 score=grade_data.score,
                 feedback=grade_data.feedback
@@ -58,7 +60,7 @@ class GradeService:
             self.db.commit()
             self.db.refresh(db_grade)
             
-            logger.info(f"Calificación creada: {db_grade.id} para entrega {grade_data.submission_id}")
+            logger.info(f"Calificación creada: {db_grade.id} para entrega {submission_id}")
             return db_grade
             
         except Exception as e:
