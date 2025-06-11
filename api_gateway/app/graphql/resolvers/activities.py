@@ -62,6 +62,16 @@ class Submissions:
     latest_grade: Optional[float] = None 
 
 @strawberry.type
+class Grade:
+    id: int
+    submission_id: int
+    graded_by: int
+    graded_at: Optional[datetime] = None
+    score: float
+    feedback: Optional[str] = None
+    score_percentage: Optional[float] = None
+
+@strawberry.type
 class SubmissionsSuccess: 
     submission: Submissions 
 
@@ -99,6 +109,15 @@ class SubmissionsErrorList:
     message: str
     code: str
 
+#Result para calificaciones
+@strawberry.type
+class GradeSuccess: 
+    grades: Grade 
+
+@strawberry.type
+class GradeError: 
+    message: str
+    code: str
 
 #Unio para la respuesta de actividades
 ActivitiesResult = strawberry.union("ActivitiesResult", (ActivitiesSuccess, ActivitiesError))
@@ -112,6 +131,7 @@ SubmissionResult = strawberry.union("SubmissionResult", (SubmissionsSuccess, Sub
 #Union para la respuesta de la creación de la submision
 SubmissionsResult = strawberry.union("SubmissionsResult", (SubmissionsSuccessList, SubmissionsErrorList))
 
+GradeResult = strawberry.union("GradeResult", (GradeSuccess, GradeError))
 
 @strawberry.type
 class Query:
@@ -607,9 +627,113 @@ class Mutation:
         except Exception as e: 
             print("❌ Problemas en el servidor:", str(e))
             return SubmissionsError(message = "Error en el servidor", code = "501")
-
-
         
+    @strawberry.mutation
+    async def gradeSubmission(
+        self,
+        info,
+        score: float,
+        submission_id: int,
+        feedback: Optional[str] = None,
+    ) -> GradeResult:
+        """
+        Califica una submisión de un estudiante.
+
+        Args:
+            score (float): Calificacion de la submisión
+            feedback (Optional[str]): Retroalimentación para el estudiante
+
+        Returns:
+            Submissions Resultado de la actividad actualizada
+
+        Adicional: Se debe enviar el token de autenticación en el header
+        """
+
+
+        #Obtenemos el token enviado en el header
+        request = info.context["request"]
+
+        # Intentar obtener el token desde el header Authorization
+        auth_header = request.headers.get("authorization")
+        token = None
+
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+        else:
+            # Si no hay header Authorization, intentar obtener desde cookies
+            token = request.cookies.get("auth_token")
+
+        if not token:
+            return GradeError(message = "Token no proporcionado", code = "401")
+
+        #Verifica el token
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{AUTH_SERVICE_URL}/auth/me",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+
+                if response.status_code != 200:
+                    return GradeError(message = "Token invalido o expirado", code = "401")
+            user_data = response.json()
+        except Exception as e:
+            print("❌ Error in la verificación del token :", str(e))
+            return GradeError(message = "Error al verificar el token ", code = "401")
+
+        #Calificación de la submisión
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+
+                grade_payload = {
+                    "score": score,
+                    "feedback": feedback
+                }
+
+                grade_response = await client.post(
+                    f"{ACTIVITIES_SERVICE_URL}/api/submissions/{submission_id}/grade",
+                    params={"user_role": "TEACHER" if user_data["is_superuser"] else "STUDENT"},
+                    headers={"User_id": str(user_data["id"])},
+                    json=grade_payload
+                )
+
+                if grade_response.status_code != 201:
+                    error_data = grade_response.json()
+                    # error_detail = "Credenciales inválidas"
+                    # error_code = "AUTHENTICATION_ERROR"
+
+                    # if "detail" in error_data:
+                    #     if isinstance(error_data["detail"], dict):
+                    #         error_detail = error_data["detail"].get(
+                    #             "message", error_detail
+                    #         )
+                    #         error_code = error_data["detail"].get("code", error_code)
+                    #     else:
+                    #         error_detail = error_data["detail"]
+                    # return GradeError(message=error_detail, code=str(grade_response.status_code))
+                    return GradeError(
+                        message=error_data.get("detail", "Error inesperado en el microservicio"),
+                        code=str(grade_response.status_code)
+                    )
+
+                grade_data = grade_response.json()
+
+                grade = Grade(
+                    id = grade_data['id'],
+                    submission_id = grade_data['submission_id'],
+                    graded_by = grade_data['graded_by'],
+                    graded_at = datetime.fromisoformat(grade_data["graded_at"].replace("Z", "+00:00"))
+                        if grade_data.get("graded_at") else None,
+                    score = grade_data['score'],
+                    feedback = grade_data['feedback'],
+                    score_percentage = grade_data['score_percentage']
+                )
+
+
+                return GradeSuccess(grades=grade)
+        except Exception as e:
+            print("❌ Problemas en el servidor:", str(e))
+            return GradeError(message="Error en el servidor", code="501")
 
         
 

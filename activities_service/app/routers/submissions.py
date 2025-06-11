@@ -195,7 +195,7 @@ async def delete_submission(
 async def grade_submission(
     submission_id: int,
     grade_data: GradeCreate,
-    user_id: int = Header(..., alias = "User_id"),
+    User_id: int = Header(..., alias = "User_id"), #indentificador del profesor o admin
     user_role: str = Query(..., description="Rol del usuario (teacher o admin)"),
     db: Session = Depends(get_db)
 ):
@@ -213,9 +213,9 @@ async def grade_submission(
             )
 
         service = GradeService(db)
-        grade = service.create_grade(grade_data, graded_by=user_id, submission_id=submission_id)
+        grade = service.create_grade(grade_data, graded_by=User_id, submission_id=submission_id)
         
-        logger.info(f"Calificación creada para entrega {submission_id} por usuario {user_id}")
+        logger.info(f"Calificación creada para entrega {submission_id} por usuario {User_id}")
         
         return GradeResponse.from_orm(grade)
         
