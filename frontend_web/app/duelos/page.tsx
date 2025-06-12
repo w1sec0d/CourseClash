@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import { useState, useCallback } from "react";
-import { TrophyIcon } from "@heroicons/react/24/outline";
-import { useAuthApollo } from "@/lib/auth-context-apollo";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import QuizScreen from "./components/quizScreen";
+import { useState, useCallback } from 'react';
+import { TrophyIcon } from '@heroicons/react/24/outline';
+import { useAuthApollo } from '@/lib/auth-context-apollo';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import QuizScreen from './components/quizScreen';
 
 // Hooks
-import { useWebSocketNotifications } from "./hooks/useWebSocketNotifications";
-import { useDuelWebSocket } from "./hooks/useDuelWebSocket";
-import { useDuelOperations } from "./hooks/useDuelOperations";
+import { useWebSocketNotifications } from './hooks/useWebSocketNotifications';
+import { useDuelWebSocket } from './hooks/useDuelWebSocket';
+import { useDuelOperations } from './hooks/useDuelOperations';
 
 // Components
-import DuelLanding from "./components/DuelLanding";
-import OpponentSearch from "./components/OpponentSearch";
-import PendingChallenges from "./components/PendingChallenges";
-import DuelInfo from "./components/DuelInfo";
+import DuelLanding from './components/DuelLanding';
+import OpponentSearch from './components/OpponentSearch';
+import PendingChallenges from './components/PendingChallenges';
+import DuelInfo from './components/DuelInfo';
 
 // Utils
-import { getUserId, validateUserSession } from "./utils/userUtils";
+import { getUserId, validateUserSession } from './utils/userUtils';
 
 function DuelosContent() {
   const { user } = useAuthApollo();
@@ -65,7 +65,7 @@ function DuelosContent() {
       await searchUser();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Error al buscar el usuario"
+        err instanceof Error ? err.message : 'Error al buscar el usuario'
       );
     }
   }, [searchUser]);
@@ -73,7 +73,7 @@ function DuelosContent() {
   // Handle duel request
   const handleRequestDuel = useCallback(async () => {
     if (duelConnecting || preparingDuel) {
-      console.log("Already processing duel, skipping request");
+      console.log('Already processing duel, skipping request');
       return;
     }
 
@@ -90,7 +90,7 @@ function DuelosContent() {
       }
 
       if (!foundUser) {
-        setError("Debes buscar y seleccionar un oponente primero");
+        setError('Debes buscar y seleccionar un oponente primero');
         setPreparingDuel(false);
         return;
       }
@@ -115,7 +115,7 @@ function DuelosContent() {
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Error al solicitar el duelo"
+        err instanceof Error ? err.message : 'Error al solicitar el duelo'
       );
       setPreparingDuel(false);
     }
@@ -132,7 +132,7 @@ function DuelosContent() {
   const handleChallengeAccept = useCallback(
     async (duelId: string) => {
       if (duelConnecting || preparingDuel) {
-        console.log("Already processing duel, skipping accept");
+        console.log('Already processing duel, skipping accept');
         return;
       }
 
@@ -171,7 +171,7 @@ function DuelosContent() {
         removeChallenge(duelId);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Error al aceptar el duelo"
+          err instanceof Error ? err.message : 'Error al aceptar el duelo'
         );
         setPreparingDuel(false);
       }
@@ -200,19 +200,19 @@ function DuelosContent() {
     setPreparingDuel(false);
     disconnectDuel();
     // Clear foundUser to prevent issues with subsequent duels
-    setOpponentEmail("");
+    setOpponentEmail('');
   }, [disconnectDuel, setOpponentEmail]);
 
   if (preparingDuel) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-gray-700">
+      <div className='container mx-auto p-4'>
+        <div className='min-h-screen flex items-center justify-center'>
+          <div className='text-center'>
+            <div className='animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4'></div>
+            <h2 className='text-xl font-semibold text-gray-700'>
               Preparando el duelo...
             </h2>
-            <p className="text-gray-500 mt-2">Sincronizando con el servidor</p>
+            <p className='text-gray-500 mt-2'>Sincronizando con el servidor</p>
           </div>
         </div>
       </div>
@@ -221,48 +221,49 @@ function DuelosContent() {
 
   if (showQuiz) {
     return (
-      <div className="container mx-auto p-4">
+      <div className='container mx-auto p-4'>
         <QuizScreen
           wsConnection={wsConnection}
-          playerId={getUserId(user) || ""}
-          opponentId={foundUser?.id || "user_002"}
+          playerId={getUserId(user) || ''}
+          opponentId={foundUser?.id || 'user_002'}
+          onExit={handleQuizExit}
         />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="mx-auto px-4 py-8 container">
-        <div className="text-center mb-6">
-          <p className="text-3xl font-bold text-emerald-700 flex items-center justify-center gap-2">
-            <TrophyIcon className="w-8 h-8" />
+    <div className='container mx-auto p-4'>
+      <div className='mx-auto px-4 py-8 container'>
+        <div className='text-center mb-6'>
+          <p className='text-3xl font-bold text-emerald-700 flex items-center justify-center gap-2'>
+            <TrophyIcon className='w-8 h-8' />
             Duelos Académicos
           </p>
 
           {/* Indicador de conexión WebSocket */}
-          <div className="mt-2 flex items-center justify-center gap-2">
+          <div className='mt-2 flex items-center justify-center gap-2'>
             <div
               className={`w-2 h-2 rounded-full ${
-                notificationConnected ? "bg-green-500" : "bg-red-500"
+                notificationConnected ? 'bg-green-500' : 'bg-red-500'
               }`}
             ></div>
             <span
               className={`text-sm ${
-                notificationConnected ? "text-green-600" : "text-red-600"
+                notificationConnected ? 'text-green-600' : 'text-red-600'
               }`}
             >
               {notificationConnected
-                ? "Conectado a notificaciones"
-                : "Desconectado de notificaciones"}
+                ? 'Conectado a notificaciones'
+                : 'Desconectado de notificaciones'}
             </span>
           </div>
         </div>
 
-        <div className="lg:flex-row flex flex-col gap-8">
+        <div className='lg:flex-row flex flex-col gap-8'>
           <DuelLanding />
 
-          <div className="lg:w-1/2 space-y-6">
+          <div className='lg:w-1/2 space-y-6'>
             <OpponentSearch
               opponentEmail={opponentEmail}
               setOpponentEmail={setOpponentEmail}
