@@ -188,11 +188,10 @@ export default function Login() {
         console.log('🔍 Error details:', {
           message: error.message,
           code: error.code,
-          isServerError: error.isServerError,
         });
 
         // Diferenciar entre errores de servidor y errores de autenticación
-        if (error.isServerError) {
+        if (error.code === 'SERVER_ERROR') {
           // 🚨 Error de servidor (500, timeout, network, etc.)
           setError('root', {
             message: `🔧 ${error.message}`,
