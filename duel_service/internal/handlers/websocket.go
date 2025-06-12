@@ -201,6 +201,9 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		// Notificar al retador que el oponente se conectó
 		syncChannel <- struct{}{}
 		
+		// Pequeño delay para asegurar que el retador procese el mensaje de conexión
+		time.Sleep(1 * time.Second)
+		
 		// Iniciar el duelo
 		log.Printf("Iniciando duelo %s: Retador %s vs Oponente %s", duelID, p1ToUse.ID, p2ToUse.ID)
 		

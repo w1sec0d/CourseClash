@@ -48,6 +48,7 @@ export default function QuizScreen({
     null
   );
   const [isWaiting, setIsWaiting] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [playerProgress, setPlayerProgress] = useState(0);
   const [opponentProgress, setOpponentProgress] = useState(0);
   const [totalQuestions] = useState(5);
@@ -58,6 +59,7 @@ export default function QuizScreen({
     if (!wsConnection) return;
 
     console.log(`[${playerId}] Setting up WebSocket message handler`);
+    setIsInitializing(false); // Mark as initialized once we have a connection
 
     const handleMessage = (event: MessageEvent) => {
       try {
@@ -67,14 +69,19 @@ export default function QuizScreen({
         // Handle plain text messages
         if (typeof event.data === "string" && !event.data.startsWith("{")) {
           console.log(`[${playerId}] Received text message:`, event.data);
-          if (
+
+          if (event.data.includes("Esperando al oponente")) {
+            setIsWaiting(true);
+            setError(null);
+          } else if (
             event.data === "¡Oponente conectado! El duelo comenzará pronto." ||
             event.data === "¡Duelo listo!"
           ) {
             console.log(
               `[${playerId}] Both players connected, waiting for first question...`
             );
-            setIsWaiting(true); // Still waiting for the first question
+            setIsWaiting(true);
+            setError(null);
           }
           return;
         }
@@ -115,11 +122,12 @@ export default function QuizScreen({
     };
 
     wsConnection.addEventListener("message", handleMessage);
+
     return () => {
-      console.log("Cleaning up WebSocket connection");
+      console.log(`[${playerId}] Cleaning up WebSocket connection`);
       wsConnection.removeEventListener("message", handleMessage);
     };
-  }, [wsConnection, totalQuestions]);
+  }, [wsConnection, playerId]); // Only depend on wsConnection and playerId, not totalQuestions
 
   const handleAnswerSelect = (selectedOption: string) => {
     if (!wsConnection || !currentQuestion) return;
@@ -154,6 +162,22 @@ export default function QuizScreen({
     );
   }
 
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-700">
+            Inicializando duelo...
+          </h2>
+          <p className="text-gray-500 mt-2">
+            Estableciendo conexión con el servidor
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (isWaiting) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -165,6 +189,7 @@ export default function QuizScreen({
           <p className="text-gray-500 mt-2">
             El duelo comenzará cuando ambos jugadores estén listos
           </p>
+          {error && <p className="text-orange-500 mt-2">{error}</p>}
         </div>
       </div>
     );
