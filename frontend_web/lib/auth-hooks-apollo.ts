@@ -10,6 +10,7 @@ import {
   clearAuthTokens,
 } from '@/lib/cookie-utils';
 import { useRouter } from 'next/navigation';
+import { useApolloClient } from '@apollo/client';
 
 // Definir las queries y mutations con gql
 const LOGIN_MUTATION = gql`
@@ -173,7 +174,9 @@ export function useCurrentUserApollo() {
   console.log('🔑 useCurrentUserApollo');
   console.log('🔑 getAuthToken():', getAuthToken());
   const reloadAttemptedRef = useRef(false);
+  const lastTokenRef = useRef<string | null>(null);
   const router = useRouter();
+  const apolloClient = useApolloClient();
 
   const { data, loading, error, refetch } = useQuery(ME_QUERY, {
     skip: typeof window === 'undefined' || !getAuthToken(),
@@ -183,15 +186,22 @@ export function useCurrentUserApollo() {
 
   // Handle token expiry in useEffect to avoid rendering issues
   useEffect(() => {
-    // Si tenemos token pero me es null (token expirado/inválido)
-    const hasToken = getAuthToken();
+    const currentToken = getAuthToken();
+    const hasToken = !!currentToken;
     const userIsNull = data && data.me === null;
+
+    // Reset reloadAttemptedRef if token has changed
+    if (currentToken !== lastTokenRef.current) {
+      reloadAttemptedRef.current = false;
+      lastTokenRef.current = currentToken;
+    }
+
     const shouldHandleExpiry =
       !loading && hasToken && userIsNull && !reloadAttemptedRef.current;
 
     if (shouldHandleExpiry) {
       console.log(
-        '🚨 Token presente pero usuario null - token expirado, limpiando cookies'
+        '🚨 Token presente pero usuario null - token expirado, limpiando cookies y cache'
       );
 
       // Mark that we've attempted a reload to prevent infinite loops
@@ -200,10 +210,58 @@ export function useCurrentUserApollo() {
       // Clear tokens
       clearAuthTokens();
 
-      // Use Next.js router to refresh the page (better than window.location.reload)
-      router.refresh();
+      // Clear Apollo cache to remove stale data
+      try {
+        apolloClient.clearStore();
+        console.log('✅ Apollo cache cleared');
+      } catch (cacheError) {
+        console.warn('⚠️ Failed to clear Apollo cache:', cacheError);
+        // Fallback: try to clear just the ME query
+        try {
+          apolloClient.cache.evict({ fieldName: 'me' });
+          apolloClient.cache.gc();
+          console.log('✅ Apollo ME query evicted from cache');
+        } catch (evictError) {
+          console.warn('⚠️ Failed to evict ME query:', evictError);
+        }
+      }
+
+      // Multiple strategies for page refresh/redirect
+      try {
+        // Strategy 1: Try router refresh first
+        if (typeof router?.refresh === 'function') {
+          router.refresh();
+          console.log('✅ Router refresh executed');
+        } else {
+          throw new Error('Router refresh not available');
+        }
+      } catch (routerError) {
+        console.warn('⚠️ Router refresh failed:', routerError);
+
+        try {
+          // Strategy 2: Try router push to login
+          if (typeof router?.push === 'function') {
+            router.push('/login');
+            console.log('✅ Redirected to login');
+          } else {
+            throw new Error('Router push not available');
+          }
+        } catch (pushError) {
+          console.warn('⚠️ Router push failed:', pushError);
+
+          // Strategy 3: Fallback to window reload (only if window exists)
+          if (typeof window !== 'undefined' && window.location) {
+            console.log('🔄 Falling back to window.location.reload()');
+            setTimeout(() => {
+              window.location.reload();
+            }, 100);
+          } else {
+            console.error('❌ All refresh strategies failed');
+          }
+        }
+      }
     }
-  }, [data, loading, router]);
+  }, [data, loading, router, apolloClient]);
 
   return {
     user: data?.me as User | null,
