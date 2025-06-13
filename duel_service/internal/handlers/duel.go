@@ -53,7 +53,7 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 		answer2 := receiveAnswer(player2)
 
 		//Saltar ping de confirmacion
-		if(answer1 == "" && answer2 == ""){
+		for (answer1 == "" && answer2 == ""){
 			answer1 = receiveAnswer(player1)
 			answer2 = receiveAnswer(player2)
 		}
@@ -104,30 +104,9 @@ func broadcastQuestion(player1, player2 *models.Player, question models.Question
 // * Es necesario que se envie desde el cliente para procesarlo.
 
 func receiveAnswer(player *models.Player) string {
-	log.Printf("⏳ [ESPERANDO RESPUESTA] Jugador %s - Iniciando lectura de respuesta", player.ID)
-	
-	for {
-		var response map[string]interface{} // Cambiar a interface{} para capturar cualquier tipo de mensaje
-		if err := player.Conn.ReadJSON(&response); err != nil {
-			log.Printf("❌ [ERROR LECTURA] Jugador %s - Error al leer mensaje: %v", player.ID, err)
-			return ""
-		}
-		
-		log.Printf("📨 [MENSAJE RECIBIDO] Jugador %s - Mensaje completo: %+v", player.ID, response)
-		
-		// Verificar si es un mensaje de respuesta válido
-		if answerValue, exists := response["answer"]; exists {
-			if answer, ok := answerValue.(string); ok {
-				log.Printf("✅ [RESPUESTA VÁLIDA] Jugador %s - Respuesta: '%s'", player.ID, answer)
-				return answer
-			} else {
-				log.Printf("⚠️ [RESPUESTA INVÁLIDA] Jugador %s - 'answer' no es string: %+v (tipo: %T)", player.ID, answerValue, answerValue)
-			}
-		} else {
-			log.Printf("🔍 [MENSAJE IGNORADO] Jugador %s - No contiene 'answer', ignorando mensaje", player.ID)
-			receiveAnswer(player)
-		}
-	}
+	var response map[string]string
+	player.Conn.ReadJSON(&response)
+	return response["answer"]
 }
 
 // Esta función es la encargada de calcular la puntuación de cada estudiante de acuerdo a si su respuesta fue correcta
