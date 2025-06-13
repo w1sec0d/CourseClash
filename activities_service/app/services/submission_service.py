@@ -129,50 +129,50 @@ class SubmissionService:
             raise
     
     def update_submission(
-        self,
-        submission_id: int,
-        submission_data: SubmissionUpdate,
-        user_id: int
-    ) -> Optional[Submission]:
-        """
-        Actualizar una entrega existente
-        Solo el estudiante que la creó puede actualizarla y antes de la fecha límite
-        """
-        try:
-            submission = self.db.query(Submission).filter(
-                and_(
-                    Submission.id == submission_id,
-                    Submission.user_id == user_id
-                )
-            ).first()
-            
-            if not submission:
-                return None
-            
-            # Verificar que se puede editar (antes de la fecha límite y no calificada)
-            if not submission.can_edit:
-                raise ValueError("No se puede editar esta entrega")
-            
-            # Actualizar campos proporcionados
-            update_data = submission_data.dict(exclude_unset=True)
-            
-            for field, value in update_data.items():
-                if hasattr(submission, field):
-                    setattr(submission, field, value)
-            
-            # Actualizar timestamp de entrega
-            submission.submitted_at = datetime.now()
-            
-            self.db.commit()
-            self.db.refresh(submission)
-            
-            logger.info(f"Entrega {submission_id} actualizada")
-            return submission
-            
-        except Exception as e:
-            self.db.rollback()
-            logger.error(f"Error actualizando entrega {submission_id}: {e}")
-            raise
+            self,
+            submission_id: int,
+            submission_data: SubmissionUpdate,
+            user_id: int
+        ) -> Optional[Submission]:
+            """
+            Actualizar una entrega existente
+            Solo el estudiante que la creó puede actualizarla y antes de la fecha límite
+            """
+            try:
+                submission = self.db.query(Submission).filter(
+                    and_(
+                        Submission.id == submission_id,
+                        Submission.user_id == user_id
+                    )
+                ).first()
+                
+                if not submission:
+                    return None
+                
+                # Verificar que se puede editar (antes de la fecha límite y no calificada)
+                if not submission.can_edit:
+                    raise ValueError("No se puede editar esta entrega")
+                
+                # Actualizar campos proporcionados
+                update_data = submission_data.dict(exclude_unset=True)
+                
+                for field, value in update_data.items():
+                    if hasattr(submission, field):
+                        setattr(submission, field, value)
+                
+                # Actualizar timestamp de entrega
+                submission.submitted_at = datetime.now()
+                
+                self.db.commit()
+                self.db.refresh(submission)
+                
+                logger.info(f"Entrega {submission_id} actualizada")
+                return submission
+                
+            except Exception as e:
+                self.db.rollback()
+                logger.error(f"Error actualizando entrega {submission_id}: {e}")
+                raise
     
     def delete_submission(
         self,

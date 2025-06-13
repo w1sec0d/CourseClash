@@ -21,6 +21,17 @@ class SubmissionBase(BaseModel):
                     raise ValueError('Todas las URLs de archivos deben ser válidas')
         return v
 
+class GraseSubmission(BaseModel):
+    """Schema for grading a submission"""
+    id: int
+    graded_by: int 
+    score: float
+    feedback: Optional[str] 
+    graded_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class SubmissionCreate(SubmissionBase):
     """Schema for creating a new submission"""
     activity_id: int = Field(..., ge=0, description="ID de la actividad")
@@ -37,7 +48,7 @@ class SubmissionResponse(SubmissionBase):
     submitted_at: datetime
     is_graded: bool
     can_edit: bool
-    latest_grade: Optional[float] = None  # Will be GradeResponse when imported
+    latest_grade: Optional[GraseSubmission] = None  # Will be GradeResponse when imported
 
     class Config:
         from_attributes = True
