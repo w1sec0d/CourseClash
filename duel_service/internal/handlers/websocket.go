@@ -209,9 +209,10 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		
 		// Obtener preguntas aleatorias de la base de datos para el duelo
 		questionService := services.NewQuestionService()
+		log.Printf("🔍 [DEBUG] Intentando obtener preguntas de la base de datos para el duelo %s", duelID)
 		questions, err := questionService.GetQuestionsForDuel(123)
 		if err != nil {
-			log.Printf("Error al obtener preguntas para el duelo %s: %v. Usando preguntas de respaldo.", duelID, err)
+			log.Printf("❌ [ERROR] Error al obtener preguntas para el duelo %s: %v. Usando preguntas de respaldo.", duelID, err)
 			questions = []models.Question{
 				{ID: "1", Text: "¿Cuál es la capital de Francia?", Answer: "París", Options: []string{"Madrid", "París", "Londres", "Roma"}, Duration: 30},
 				{ID: "2", Text: "¿Cuánto es 2+2?", Answer: "4", Options: []string{"3", "4", "5", "6"}, Duration: 30},
@@ -219,8 +220,16 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 				{ID: "4", Text: "¿Cuál es el planeta más grande del sistema solar?", Answer: "Júpiter", Options: []string{"Tierra", "Júpiter", "Saturno", "Marte"}, Duration: 30},
 				{ID: "5", Text: "¿En qué año comenzó la Segunda Guerra Mundial?", Answer: "1939", Options: []string{"1914", "1939", "1945", "1918"}, Duration: 30},
 			}
+			log.Printf("⚠️ [RESPALDO] Se usaron %d preguntas hardcodeadas como respaldo", len(questions))
+		} else {
+			log.Printf("✅ [BD ÉXITO] Se obtuvieron %d preguntas de la base de datos", len(questions))
 		}
 		
+		log.Printf("📋 [PREGUNTAS FINALES] Total de preguntas preparadas para el duelo %s: %d", duelID, len(questions))
+		for i, q := range questions {
+			log.Printf("📋 [PREGUNTA %d/%d] ID: %s, Texto: %s", i+1, len(questions), q.ID, q.Text)
+		}
+
 		log.Printf("Duelo %s: Obtenidas %d preguntas para el duelo", duelID, len(questions))
 		duelsync.StartDuel(p1ToUse, p2ToUse, duelID, questions, HandleDuel)
 		

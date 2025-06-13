@@ -33,12 +33,18 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 		log.Printf("HandleDuel para jugadores %s y %s finalizado.", player1.ID, player2.ID)
 	}()
 
-	log.Printf("Iniciando HandleDuel para %s y %s", player1.ID, player2.ID)
+	log.Printf("🎯 [HANDLE DUEL] Iniciando HandleDuel para %s y %s con %d preguntas", player1.ID, player2.ID, len(questions))
+	
+	// 🐛 LOG DETALLADO: Mostrar todas las preguntas recibidas
+	for i, q := range questions {
+		log.Printf("🎯 [PREGUNTA RECIBIDA %d/%d] ID: %s, Texto: %s", i+1, len(questions), q.ID, q.Text)
+	}
 
 	// Notificamos a los jugadores que el duelo va a comenzar
 	// ...
 
-	for _, question := range questions {
+	for i, question := range questions {
+		log.Printf("🚀 [ENVIANDO PREGUNTA %d/%d] Iniciando envío: ID=%s, Texto=%s", i+1, len(questions), question.ID, question.Text)
 		broadcastQuestion(player1, player2, question)
 		startTime := time.Now()
 
@@ -46,9 +52,18 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 		answer1 := receiveAnswer(player1)
 		answer2 := receiveAnswer(player2)
 
+		//Saltar ping de confirmacion
+		if(answer1 == "" && answer2 == ""){
+			answer1 = receiveAnswer(player1)
+			answer2 = receiveAnswer(player2)
+		}
 		calculateScore(player1, question, answer1, startTime)
 		calculateScore(player2, question, answer2, startTime)
+		
+		log.Printf("✅ [PREGUNTA %d/%d COMPLETADA] P1 respondió: '%s', P2 respondió: '%s'", i+1, len(questions), answer1, answer2)
 	}
+	
+	log.Printf("🏁 [TODAS LAS PREGUNTAS COMPLETADAS] Enviando resultados finales del duelo %s", duelID)
 
 	// Enviar resultados finales
 	endDuel(player1, player2, duelID)
@@ -61,13 +76,27 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 // * Con WriteJSON básicamente se envía cada pregunta a cada jugador utilizando la conexión websocket
 
 func broadcastQuestion(player1, player2 *models.Player, question models.Question) {
+	log.Printf("📤 [BROADCAST] Enviando pregunta ID: %s, Texto: %s", question.ID, question.Text)
+	
 	message := map[string]interface{}{
 		"type": "question",
 		"data": question,
 	}
+	
+	log.Printf("📤 [MENSAJE WS] Estructura del mensaje: %+v", message)
+	
 	// Envio sincronizado de preguntas usando los métodos seguros
-	player1.SafeWriteJSON(message)
-	player2.SafeWriteJSON(message)
+	if err := player1.SafeWriteJSON(message); err != nil {
+		log.Printf("❌ [ERROR] No se pudo enviar pregunta a %s: %v", player1.ID, err)
+	} else {
+		log.Printf("✅ [ENVIADO] Pregunta enviada correctamente a %s", player1.ID)
+	}
+	
+	if err := player2.SafeWriteJSON(message); err != nil {
+		log.Printf("❌ [ERROR] No se pudo enviar pregunta a %s: %v", player2.ID, err)
+	} else {
+		log.Printf("✅ [ENVIADO] Pregunta enviada correctamente a %s", player2.ID)
+	}
 }
 
 // Esta función permite recibir un mapa con la clave answer, que representa la respuesta de los jugadores
@@ -75,9 +104,30 @@ func broadcastQuestion(player1, player2 *models.Player, question models.Question
 // * Es necesario que se envie desde el cliente para procesarlo.
 
 func receiveAnswer(player *models.Player) string {
-	var response map[string]string
-	player.Conn.ReadJSON(&response)
-	return response["answer"]
+	log.Printf("⏳ [ESPERANDO RESPUESTA] Jugador %s - Iniciando lectura de respuesta", player.ID)
+	
+	for {
+		var response map[string]interface{} // Cambiar a interface{} para capturar cualquier tipo de mensaje
+		if err := player.Conn.ReadJSON(&response); err != nil {
+			log.Printf("❌ [ERROR LECTURA] Jugador %s - Error al leer mensaje: %v", player.ID, err)
+			return ""
+		}
+		
+		log.Printf("📨 [MENSAJE RECIBIDO] Jugador %s - Mensaje completo: %+v", player.ID, response)
+		
+		// Verificar si es un mensaje de respuesta válido
+		if answerValue, exists := response["answer"]; exists {
+			if answer, ok := answerValue.(string); ok {
+				log.Printf("✅ [RESPUESTA VÁLIDA] Jugador %s - Respuesta: '%s'", player.ID, answer)
+				return answer
+			} else {
+				log.Printf("⚠️ [RESPUESTA INVÁLIDA] Jugador %s - 'answer' no es string: %+v (tipo: %T)", player.ID, answerValue, answerValue)
+			}
+		} else {
+			log.Printf("🔍 [MENSAJE IGNORADO] Jugador %s - No contiene 'answer', ignorando mensaje", player.ID)
+			receiveAnswer(player)
+		}
+	}
 }
 
 // Esta función es la encargada de calcular la puntuación de cada estudiante de acuerdo a si su respuesta fue correcta
