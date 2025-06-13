@@ -1,94 +1,66 @@
-# Servicio de Cursos
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-Este servicio es responsable de la creación y gestión de cursos, inscripción de estudiantes, gestión de contenido del curso, calificaciones y actividades en CourseClash.
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-## Tecnologías
+## About Laravel
 
-- **FastAPI**: Framework web de alto rendimiento para construir APIs con Python.
-- **SQLAlchemy**: ORM (Object-Relational Mapping) para interactuar con la base de datos.
-- **Pydantic**: Validación de datos y configuración de settings.
-- **MySQL**: Base de datos relacional para almacenar información estructurada de cursos y actividades.
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-## Estructura del Proyecto
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-```
-/course_service
-├── app/                      # Código principal de la aplicación
-│   ├── __init__.py           # Inicializador del paquete
-│   ├── core/                 # Configuraciones y utilidades centrales
-│   │   ├── config.py         # Configuración de la aplicación
-│   │   └── dependencies.py   # Dependencias compartidas de FastAPI
-│   ├── db.py                 # Configuración de la base de datos
-│   ├── main.py               # Punto de entrada de la aplicación
-│   ├── models/               # Modelos SQLAlchemy (tablas de la BD)
-│   │   ├── __init__.py
-│   │   ├── course.py         # Modelo de curso
-│   │   └── activity.py       # Modelo de actividades
-│   ├── routers/              # Endpoints de la API
-│   │   ├── __init__.py
-│   │   ├── courses.py        # Rutas de gestión de cursos
-│   │   └── activities.py     # Rutas de gestión de actividades
-│   ├── schemas/              # Esquemas Pydantic para validación
-│   │   ├── __init__.py
-│   │   ├── course.py         # Esquemas de cursos
-│   │   └── activity.py       # Esquemas de actividades
-│   ├── services/             # Lógica de negocio
-│   │   ├── __init__.py
-│   │   └── course_service.py # Servicios relacionados con cursos
-│   └── utils/                # Utilidades generales
-│       ├── __init__.py
-│       └── utils.py          # Funciones de utilidad
-├── .env                      # Variables de entorno (no incluir en git)
-├── .gitignore                # Archivos a ignorar por git
-├── requirements.txt          # Dependencias del proyecto
-└── venv/                     # Entorno virtual de Python (no incluir en git)
-```
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-## Funcionalidades Principales
+## Learning Laravel
 
-- Creación y gestión de cursos
-- Asignación de participantes a cursos
-- Gestión del tablero de anuncios
-- Creación y gestión de actividades (tareas, quices)
-- Calificación de actividades
-- Subida y descarga de archivos relacionados con actividades
-- Comentarios en actividades
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-## Cómo Ejecutar
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-1. Crear y activar entorno virtual:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # En Windows: venv\Scripts\activate
-   ```
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-2. Instalar dependencias:
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Laravel Sponsors
 
-3. Configurar variables de entorno en el archivo `.env`
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-4. Ejecutar el servidor:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
+### Premium Partners
 
-5. Acceder a la documentación de la API:
-   - Swagger UI: http://localhost:8001/docs
-   - ReDoc: http://localhost:8001/redoc
+- **[Vehikl](https://vehikl.com/)**
+- **[Tighten Co.](https://tighten.co)**
+- **[WebReinvent](https://webreinvent.com/)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
+- **[Cyber-Duck](https://cyber-duck.co.uk)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Jump24](https://jump24.co.uk)**
+- **[Redberry](https://redberry.international/laravel/)**
+- **[Active Logic](https://activelogic.com)**
+- **[byte5](https://byte5.de)**
+- **[OP.GG](https://op.gg)**
 
-## Endpoints Principales
+## Contributing
 
-- `POST /api/courses/`: Crear un nuevo curso
-- `GET /api/courses/`: Listar todos los cursos
-- `GET /api/courses/{course_id}`: Obtener detalles de un curso específico
-- `PUT /api/courses/{course_id}`: Actualizar información de un curso
-- `DELETE /api/courses/{course_id}`: Eliminar un curso
-- `POST /api/courses/{course_id}/participants`: Añadir participantes a un curso
-- `POST /api/courses/{course_id}/activities`: Crear una nueva actividad en un curso
-- `GET /api/courses/{course_id}/activities`: Listar todas las actividades de un curso
-- `GET /api/activities/{activity_id}`: Obtener detalles de una actividad específica
-- `PUT /api/activities/{activity_id}`: Actualizar información de una actividad
-- `POST /api/activities/{activity_id}/submissions`: Enviar una solución para una actividad
-- `POST /api/activities/{activity_id}/grades`: Calificar una actividad
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+
+## Code of Conduct
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+
+## License
+
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
