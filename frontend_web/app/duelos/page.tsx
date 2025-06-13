@@ -52,6 +52,8 @@ export default function Duelos() {
     requestLoading,
     acceptLoading,
     duelResponse,
+
+    clearAll,
   } = useDuelOperations();
 
   // Combine all errors
@@ -198,9 +200,8 @@ export default function Duelos() {
     setShowQuiz(false);
     setPreparingDuel(false);
     disconnectDuel();
-    // Clear foundUser to prevent issues with subsequent duels
-    setOpponentEmail('');
-  }, [disconnectDuel, setOpponentEmail]);
+    clearAll();
+  }, [disconnectDuel, clearAll]);
 
   if (preparingDuel) {
     return (

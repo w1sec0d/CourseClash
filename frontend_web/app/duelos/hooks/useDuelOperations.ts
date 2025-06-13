@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
-import { useDuels } from "@/lib/duel-hooks-apollo";
-import { RequestDuelResponse } from "../../types/duel";
+import { useState, useCallback, useEffect } from 'react';
+import { useDuels } from '@/lib/duel-hooks-apollo';
+import { RequestDuelResponse } from '../../types/duel';
 
 interface User {
   id: string;
@@ -17,6 +17,7 @@ interface UseDuelOperationsReturn {
   foundUser: User | null;
   searchUser: () => Promise<void>;
   searchLoading: boolean;
+  clearFoundUser: () => void;
 
   // Duel operations
   requestDuel: (
@@ -30,17 +31,19 @@ interface UseDuelOperationsReturn {
   // State
   duelResponse: RequestDuelResponse | null;
   clearDuelResponse: () => void;
+  clearAll: () => void;
 }
 
 export const useDuelOperations = (): UseDuelOperationsReturn => {
-  const [opponentEmail, setOpponentEmail] = useState("");
+  const [opponentEmail, setOpponentEmail] = useState('');
   const [duelResponse, setDuelResponse] = useState<RequestDuelResponse | null>(
     null
   );
+  const [foundUser, setFoundUser] = useState<User | null>(null);
 
   const {
     searchUserByEmail,
-    foundUser,
+    foundUser: apolloFoundUser,
     searchLoading,
     requestDuel: apolloRequestDuel,
     requestLoading,
@@ -48,14 +51,18 @@ export const useDuelOperations = (): UseDuelOperationsReturn => {
     acceptLoading,
   } = useDuels();
 
+  useEffect(() => {
+    setFoundUser(apolloFoundUser);
+  }, [apolloFoundUser]);
+
   const searchUser = useCallback(async () => {
     if (!opponentEmail) {
-      throw new Error("Por favor, ingresa el correo del oponente");
+      throw new Error('Por favor, ingresa el correo del oponente');
     }
 
     const user = await searchUserByEmail(opponentEmail);
     if (!user) {
-      throw new Error("No se encontró ningún usuario con ese correo");
+      throw new Error('No se encontró ningún usuario con ese correo');
     }
   }, [opponentEmail, searchUserByEmail]);
 
@@ -80,7 +87,17 @@ export const useDuelOperations = (): UseDuelOperationsReturn => {
     [apolloAcceptDuel]
   );
 
+  const clearFoundUser = useCallback(() => {
+    setFoundUser(null);
+  }, []);
+
   const clearDuelResponse = useCallback(() => {
+    setDuelResponse(null);
+  }, []);
+
+  const clearAll = useCallback(() => {
+    setOpponentEmail('');
+    setFoundUser(null);
     setDuelResponse(null);
   }, []);
 
@@ -96,5 +113,7 @@ export const useDuelOperations = (): UseDuelOperationsReturn => {
     acceptLoading,
     duelResponse,
     clearDuelResponse,
+    clearFoundUser,
+    clearAll,
   };
 };
