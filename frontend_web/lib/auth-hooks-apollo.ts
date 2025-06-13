@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, gql } from '@apollo/client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User, AuthError, AuthErrorCode } from '@/lib/auth-types';
 import {
   setAuthToken,
@@ -9,6 +9,7 @@ import {
   getAuthToken,
   clearAuthTokens,
 } from '@/lib/cookie-utils';
+import { useRouter } from 'next/navigation';
 
 // Definir las queries y mutations con gql
 const LOGIN_MUTATION = gql`
@@ -171,20 +172,38 @@ export function useLoginApollo() {
 export function useCurrentUserApollo() {
   console.log('🔑 useCurrentUserApollo');
   console.log('🔑 getAuthToken():', getAuthToken());
+  const reloadAttemptedRef = useRef(false);
+  const router = useRouter();
+
   const { data, loading, error, refetch } = useQuery(ME_QUERY, {
     skip: typeof window === 'undefined' || !getAuthToken(),
     errorPolicy: 'all',
     notifyOnNetworkStatusChange: true,
   });
 
-  // Si tenemos token pero me es null (token expirado/inválido)
-  if (!loading && getAuthToken() && data && data.me === null) {
-    console.log(
-      '🚨 Token presente pero usuario null - token expirado, limpiando cookies'
-    );
-    clearAuthTokens();
-    window.location.reload();
-  }
+  // Handle token expiry in useEffect to avoid rendering issues
+  useEffect(() => {
+    // Si tenemos token pero me es null (token expirado/inválido)
+    const hasToken = getAuthToken();
+    const userIsNull = data && data.me === null;
+    const shouldHandleExpiry =
+      !loading && hasToken && userIsNull && !reloadAttemptedRef.current;
+
+    if (shouldHandleExpiry) {
+      console.log(
+        '🚨 Token presente pero usuario null - token expirado, limpiando cookies'
+      );
+
+      // Mark that we've attempted a reload to prevent infinite loops
+      reloadAttemptedRef.current = true;
+
+      // Clear tokens
+      clearAuthTokens();
+
+      // Use Next.js router to refresh the page (better than window.location.reload)
+      router.refresh();
+    }
+  }, [data, loading, router]);
 
   return {
     user: data?.me as User | null,
