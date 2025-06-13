@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { Question } from "./Question";
-import { DuelHeader } from "./DuelHeader";
-import { DuelResults } from "./DuelResults";
+import { useState, useEffect } from 'react';
+import { Question } from './Question';
+import { DuelHeader } from './DuelHeader';
+import { DuelResults } from './DuelResults';
 // import { PowerUps } from './PowerUps';
 // import { StreakAlert } from './StreakAlert';
 
@@ -37,17 +37,20 @@ interface QuizScreenProps {
   wsConnection: WebSocket | null;
   playerId: string;
   opponentId: string;
+  onExit?: () => void;
 }
 
 export default function QuizScreen({
   wsConnection,
   playerId,
   opponentId,
+  onExit,
 }: QuizScreenProps) {
   const [currentQuestion, setCurrentQuestion] = useState<QuestionData | null>(
     null
   );
   const [isWaiting, setIsWaiting] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [playerProgress, setPlayerProgress] = useState(0);
   const [opponentProgress, setOpponentProgress] = useState(0);
   const [totalQuestions] = useState(5);
@@ -58,6 +61,10 @@ export default function QuizScreen({
     if (!wsConnection) return;
 
     console.log(`[${playerId}] Setting up WebSocket message handler`);
+    console.log(
+      `[${playerId}] WebSocket readyState: ${wsConnection.readyState}`
+    );
+    setIsInitializing(false); // Mark as initialized once we have a connection
 
     const handleMessage = (event: MessageEvent) => {
       try {
@@ -65,61 +72,98 @@ export default function QuizScreen({
         console.log(`[${playerId}] Message type:`, typeof event.data);
 
         // Handle plain text messages
-        if (typeof event.data === "string" && !event.data.startsWith("{")) {
+        if (typeof event.data === 'string' && !event.data.startsWith('{')) {
           console.log(`[${playerId}] Received text message:`, event.data);
-          if (
-            event.data === "¡Oponente conectado! El duelo comenzará pronto." ||
-            event.data === "¡Duelo listo!"
+
+          if (event.data.includes('Esperando al oponente')) {
+            setIsWaiting(true);
+            setError(null);
+          } else if (
+            event.data === '¡Oponente conectado! El duelo comenzará pronto.' ||
+            event.data === '¡Duelo listo!'
           ) {
             console.log(
               `[${playerId}] Both players connected, waiting for first question...`
             );
-            setIsWaiting(true); // Still waiting for the first question
+            setIsWaiting(true);
+            setError(null);
           }
           return;
         }
 
         // Handle JSON messages
         const data =
-          typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+          typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
         console.log(`[${playerId}] Parsed WebSocket message:`, data);
 
-        if (data.type === "question") {
+        if (data.type === 'question') {
           console.log(`[${playerId}] Received question, starting quiz!`);
           setIsWaiting(false);
           setCurrentQuestion(data.data);
           setError(null);
           // Update opponent progress when new question arrives
           setOpponentProgress((prev) => Math.min(prev + 1, totalQuestions) - 1);
-        } else if (data.type === "opponent_progress") {
-          console.log("Opponent progress update:", data.progress);
+        } else if (data.type === 'opponent_progress') {
+          console.log('Opponent progress update:', data.progress);
           setOpponentProgress(data.progress);
           // If opponent has finished all questions, show waiting message
           if (data.progress >= totalQuestions) {
-            setError("Tu oponente ha terminado. Esperando tus respuestas...");
+            setError('Tu oponente ha terminado. Esperando tus respuestas...');
           }
-        } else if (data.type === "duel_end") {
-          console.log("Duel end message received:", data);
+        } else if (data.type === 'duel_end') {
+          console.log('Duel end message received:', data);
           setDuelResults(data.data);
-          console.log("Duel results state set to:", data.data);
-        } else if (data.type === "error") {
+          console.log('Duel results state set to:', data.data);
+        } else if (data.type === 'error') {
           setError(data.message);
         } else {
-          console.log("Unknown message type:", data.type);
+          console.log('Unknown message type:', data.type);
         }
       } catch (err) {
-        console.error("Error parsing WebSocket message:", err);
-        console.error("Raw message that caused error:", event.data);
-        setError("Error al procesar el mensaje del servidor");
+        console.error('Error parsing WebSocket message:', err);
+        console.error('Raw message that caused error:', event.data);
+        setError('Error al procesar el mensaje del servidor');
       }
     };
 
-    wsConnection.addEventListener("message", handleMessage);
-    return () => {
-      console.log("Cleaning up WebSocket connection");
-      wsConnection.removeEventListener("message", handleMessage);
+    // Add more event listeners for debugging
+    const handleOpen = () => {
+      console.log(`[${playerId}] WebSocket connection opened`);
     };
-  }, [wsConnection, totalQuestions]);
+
+    const handleClose = (event: CloseEvent) => {
+      console.log(
+        `[${playerId}] WebSocket connection closed:`,
+        event.code,
+        event.reason
+      );
+      setError('Conexión perdida con el servidor');
+    };
+
+    const handleError = (error: Event) => {
+      console.error(`[${playerId}] WebSocket error:`, error);
+      setError('Error en la conexión WebSocket');
+    };
+
+    wsConnection.addEventListener('message', handleMessage);
+    wsConnection.addEventListener('open', handleOpen);
+    wsConnection.addEventListener('close', handleClose);
+    wsConnection.addEventListener('error', handleError);
+
+    // Send a ping message to test the connection
+    if (wsConnection.readyState === WebSocket.OPEN) {
+      console.log(`[${playerId}] Sending ping message to test connection`);
+      wsConnection.send(JSON.stringify({ type: 'ping', playerId }));
+    }
+
+    return () => {
+      console.log(`[${playerId}] Cleaning up WebSocket connection`);
+      wsConnection.removeEventListener('message', handleMessage);
+      wsConnection.removeEventListener('open', handleOpen);
+      wsConnection.removeEventListener('close', handleClose);
+      wsConnection.removeEventListener('error', handleError);
+    };
+  }, [wsConnection, playerId]);
 
   const handleAnswerSelect = (selectedOption: string) => {
     if (!wsConnection || !currentQuestion) return;
@@ -127,7 +171,7 @@ export default function QuizScreen({
     try {
       wsConnection.send(
         JSON.stringify({
-          type: "answer",
+          type: 'answer',
           questionId: currentQuestion.id,
           answer: selectedOption,
         })
@@ -136,35 +180,53 @@ export default function QuizScreen({
       setPlayerProgress((prev) => prev + 1);
       setError(null);
     } catch (err) {
-      console.error("Error sending answer:", err);
-      setError("Error al enviar la respuesta");
+      console.error('Error sending answer:', err);
+      setError('Error al enviar la respuesta');
     }
   };
 
   if (duelResults) {
-    console.log("Rendering duel results:", duelResults);
+    console.log('Rendering duel results:', duelResults);
     return (
-      <div className="min-h-screen">
+      <div className='min-h-screen'>
         <DuelResults
           results={duelResults}
           playerId={playerId}
           opponentId={opponentId}
+          onExit={onExit}
         />
+      </div>
+    );
+  }
+
+  if (isInitializing) {
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4'></div>
+          <h2 className='text-xl font-semibold text-gray-700'>
+            Inicializando duelo...
+          </h2>
+          <p className='text-gray-500 mt-2'>
+            Estableciendo conexión con el servidor
+          </p>
+        </div>
       </div>
     );
   }
 
   if (isWaiting) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-700">
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4'></div>
+          <h2 className='text-xl font-semibold text-gray-700'>
             Esperando al oponente...
           </h2>
-          <p className="text-gray-500 mt-2">
+          <p className='text-gray-500 mt-2'>
             El duelo comenzará cuando ambos jugadores estén listos
           </p>
+          {error && <p className='text-orange-500 mt-2'>{error}</p>}
         </div>
       </div>
     );
@@ -172,29 +234,29 @@ export default function QuizScreen({
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-700">
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-center'>
+          <h2 className='text-xl font-semibold text-gray-700'>
             Esperando la siguiente pregunta...
           </h2>
-          {error && <p className="text-red-500 mt-2">{error}</p>}
+          {error && <p className='text-red-500 mt-2'>{error}</p>}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="mx-auto px-4 py-6 flex-grow container">
-        <div className="mx-auto max-w-3xl">
+    <div className='min-h-screen flex flex-col'>
+      <main className='mx-auto px-4 py-6 flex-grow container'>
+        <div className='mx-auto max-w-3xl'>
           {error && (
-            <div className="mb-4 p-4 bg-red-100 rounded-lg">
-              <p className="text-red-700">{error}</p>
+            <div className='mb-4 p-4 bg-red-100 rounded-lg'>
+              <p className='text-red-700'>{error}</p>
             </div>
           )}
 
           <DuelHeader
-            title="Duelo de Preguntas"
+            title='Duelo de Preguntas'
             opponent={opponentId}
             playerProgress={playerProgress}
             opponentProgress={opponentProgress}

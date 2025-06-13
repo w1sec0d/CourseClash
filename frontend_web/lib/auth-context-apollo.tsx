@@ -335,7 +335,8 @@ export function AuthProviderApollo({ children }: { children: ReactNode }) {
     if (token) {
       // Si hay token, intentar obtener el usuario
       fetchCurrentUser()
-        .then((userData) => {
+        .then((result) => {
+          const userData = result?.data?.me;
           setIsAuthenticated(!!userData);
           setIsInitialized(true);
         })
@@ -351,8 +352,10 @@ export function AuthProviderApollo({ children }: { children: ReactNode }) {
 
   // Actualizar estado de autenticación cuando cambia el usuario
   useEffect(() => {
-    setIsAuthenticated(!!user);
-  }, [user]);
+    if (isInitialized) {
+      setIsAuthenticated(!!user);
+    }
+  }, [user, isInitialized]);
 
   // Token refresh (opcional)
   useEffect(() => {
