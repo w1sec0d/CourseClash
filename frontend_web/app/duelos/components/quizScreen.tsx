@@ -64,6 +64,8 @@ export default function QuizScreen({
     console.log(
       `[${playerId}] WebSocket readyState: ${wsConnection.readyState}`
     );
+    console.log(`[${playerId}] WebSocket URL: ${wsConnection.url}`);
+    console.log(`[${playerId}] useEffect execution time: ${Date.now()}`);
     setIsInitializing(false); // Mark as initialized once we have a connection
 
     const handleMessage = (event: MessageEvent) => {
@@ -150,18 +152,29 @@ export default function QuizScreen({
     wsConnection.addEventListener("close", handleClose);
     wsConnection.addEventListener("error", handleError);
 
-    // // Send a ping message to test the connection
-    // if (wsConnection.readyState === WebSocket.OPEN) {
-    //   console.log(`[${playerId}] Sending ping message to test connection`);
-    //   wsConnection.send(JSON.stringify({ type: 'ping', playerId }));
-    // }
+    // Delay crítico para sincronización - NO REMOVER
+    // Aparentemente este timing es necesario para la estabilidad
+    const stabilizationTimer = setTimeout(() => {
+      console.log(
+        `[${playerId}] Sincronización completada - conexión estabilizada`
+      );
 
+      // Ping original (comentado por ahora)
+      // if (wsConnection.readyState === WebSocket.OPEN) {
+      //   wsConnection.send(JSON.stringify({ type: 'ping', playerId }));
+      // }
+    }, 500);
+
+    // Limpiar timer en cleanup
     return () => {
       console.log(`[${playerId}] Cleaning up WebSocket connection`);
-      wsConnection.removeEventListener("message", handleMessage);
-      wsConnection.removeEventListener("open", handleOpen);
-      wsConnection.removeEventListener("close", handleClose);
-      wsConnection.removeEventListener("error", handleError);
+      clearTimeout(stabilizationTimer);
+      if (wsConnection) {
+        wsConnection.removeEventListener("message", handleMessage);
+        wsConnection.removeEventListener("open", handleOpen);
+        wsConnection.removeEventListener("close", handleClose);
+        wsConnection.removeEventListener("error", handleError);
+      }
     };
   }, [wsConnection, playerId]);
 

@@ -104,8 +104,10 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 	duelRequestExists := false
 	_, duelRequestExists = duelsync.DuelRequests[duelID]
 
-	log.Printf("Jugador %s conectándose al duelo %s. Es retador: %t, Es oponente: %t, Duelo existe: %t", 
+	log.Printf("🔗 [CONEXION] Jugador %s conectándose al duelo %s. Es retador: %t, Es oponente: %t, Duelo existe: %t", 
 		playerID, duelID, isRequester, isOpponent, duelRequestExists)
+	log.Printf("🔗 [ESTADO] Player1 existe: %t, Player2 existe: %t", 
+		playersConnected.Player1 != nil, playersConnected.Player2 != nil)
 
 	isPlayer1 := false
 
@@ -181,9 +183,12 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		// Verificar que el retador ya esté conectado
 		if playersConnected.Player1 == nil {
 			duelsync.Mu.Unlock()
+			log.Printf("❌ [ERROR] Oponente %s intentó conectar pero retador no está conectado para duelo %s", playerID, duelID)
 			conn.WriteMessage(websocket.TextMessage, []byte("El retador aún no se ha conectado. Espera un momento."))
 			return
 		}
+		
+		log.Printf("✅ [OK] Oponente %s conectando - retador %s ya está conectado", playerID, playersConnected.Player1.ID)
 		
 		// Asignar como Player2
 		playersConnected.Player2 = player
