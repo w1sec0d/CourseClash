@@ -128,6 +128,20 @@ class GradeError:
     message: str
     code: str
 
+#Result para comentarios
+@strawberry.type
+class CommentSuccess: 
+    id: int
+    activity_id: int
+    content: str
+    created_at: datetime
+
+@strawberry.type
+class CommentError:
+    message: str
+    code: str
+
+
 #Unio para la respuesta de actividades
 ActivitiesResult = strawberry.union("ActivitiesResult", (ActivitiesSuccess, ActivitiesError))
 
@@ -140,7 +154,11 @@ SubmissionResult = strawberry.union("SubmissionResult", (SubmissionsSuccess, Sub
 #Union para la respuesta de la creación de la submision
 SubmissionsResult = strawberry.union("SubmissionsResult", (SubmissionsSuccessList, SubmissionsErrorList))
 
+#Union para la respuesta de la calificación
 GradeResult = strawberry.union("GradeResult", (GradeSuccess, GradeError))
+
+#Union para la respuesta de los comentarios
+CommentResult = strawberry.union("CommentResult", (CommentSuccess, CommentError))
 
 @strawberry.type
 class Query:
@@ -768,6 +786,98 @@ class Mutation:
         except Exception as e:
             print("❌ Problemas en el servidor:", str(e))
             return GradeError(message="Error en el servidor", code="501")
+    
+    @strawberry.mutation
+    async def createComment(
+        self,
+        info,
+        activity_id: str,
+        content: str
+    ) -> CommentResult:
+        """
+        Crea un comentario en una actividad.
+
+        Args:
+            activity_id (str): Identificador de la actividad
+            content (str): Contenido del comentario
+
+        Returns:
+            Activity Resultado de la actividad actualizada
+
+        Adicional: Se debe enviar el token de autenticación en el header
+        """
+
+        #Obtenemos el token enviado en el header
+        request = info.context["request"]
+
+        # Intentar obtener el token desde el header Authorization
+        auth_header = request.headers.get("authorization")
+        token = None
+
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+        else:
+            # Si no hay header Authorization, intentar obtener desde cookies
+            token = request.cookies.get("auth_token")
+
+        if not token:
+            return CommentError(message = "Token no proporcionado", code = "401")
+        
+        #Verifica el token
+        try: 
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{AUTH_SERVICE_URL}/auth/me",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+
+                if response.status_code != 200:
+                    return CommentError(message = "Token invalido o expirado", code = "401")
+            user_data = response.json()
+        except Exception as e: 
+            print("❌ Error in la verificación del token :", str(e))
+            return CommentError(message = "Error al verificar el token ", code = "401")
+        
+        #Creación del comentario en la actividad
+        try: 
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                comment_payload = {
+                    "content": content
+                }
+                comment_response = await client.post(
+                    f"{ACTIVITIES_SERVICE_URL}/api/activities/{activity_id}/comments",
+                    json = comment_payload,
+                    headers={"User_id": str(user_data["id"])}
+                )
+
+                if comment_response.status_code != 201:
+                    error_data = comment_response.json()
+                    error_detail = "Credenciales inválidas"
+                    error_code = "AUTHENTICATION_ERROR"
+
+                    if "detail" in error_data:
+                        if isinstance(error_data["detail"], dict):
+                            error_detail = error_data["detail"].get(
+                                "message", error_detail
+                            )
+                            error_code = error_data["detail"].get("code", error_code)
+                        else:
+                            error_detail = error_data["detail"]
+                    return CommentError(message=error_detail, code=error_code)
+                
+                comment_data = comment_response.json()
+                comment = CommentSuccess(
+                    id=comment_data["id"],
+                    activity_id=comment_data["activity_id"],
+                    content=comment_data["content"],
+                    created_at=datetime.fromisoformat(comment_data["created_at"].replace("Z", "+00:00"))
+                        if comment_data.get("created_at") else None
+                )
+
+                return comment
+        except httpx.HTTPStatusError as e:
+            print("❌ Error al crear el comentario:", str(e))
+            return CommentError(message="Error al registrar el comentario", code="500")
 
         
 
