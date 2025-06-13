@@ -42,6 +42,8 @@ func NotificationHandler(w http.ResponseWriter, r *http.Request, userID string) 
 	if existingConn, exists := duelsync.NotificationConnections[userID]; exists && existingConn != nil {
 		duelsync.NotificationMu.Unlock()
 		log.Printf("Cerrando conexión de notificaciones anterior para el usuario %s", userID)
+		// Cerrar la conexión anterior con código de cierre normal
+		existingConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Nueva conexión establecida"))
 		existingConn.Close()
 		
 		// Volvemos a adquirir el lock después de cerrar la conexión anterior

@@ -5,7 +5,7 @@ services:
     build:
       context: ./auth_user_service
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - DATABASE_URL=mysql+pymysql://root:password@cc_authcourses_db:3306/authcourses_db
       - SECRET=Arquisoft
@@ -60,6 +60,7 @@ services:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
 
+
   # Servicio de Duelos
   cc_duels_ms:
     build:
@@ -67,7 +68,7 @@ services:
       dockerfile: Dockerfile
     container_name: cc_duels_ms
     ports:
-      - "8002:8002"
+      - '8002:8002'
     restart: unless-stopped
     environment:
       - GIN_MODE=debug
@@ -79,12 +80,12 @@ services:
     healthcheck:
       test:
         [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:8002/swagger/index.html",
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:8002/swagger/index.html',
         ]
       interval: 30s
       timeout: 10s
@@ -97,7 +98,7 @@ services:
     build:
       context: ./api_gateway
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       - AUTH_SERVICE_URL=http://cc_auth_ms:8000
       - COURSE_SERVICE_URL=http://cc_courses_ms:8001
@@ -115,13 +116,13 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 
   # Frontend
-  cc_fe:
-    container_name: cc_fe
+  cc_fe_web:
+    container_name: cc_fe_web
     build:
-      context: ./frontend
+      context: ./frontend_web
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - API_URL=http://cc_ag:8080
@@ -133,12 +134,12 @@ services:
     healthcheck:
       test:
         [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://0.0.0.0:3000",
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://0.0.0.0:3000',
         ]
       interval: 30s
       timeout: 10s
@@ -150,7 +151,7 @@ services:
     container_name: cc_authcourses_db
     image: mysql:8.0
     ports:
-      - "3306:3306"
+      - '3306:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=authcourses_db
@@ -177,6 +178,7 @@ services:
   #     - courseclash-network
   #   command: --default-authentication-plugin=mysql_native_password
 
+
   cc_activities_db:
     container_name: cc_activities_db
     image: mysql:8.0
@@ -197,12 +199,13 @@ services:
       timeout: 5s
       retries: 5
 
+
   # Base de datos Mongo (para Duelos)
   cc_duels_db:
     image: mongo:latest
     container_name: cc_duels_db
     ports:
-      - "27018:27017"
+      - '27018:27017'
     volumes:
       - mongo_data:/data/db
       - ./mongo_service/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro

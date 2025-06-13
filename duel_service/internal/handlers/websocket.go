@@ -93,25 +93,47 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		duelsync.DuelSyncChans[duelID] = syncChannel
 	}
 
+	// Determinar si es el retador o el aceptador basándose en el duelID
+	// El formato del duelID es "requesterID_vs_opponentID"
+	requesterID := parts[0]
+	opponentID := parts[1]
+	isRequester := playerID == requesterID
+	isOpponent := playerID == opponentID
+	
+	// Verificar que el duelo existe antes de asignar jugadores
+	duelRequestExists := false
+	_, duelRequestExists = duelsync.DuelRequests[duelID]
+
+	log.Printf("Jugador %s conectándose al duelo %s. Es retador: %t, Es oponente: %t, Duelo existe: %t", 
+		playerID, duelID, isRequester, isOpponent, duelRequestExists)
+
 	isPlayer1 := false
-	isFirstConnection := false
-	// En caso de que el player 1 no este conectado la primera conexión webSocket será la de el.
-	if playersConnected.Player1 == nil {
+
+	// CASO 1: Es el RETADOR (quien solicita el duelo)
+	if isRequester {
+		// El retador se conecta después de solicitar el duelo
+		// Debe ser asignado como Player1 y esperar la aceptación
 		playersConnected.Player1 = player
 		isPlayer1 = true
-		isFirstConnection = true
-	}
-	duelsync.Mu.Unlock()
+		duelsync.Mu.Unlock()
+		
+		if !duelRequestExists {
+			conn.WriteMessage(websocket.TextMessage, []byte("El duelo no existe o ya expiró."))
+			return
+		}
 
-	if isPlayer1 && isFirstConnection {
-		// Solo el retador espera la aceptación del duelo
+		log.Printf("Retador %s esperando aceptación del duelo %s", playerID, duelID)
+		
+		// Esperar la aceptación del duelo
 		duelsync.Mu.Lock()
 		acceptChan, exists := duelsync.DuelRequests[duelID]
 		duelsync.Mu.Unlock()
+		
 		if !exists {
 			conn.WriteMessage(websocket.TextMessage, []byte("El duelo no existe o ya expiró."))
 			return
 		}
+		
 		select {
 		case accepted := <-acceptChan:
 			if !accepted {
@@ -132,51 +154,64 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 			duelsync.Mu.Unlock()
 			return
 		}
-		// Si fue aceptado, ahora sí espera al oponente
+		
+		// Duelo aceptado, esperando al oponente
 		conn.WriteMessage(websocket.TextMessage, []byte("Duelo aceptado. Esperando al oponente..."))
-		log.Printf("Jugador %s (P1) conectado al duelo %s. Esperando al oponente...", playerID, duelID)
+		log.Printf("Retador %s: duelo %s aceptado. Esperando al oponente...", playerID, duelID)
+		
+		// Esperar a que el oponente se conecte
 		<-syncChannel
-		log.Printf("Jugador %s (P1) notificado por P2 para el duelo %s.", playerID, duelID)
-		// Ahora la conexión ya está asignada a un Player, usamos el método seguro
+		
+		log.Printf("Retador %s: oponente conectado para el duelo %s", playerID, duelID)
 		if err := player.SafeWriteMessage(websocket.TextMessage, []byte("¡Oponente conectado! El duelo comenzará pronto.")); err != nil {
-			log.Printf("Error al enviar mensaje 'Oponente conectado' a P1 %s: %v", playerID, err)
-			// No retornar necesariamente, P1 aún debe esperar en player.Done
+			log.Printf("Error al enviar mensaje 'Oponente conectado' al retador %s: %v", playerID, err)
 		}
 
-	// Lógica para cuando el jugador se conecta
-	} else if playersConnected.Player2 == nil {
-		// El oponente solo puede entrar si el duelo ya fue aceptado
-		duelsync.Mu.Lock()
-		_, exists := duelsync.DuelRequests[duelID]
-		duelsync.Mu.Unlock()
-		if exists {
-			conn.WriteMessage(websocket.TextMessage, []byte("No puedes unirte hasta que el duelo sea aceptado."))
+	// CASO 2: Es el OPONENTE (quien acepta el duelo)  
+	} else if isOpponent {
+		// El oponente se conecta después de aceptar el duelo
+		// El duelo ya debe haber sido aceptado, así que no debe existir en DuelRequests
+		
+		if duelRequestExists {
+			duelsync.Mu.Unlock()
+			conn.WriteMessage(websocket.TextMessage, []byte("El duelo aún no ha sido aceptado. Acepta primero el duelo."))
 			return
 		}
+		
+		// Verificar que el retador ya esté conectado
+		if playersConnected.Player1 == nil {
+			duelsync.Mu.Unlock()
+			conn.WriteMessage(websocket.TextMessage, []byte("El retador aún no se ha conectado. Espera un momento."))
+			return
+		}
+		
+		// Asignar como Player2
 		playersConnected.Player2 = player
-		// Capturar P1 y P2 para startDuel. Es seguro leer playersConnected.Player1 aquí porque está protegido por el mutex.
 		p1ToUse := playersConnected.Player1
 		p2ToUse := playersConnected.Player2
-		log.Printf("Jugador %s (P2) conectado al duelo %s. Notificando a P1 (%s) e iniciando duelo.", playerID, duelID, p1ToUse.ID)
-		// Ahora la conexión ya está asignada a un Player, usamos el método seguro
-		if err := player.SafeWriteMessage(websocket.TextMessage, []byte("¡Duelo listo!")); err != nil {
-			log.Printf("Error al enviar mensaje 'Duelo listo' a P2 %s: %v", playerID, err)
-			// No retornar, aún necesitamos notificar a P1 e iniciar el duelo.
-		}
-
+		duelsync.Mu.Unlock()
 		
-		// Notifica al Jugador 1 que P2 está listo y el duelo ha comenzado/está comenzando
+		log.Printf("Oponente %s conectado al duelo %s. Notificando al retador %s e iniciando duelo.", 
+			playerID, duelID, p1ToUse.ID)
+		
+		if err := player.SafeWriteMessage(websocket.TextMessage, []byte("¡Duelo listo!")); err != nil {
+			log.Printf("Error al enviar mensaje 'Duelo listo' al oponente %s: %v", playerID, err)
+		}
+		
+		// Notificar al retador que el oponente se conectó
 		syncChannel <- struct{}{}
 		
-		// P2 inicia el duelo
-		log.Printf("P2 (%s) iniciando duelo con P1 (%s) para el duelID %s.", p2ToUse.ID, p1ToUse.ID, duelID)
+		// Pequeño delay para asegurar que el retador procese el mensaje de conexión
+		time.Sleep(1 * time.Second)
+		
+		// Iniciar el duelo
+		log.Printf("Iniciando duelo %s: Retador %s vs Oponente %s", duelID, p1ToUse.ID, p2ToUse.ID)
 		
 		// Obtener preguntas aleatorias de la base de datos para el duelo
 		questionService := services.NewQuestionService()
-		questions, err := questionService.GetQuestionsForDuel(123) // Usar el curso 123 como ejemplo
+		questions, err := questionService.GetQuestionsForDuel(123)
 		if err != nil {
 			log.Printf("Error al obtener preguntas para el duelo %s: %v. Usando preguntas de respaldo.", duelID, err)
-			// Usar preguntas de respaldo en caso de error
 			questions = []models.Question{
 				{ID: "1", Text: "¿Cuál es la capital de Francia?", Answer: "París", Options: []string{"Madrid", "París", "Londres", "Roma"}, Duration: 30},
 				{ID: "2", Text: "¿Cuánto es 2+2?", Answer: "4", Options: []string{"3", "4", "5", "6"}, Duration: 30},
@@ -189,11 +224,12 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		log.Printf("Duelo %s: Obtenidas %d preguntas para el duelo", duelID, len(questions))
 		duelsync.StartDuel(p1ToUse, p2ToUse, duelID, questions, HandleDuel)
 		
-	// En caso de que el duelo este lleno
+	// CASO 3: Jugador no autorizado 
 	} else {
-		log.Printf("Duelo %s ya tiene dos jugadores. Jugador %s (%s) no puede unirse.", duelID, player.ID, playerID)
-		conn.WriteMessage(websocket.TextMessage, []byte("Ya hay dos jugadores conectados."))
-		return // Salir temprano, no esperar en player.Done
+		duelsync.Mu.Unlock()
+		log.Printf("Duelo %s: jugador %s no autorizado.", duelID, playerID)
+		conn.WriteMessage(websocket.TextMessage, []byte("No puedes unirte a este duelo."))
+		return
 	}
 
 	// Ambos jugadores (P1 después de ser notificado, P2 después de iniciar el duelo y notificar)

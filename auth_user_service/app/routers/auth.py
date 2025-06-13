@@ -226,6 +226,15 @@ def login(form_data: Login, db: Session = Depends(get_db)):
         else:
             user_data = auth_service.get_user_by_email(form_data.username)
 
+        if user_data.get("error"):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={
+                    "message": user_data.get("error"),
+                    "code": AuthErrorCode.SERVER_ERROR,
+                },
+            )
+
         if not user_data.get("success", False):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

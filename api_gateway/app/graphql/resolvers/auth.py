@@ -132,8 +132,6 @@ class Query:
                     headers={"Authorization": f"Bearer {token}"},
                 )
 
-                print("🔑 Response!!!:", response)
-
                 if response.status_code != 200:
                     return None
 
@@ -153,10 +151,8 @@ class Query:
                     "role": (
                         "ADMIN" if user_data.get("is_superuser") else "STUDENT"
                     ),  # Transform is_superuser to role
-                    "createdAt": user_data.get(
-                        "created_at"
-                    ),  # Transform created_at to createdAt
-                    "updatedAt": None,  # Set to None since backend doesn't provide it
+                    "createdAt": user_data.get("created_at", ""),  # Asegurar que existe
+                    "updatedAt": user_data.get("updated_at"),
                 }
 
                 print("👤 Transformed user data:", graphql_user_data)  # Debug log
@@ -222,8 +218,8 @@ class Query:
                     "fullName": user_data.get("full_name"),
                     "avatar": user_data.get("avatar_url"),
                     "role": "ADMIN" if user_data.get("is_superuser") else "STUDENT",
-                    "createdAt": user_data.get("created_at"),
-                    "updatedAt": None,
+                    "createdAt": user_data.get("created_at", ""),  # Asegurar que existe
+                    "updatedAt": user_data.get("updated_at"),
                 }
 
                 return User(**graphql_user_data)
@@ -261,7 +257,7 @@ class Mutation:
                     json={"username": email, "password": password},
                 )
 
-                if response.status_code != 200:
+                if response.status_code == 401:
                     error_data = response.json()
                     error_detail = "Credenciales inválidas"
                     error_code = "AUTHENTICATION_ERROR"
@@ -275,6 +271,12 @@ class Mutation:
                         else:
                             error_detail = error_data["detail"]
 
+                    return AuthError(message=error_detail, code=error_code)
+
+                if response.status_code == 500:
+                    error_data = response.json()
+                    error_detail = "Error de conexión con el servidor, intenta nuevamente más tarde"
+                    error_code = "SERVER_ERROR"
                     return AuthError(message=error_detail, code=error_code)
 
                 auth_data = response.json()
@@ -292,8 +294,10 @@ class Mutation:
                     "avatar": user_data.get(
                         "avatar_url"
                     ),  # Convert avatar_url to avatar
+
                     "role": "TEACHER" if user_data.get("is_superuser",0) == 1 else "STUDENT",
                     "createdAt": user_data.get("created_at"),
+
                     "updatedAt": user_data.get("updated_at"),
                 }
 
