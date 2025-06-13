@@ -7,7 +7,8 @@ class CommentBase(BaseModel):
 
 class CommentCreate(CommentBase):
     """Schema for creating a new comment"""
-    activity_id: int = Field(..., gt=0, description="ID de la actividad")
+    #activity_id: int = Field(..., gt=0, description="ID de la actividad")
+    pass
 
 class CommentResponse(CommentBase):
     """Schema for comment response"""

@@ -6,8 +6,10 @@ import logging
 from app.database import get_db
 from app.models import Activity
 from app.schemas.activity import ActivityCreate, ActivityUpdate, ActivityResponse, ActivityList, ActivitySchema
+from app.schemas.comment import CommentCreate, CommentResponse
 from app.middleware.auth import get_current_user, require_teacher_or_admin
 from app.services.activity_service import ActivityService
+from app.services.comment_service import CommentService
 
 logger = logging.getLogger(__name__)
 
@@ -184,3 +186,32 @@ async def delete_activity(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor"
         ) 
+
+#YA
+#Comentar en una actividad
+@router.post("/{activity_id}/comments", response_model=CommentResponse, status_code=status.HTTP_201_CREATED)
+async def comment_on_activity(
+    activity_id: int,
+    comment_data: CommentCreate,
+    user_id: int = Header(..., alias="User_id"),
+    db: Session = Depends(get_db)
+):
+    """
+    Comentar en una actividad
+    """
+    try:
+        service = CommentService(db)
+        comment = service.create_comment(comment_data, user_id=user_id, activity_id=activity_id)
+
+        logger.info(f"Comentario creado en actividad {activity_id} por usuario {user_id}")
+
+        return CommentResponse.from_orm(comment)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creando comentario en actividad {activity_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
