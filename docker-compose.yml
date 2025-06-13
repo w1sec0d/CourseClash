@@ -23,23 +23,23 @@ services:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # Servicio de Cursos
-  cc_courses_ms:
-    container_name: cc_courses_ms
-    build:
-      context: ./course_service
-    ports:
-      - "8001:8001"
-    environment:
-      - DATABASE_URL=mysql+pymysql://root:password@cc_courses_db:3306/courseClash
-      - JWT_SECRET=your_jwt_secret_key
-    volumes:
-      - ./course_service:/app
-    depends_on:
-      - cc_courses_db
-    networks:
-      - courseclash-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+  # # Servicio de Cursos
+  # cc_courses_ms:
+  #   container_name: cc_courses_ms
+  #   build:
+  #     context: ./course_service
+  #   ports:
+  #     - "8001:8001"
+  #   environment:
+  #     - DATABASE_URL=mysql+pymysql://root:password@cc_courses_db:3306/courseClash
+  #     - JWT_SECRET=your_jwt_secret_key
+  #   volumes:
+  #     - ./course_service:/app
+  #   depends_on:
+  #     - cc_courses_db
+  #   networks:
+  #     - courseclash-network
+  #   command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
  # Servicio de actividades
   cc_activities_ms:
@@ -162,20 +162,20 @@ services:
     command: --default-authentication-plugin=mysql_native_password
 
   # Base de datos MySQL (para courses service)
-  cc_courses_db:
-    container_name: cc_courses_db
-    image: mysql:8.0
-    ports:
-      - "3307:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=courseClash
-    volumes:
-      - courses_mysql_data:/var/lib/mysql
-      - ./mysql_courses:/docker-entrypoint-initdb.d
-    networks:
-      - courseclash-network
-    command: --default-authentication-plugin=mysql_native_password
+  # cc_courses_db:
+  #   container_name: cc_courses_db
+  #   image: mysql:8.0
+  #   ports:
+  #     - "3307:3306"
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=password
+  #     - MYSQL_DATABASE=courseClash
+  #   volumes:
+  #     - courses_mysql_data:/var/lib/mysql
+  #     - ./mysql_courses:/docker-entrypoint-initdb.d
+  #   networks:
+  #     - courseclash-network
+  #   command: --default-authentication-plugin=mysql_native_password
 
   cc_activities_db:
     container_name: cc_activities_db

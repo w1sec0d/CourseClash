@@ -34,6 +34,15 @@ class Comment:
     content: str
     created_at: datetime
 
+# Esquema para enviar los detalles de la calificación de una submisión
+@strawberry.type
+class gradeSubmission:
+    id: int
+    graded_by: int
+    graded_at: Optional[datetime] = None
+    score: float
+    feedback: Optional[str] = None
+
 #Añade esquema para de volver al front-end
 @strawberry.type
 class Activity:
@@ -59,7 +68,7 @@ class Submissions:
     additional_files: Optional[List[str]] = None
     is_graded: bool
     can_edit: bool
-    latest_grade: Optional[float] = None 
+    latest_grade: Optional[gradeSubmission] = None 
 
 @strawberry.type
 class Grade:
@@ -275,6 +284,7 @@ class Query:
                             error_detail = error_data["detail"]
                     return SubmissionsErrorList(message=str(error_detail), code=error_code)
 
+
                 data = response.json()
                 submissions_data = data.get("submissions", [])
                 submissions_list = []
@@ -286,6 +296,30 @@ class Query:
 
                     submission["submitted_at"] = submitted_at
                     submission.pop("user_id", None)  # Elimina el campo user_id si existe
+
+                                    #Mapeo de los comentarios a una instancia de Comment
+                    comments = [
+                        Comment(
+                            id=comment["id"],
+                            user_id=comment["user_id"],
+                            content=comment["content"],
+                            created_at=datetime.fromisoformat(comment["created_at"])
+                        )
+                        for comment in data.get("comments",[])
+                    ]
+
+                    #Mapeo de la calificación si existe
+                    latest_grade = submission.get("latest_grade")
+                    if latest_grade:
+                        latest_grade = gradeSubmission(
+                            id=latest_grade["id"],
+                            graded_by=latest_grade["graded_by"],
+                            graded_at=datetime.fromisoformat(latest_grade["graded_at"].replace("Z", "+00:00"))
+                                if latest_grade.get("graded_at") else None,
+                            score=latest_grade["score"],
+                            feedback=latest_grade.get("feedback")
+                        )
+                        submission["latest_grade"] = latest_grade
 
                     submission_instance = Submissions(**submission)
                     submissions_list.append(submission_instance)

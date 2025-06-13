@@ -64,7 +64,7 @@ class SubmissionService:
     def get_submissions(
         self,
         activity_id: int,
-        user_id: int,
+        user_id: int, #Id del usuario logueado
         user_role: str = "student"
     ) -> SubmissionList:
         """
