@@ -38,18 +38,29 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 	// Notificamos a los jugadores que el duelo va a comenzar
 	// ...
 
-	for _, question := range questions {
+	totalQuestions := len(questions)
+	log.Printf("Duelo %s: Iniciando con %d preguntas", duelID, totalQuestions)
+
+	for i, question := range questions {
+		log.Printf("Duelo %s: Enviando pregunta %d/%d (ID: %s) a ambos jugadores", duelID, i+1, totalQuestions, question.ID)
 		broadcastQuestion(player1, player2, question)
 		startTime := time.Now()
 
 		// Envio sincronizado de respuestas.
+		log.Printf("Duelo %s: Esperando respuestas para pregunta %d/%d", duelID, i+1, totalQuestions)
 		answer1 := receiveAnswer(player1)
+		log.Printf("Duelo %s: Respuesta recibida de jugador %s para pregunta %d/%d: %s", duelID, player1.ID, i+1, totalQuestions, answer1)
 		answer2 := receiveAnswer(player2)
+		log.Printf("Duelo %s: Respuesta recibida de jugador %s para pregunta %d/%d: %s", duelID, player2.ID, i+1, totalQuestions, answer2)
 
 		calculateScore(player1, question, answer1, startTime)
 		calculateScore(player2, question, answer2, startTime)
+		
+		log.Printf("Duelo %s: Pregunta %d/%d completada. Puntuaciones actuales - %s: %d, %s: %d", 
+			duelID, i+1, totalQuestions, player1.ID, player1.Score, player2.ID, player2.Score)
 	}
 
+	log.Printf("Duelo %s: Todas las preguntas completadas. Enviando resultados finales", duelID)
 	// Enviar resultados finales
 	endDuel(player1, player2, duelID)
 	log.Printf("Duelo finalizado entre %s y %s. Puntuaciones finales: P1: %d, P2: %d", player1.ID, player2.ID, player1.Score, player2.Score)
@@ -75,9 +86,49 @@ func broadcastQuestion(player1, player2 *models.Player, question models.Question
 // * Es necesario que se envie desde el cliente para procesarlo.
 
 func receiveAnswer(player *models.Player) string {
-	var response map[string]string
-	player.Conn.ReadJSON(&response)
-	return response["answer"]
+	for {
+		var response map[string]interface{}
+		err := player.Conn.ReadJSON(&response)
+		if err != nil {
+			log.Printf("Error al leer respuesta del jugador %s: %v", player.ID, err)
+			return ""
+		}
+		
+		// Verificar el tipo de mensaje
+		msgType, hasType := response["type"].(string)
+		if !hasType {
+			// Si no tiene tipo, verificar si tiene answer directamente (retrocompatibilidad)
+			if answer, ok := response["answer"].(string); ok {
+				return answer
+			}
+			continue
+		}
+		
+		// Procesar según el tipo de mensaje
+		switch msgType {
+		case "answer":
+			// Procesar respuesta
+			if answer, ok := response["answer"].(string); ok {
+				return answer
+			}
+			log.Printf("Mensaje de tipo 'answer' recibido del jugador %s pero sin campo 'answer'", player.ID)
+			return ""
+		case "ping", "heartbeat":
+			// Responder con pong si es necesario
+			pongMsg := map[string]interface{}{
+				"type": "pong",
+			}
+			if err := player.SafeWriteJSON(pongMsg); err != nil {
+				log.Printf("Error al enviar pong al jugador %s: %v", player.ID, err)
+			}
+			// Continuar esperando la respuesta real
+			continue
+		default:
+			// Ignorar otros tipos de mensajes
+			log.Printf("Tipo de mensaje no reconocido '%s' del jugador %s, ignorando", msgType, player.ID)
+			continue
+		}
+	}
 }
 
 // Esta función es la encargada de calcular la puntuación de cada estudiante de acuerdo a si su respuesta fue correcta
