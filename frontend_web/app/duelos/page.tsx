@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react';
 import { TrophyIcon } from '@heroicons/react/24/outline';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
-import ProtectedRoute from '@/components/ProtectedRoute';
 import QuizScreen from './components/quizScreen';
 
 // Hooks
@@ -20,7 +19,7 @@ import DuelInfo from './components/DuelInfo';
 // Utils
 import { getUserId, validateUserSession } from './utils/userUtils';
 
-function DuelosContent() {
+export default function Duelos() {
   const { user } = useAuthApollo();
   const [showQuiz, setShowQuiz] = useState(false);
   const [preparingDuel, setPreparingDuel] = useState(false);
@@ -286,13 +285,5 @@ function DuelosContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function Duelos() {
-  return (
-    <ProtectedRoute>
-      <DuelosContent />
-    </ProtectedRoute>
   );
 }

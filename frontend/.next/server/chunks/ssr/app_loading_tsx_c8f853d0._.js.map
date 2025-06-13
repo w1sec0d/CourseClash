@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///home/juan/C%C3%B3digo/CourseClash/CourseClash/frontend/app/loading.tsx"],"sourcesContent":["import LoadingSpinner from '../components/LoadingSpinner';\n\nexport default function Loading() {\n  return <LoadingSpinner />;\n}\n"],"names":[],"mappings":";;;;AAAA;;;AAEe,SAAS;IACtB,qBAAO,8OAAC,6HAAA,CAAA,UAAc;;;;;AACxB","debugId":null}}]
-}

@@ -169,11 +169,22 @@ export function useLoginApollo() {
 
 // Hook para obtener usuario actual
 export function useCurrentUserApollo() {
+  console.log('🔑 useCurrentUserApollo');
+  console.log('🔑 getAuthToken():', getAuthToken());
   const { data, loading, error, refetch } = useQuery(ME_QUERY, {
     skip: typeof window === 'undefined' || !getAuthToken(),
     errorPolicy: 'all',
     notifyOnNetworkStatusChange: true,
   });
+
+  // Si tenemos token pero me es null (token expirado/inválido)
+  if (!loading && getAuthToken() && data && data.me === null) {
+    console.log(
+      '🚨 Token presente pero usuario null - token expirado, limpiando cookies'
+    );
+    clearAuthTokens();
+    window.location.reload();
+  }
 
   return {
     user: data?.me as User | null,
