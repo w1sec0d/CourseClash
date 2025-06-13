@@ -17,7 +17,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 # Función encargada de generar el token
 # Input: paylod información que se quiere enviar en el token, expiration tiempo de expiracion del token
 # Output: token, token de refresco y expiracion del token
-def encode_token(payload: dict, expiration_minutes: int = 1) -> str:
+def encode_token(payload: dict, expiration_minutes: int = 60) -> str:
 
     # Generación de token normal
     expiration = datetime.now(timezone.utc) + timedelta(minutes=expiration_minutes)
