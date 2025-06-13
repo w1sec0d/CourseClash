@@ -1,0 +1,23 @@
+# Dockerfile para desarrollo
+FROM node:lts-alpine
+
+# Instalar dependencias del sistema
+RUN apk add --no-cache libc6-compat
+
+# Establecer directorio de trabajo
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY package.json package-lock.json ./
+
+# Instalar dependencias
+RUN npm ci
+
+# Copiar el resto del código (esto se sobrescribirá con el volumen)
+COPY . .
+
+# Exponer puerto
+EXPOSE 3000
+
+# Comando por defecto (se puede sobrescribir en docker-compose)
+CMD ["npm", "run", "dev"] 

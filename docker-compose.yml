@@ -119,17 +119,23 @@ services:
     container_name: cc_fe
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - API_URL=http://cc_ag:8080
       - NEXT_PUBLIC_API_URL=http://cc_ag:8080
+      - WATCHPACK_POLLING=true  # Para sistemas de archivos que no soportan inotify
+    volumes:
+      - ./frontend:/app
+      - node_modules_cache:/app/node_modules
+      - next_cache:/app/.next
     depends_on:
       - cc_ag
     networks:
       - courseclash-network
+    command: npm run dev
     healthcheck:
       test:
         [
@@ -214,6 +220,8 @@ volumes:
   courses_mysql_data:
   activities_mysql_data:
   mongo_data:
+  node_modules_cache:
+  next_cache:
 
 networks:
   courseclash-network:
