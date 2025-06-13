@@ -175,12 +175,6 @@ export function DuelResults({
           >
             Volver a Duelos
           </button>
-          <button
-            onClick={() => window.location.reload()}
-            className='bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors'
-          >
-            Nuevo Duelo
-          </button>
         </div>
       </div>
     </div>
