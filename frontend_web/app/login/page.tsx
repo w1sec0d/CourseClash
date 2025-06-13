@@ -178,7 +178,9 @@ export default function Login() {
     setIsLoading(true);
     try {
       // Call the login function from Apollo auth context
-      await login(data.email, data.password);
+      const res = await login(data.email, data.password);
+
+      console.log('🔑 Res:', res);
 
       // Redirect to dashboard after successful login
       router.push('/dashboard');
