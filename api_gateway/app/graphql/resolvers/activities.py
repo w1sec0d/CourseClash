@@ -853,7 +853,7 @@ class Mutation:
                 if comment_response.status_code != 201:
                     error_data = comment_response.json()
                     error_detail = "Credenciales inválidas"
-                    error_code = "AUTHENTICATION_ERROR"
+                    error_code = "Problemas en el servidor"
 
                     if "detail" in error_data:
                         if isinstance(error_data["detail"], dict):
