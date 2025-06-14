@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"log"
+	"strconv"
 	"time"
 
 	"courseclash/duel-service/internal/duelsync"
@@ -129,6 +130,17 @@ func endDuel(player1 *models.Player, player2 *models.Player, duelID string) {
 	// Actualizar los rangos de los jugadores
 	player1.Rank = string(newRank1)
 	player2.Rank = string(newRank2)
+	
+	// Actualizar el estado del duelo en la base de datos
+	duelIDInt, err := strconv.Atoi(duelID)
+	if err == nil {
+		duelRepo := repositories.NewDuelRepository()
+		if err := duelRepo.UpdateDuelStatus(duelIDInt, "completed", winnerID); err != nil {
+			log.Printf("Error al actualizar estado del duelo %s en la base de datos: %v", duelID, err)
+		}
+	} else {
+		log.Printf("Error al convertir duelID %s a entero: %v", duelID, err)
+	}
 	
 	// Guardar los cambios en MongoDB
 	playerRepo := repositories.NewPlayerRepository()

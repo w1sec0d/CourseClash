@@ -1,14 +1,38 @@
 db = db.getSiblingDB("duels_db");
 
-db.duels.insertOne({
-  challenger_id: ObjectId("000000000000000000000001"),
-  opponent_id: ObjectId("000000000000000000000002"),
-  course_id: 123,
-  status: "pending",
-  winner_id: null,
-  created_at: new Date(),
-  completed_at: null,
+// Limpiar la colección de duelos existente
+db.duels.drop();
+
+// Crear el índice único para el contador de duelos
+db.counters.createIndex({ _id: 1 }, { unique: true });
+
+// Inicializar el contador de duelos
+db.counters.insertOne({
+  _id: "duel_id",
+  seq: 0,
 });
+
+// Crear algunos duelos de ejemplo con el nuevo formato
+db.duels.insertMany([
+  {
+    _id: 1,
+    challenger_id: "user_001",
+    opponent_id: "user_002",
+    status: "completed",
+    winner_id: "user_001",
+    created_at: new Date(),
+    completed_at: new Date(),
+  },
+  {
+    _id: 2,
+    challenger_id: "user_003",
+    opponent_id: "user_004",
+    status: "pending",
+    winner_id: null,
+    created_at: new Date(),
+    completed_at: null,
+  },
+]);
 
 // Insertar varias preguntas generales para el curso 123
 db.questions.insertMany([

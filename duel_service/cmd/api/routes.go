@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"courseclash/duel-service/internal/duelsync"
@@ -9,8 +10,9 @@ import (
 	"courseclash/duel-service/internal/models"
 	"courseclash/duel-service/internal/repositories"
 
-	"github.com/gin-gonic/gin"
 	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 // requestDuelHandler maneja la solicitud de un duelo.
@@ -30,15 +32,28 @@ func requestDuelHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
-	duelID := request.RequesterID + "_vs_" + request.OpponentID
-	duelsync.Mu.Lock()
-	if _, exists := duelsync.DuelRequests[duelID]; exists {
-		duelsync.Mu.Unlock()
-		c.JSON(http.StatusConflict, gin.H{"error": "Duel already requested"})
+	
+	// Crear el duelo usando el repositorio
+	duelRepo := repositories.NewDuelRepository()
+	duel, err := duelRepo.CreateDuel(request.RequesterID, request.OpponentID)
+	if err != nil {
+		if err.Error() == "ya existe un duelo pendiente entre estos jugadores" {
+			c.JSON(http.StatusConflict, gin.H{"error": "Duel already requested"})
+			return
+		}
+		log.Printf("Error al crear duelo: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error interno del servidor"})
 		return
 	}
+	
+	// Convertir el ID del duelo a string para mantener compatibilidad
+	duelID := strconv.Itoa(duel.ID)
+	
+	// Registrar el duelo en la sincronización en memoria
+	duelsync.Mu.Lock()
 	duelsync.DuelRequests[duelID] = make(chan bool)
 	duelsync.Mu.Unlock()
+	
 	message := "Duelo solicitado exitosamente"
 	
 	// Obtener información del solicitante para la notificación
@@ -82,7 +97,7 @@ func requestDuelHandler(c *gin.Context) {
 // @Tags duelos
 // @Accept json
 // @Produce json
-// @Param accept body models.AcceptDuelRequest true "ID del duelo" example:{"duel_id":"player123_vs_player456"}
+// @Param accept body models.AcceptDuelRequest true "ID del duelo" example:{"duel_id":"123"}
 // @Success 200 {object} models.AcceptDuelResponse "Duelo aceptado exitosamente"
 // @Failure 400 {object} models.ErrorResponseInvalidRequest "Solicitud inválida o malformada"
 // @Failure 404 {object} models.ErrorResponseDuelNotFound "No se encontró el duelo con el ID proporcionado"
@@ -93,9 +108,39 @@ func acceptDuelHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Peticion invalida"})
 		return
 	}
+	
+	// Verificar que el duelo existe en la base de datos
+	duelRepo := repositories.NewDuelRepository()
+	duelIDInt, err := strconv.Atoi(accept.DuelID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de duelo inválido"})
+		return
+	}
+	
+	duel, err := duelRepo.GetDuelByID(duelIDInt)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Duelo no encontrado"})
+		return
+	}
+	
+	if duel.Status != "pending" {
+		c.JSON(http.StatusConflict, gin.H{"error": "El duelo ya no está pendiente"})
+		return
+	}
+	
+	// Actualizar el estado del duelo a aceptado
+	err = duelRepo.UpdateDuelStatus(duelIDInt, "accepted", "")
+	if err != nil {
+		log.Printf("Error al actualizar estado del duelo: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error interno del servidor"})
+		return
+	}
+	
+	// Verificar si existe el canal de sincronización
 	duelsync.Mu.Lock()
 	channel, exists := duelsync.DuelRequests[accept.DuelID]
 	duelsync.Mu.Unlock()
+	
 	if exists {
 		channel <- true
 		c.JSON(http.StatusOK, gin.H{
@@ -103,7 +148,7 @@ func acceptDuelHandler(c *gin.Context) {
 			"message": "Duelo aceptado exitosamente",
 		})
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Duelo no encontrado"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Duelo no encontrado en la sesión activa"})
 	}
 }
 

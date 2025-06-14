@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/gorilla/websocket"
 	"sync"
+
+	"github.com/gorilla/websocket"
 )
 
 // Player representa a un jugador en el duelo.
@@ -60,5 +61,5 @@ type RequestDuelRequest struct {
 
 // AcceptDuelRequest representa el body para aceptar un duelo.
 type AcceptDuelRequest struct {
-	DuelID string `json:"duel_id" example:"player123_vs_player456" binding:"required"`
+	DuelID string `json:"duel_id" example:"123" binding:"required"`
 }

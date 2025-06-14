@@ -3,7 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"strings"
+	"strconv"
 	"time"
 
 	"courseclash/duel-service/internal/duelsync"
@@ -17,20 +17,32 @@ import (
 // WsHandler gestiona la conexión WebSocket de un jugador para un duelo.
 // Se encarga de la lógica de conexión y sincronización entre los dos jugadores de un duelo.
 func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID string) {
-	// Validar que el jugador sea parte del duelo
-	// El formato del duelID es "requesterID_vs_opponentID"
-	validPlayer := false
+	// Convertir duelID a entero para buscar en la base de datos
+	duelIDInt, err := strconv.Atoi(duelID)
+	if err != nil {
+		log.Printf("ID de duelo inválido: %s", duelID)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("ID de duelo inválido"))
+		return
+	}
 	
-	// Extraer los IDs de los jugadores del duelID
-	parts := strings.Split(duelID, "_vs_")
-	if len(parts) == 2 {
-		requesterID := parts[0]
-		opponentID := parts[1]
-		
-		// Verificar si el playerID corresponde a alguno de los jugadores del duelo
-		if playerID == requesterID || playerID == opponentID {
-			validPlayer = true
-		}
+	// Verificar que el duelo existe en la base de datos
+	duelRepo := repositories.NewDuelRepository()
+	duel, err := duelRepo.GetDuelByID(duelIDInt)
+	if err != nil {
+		log.Printf("Duelo %s no encontrado: %v", duelID, err)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Duelo no encontrado"))
+		return
+	}
+	
+	// Verificar si el jugador es parte del duelo
+	validPlayer := false
+	requesterID := duel.ChallengerID
+	opponentID := duel.OpponentID
+	
+	if playerID == requesterID || playerID == opponentID {
+		validPlayer = true
 	}
 	
 	// Si el jugador no es parte del duelo, rechazar la conexión
@@ -93,10 +105,7 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		duelsync.DuelSyncChans[duelID] = syncChannel
 	}
 
-	// Determinar si es el retador o el aceptador basándose en el duelID
-	// El formato del duelID es "requesterID_vs_opponentID"
-	requesterID := parts[0]
-	opponentID := parts[1]
+	// Determinar si es el retador o el aceptador basándose en los datos del duelo
 	isRequester := playerID == requesterID
 	isOpponent := playerID == opponentID
 	

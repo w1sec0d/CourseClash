@@ -189,6 +189,35 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/ws/notifications/{user_id}": {
+            "get": {
+                "description": "Establece una conexión WebSocket para recibir notificaciones de duelos en tiempo real",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notificaciones"
+                ],
+                "summary": "Conexión WebSocket para notificaciones",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del usuario",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "Conexión WebSocket establecida para recibir notificaciones",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -200,7 +229,7 @@ const docTemplate = `{
             "properties": {
                 "duel_id": {
                     "type": "string",
-                    "example": "player123_vs_player456"
+                    "example": "123"
                 }
             }
         },
@@ -209,7 +238,7 @@ const docTemplate = `{
             "properties": {
                 "duel_id": {
                     "type": "string",
-                    "example": "player123_vs_player456"
+                    "example": "123"
                 },
                 "message": {
                     "type": "string",
@@ -301,7 +330,7 @@ const docTemplate = `{
             "properties": {
                 "duel_id": {
                     "type": "string",
-                    "example": "player123_vs_player456"
+                    "example": "123"
                 },
                 "message": {
                     "type": "string",
