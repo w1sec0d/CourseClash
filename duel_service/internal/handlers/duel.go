@@ -122,7 +122,7 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 			calculateScore(player1, question, lastAnswer1, time.Now())
 			calculateScore(player2, question, lastAnswer2, time.Now())
 		}
-	
+	}
 	log.Printf("🏁 [TODAS LAS PREGUNTAS COMPLETADAS] Enviando resultados finales del duelo %s", duelID)
 
 	// Enviar resultados finales
