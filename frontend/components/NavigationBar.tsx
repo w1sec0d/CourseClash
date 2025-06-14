@@ -48,6 +48,12 @@ export const NavigationBar: React.FC = () => {
     if (path === '/') {
       return pathname === path;
     }
+    if (path === '/dashboard' && pathname.startsWith('/dashboard')) {
+      return true;
+    }
+    if (path === '/dashboard/cursos') {
+      return pathname.startsWith('/dashboard/cursos');
+    }
     return pathname.startsWith(path);
   };
 
@@ -67,14 +73,16 @@ export const NavigationBar: React.FC = () => {
           <div className='items-center justify-between h-16 flex'>
             <div className='items-center flex'>
               <div className='flex-shrink-0'>
-                <Image
-                  alt='Logo de Course Clash'
-                  src='/logo_no_title.svg'
-                  className='h-12 w-auto'
-                  width={64}
-                  height={64}
-                  priority
-                />
+                <Link href='/' className='flex items-center hover:opacity-80 transition-opacity'>
+                  <Image
+                    alt='Logo de Course Clash'
+                    src='/logo_no_title.svg'
+                    className='h-12 w-auto'
+                    width={64}
+                    height={64}
+                    priority
+                  />
+                </Link>
               </div>
               <div className='md:block hidden'>
                 <div className='ml-10 items-baseline flex space-x-4'>
@@ -93,7 +101,7 @@ export const NavigationBar: React.FC = () => {
                     <TrophyIcon className='h-5 w-5' />
                     Duelos
                   </Link>
-                  <Link href='/dashboard' className={linkClasses('/dashboard')}>
+                  <Link href='/dashboard/cursos' className={linkClasses('/dashboard/cursos')}>
                     <AcademicCapIcon className='h-5 w-5' />
                     Mis Cursos
                   </Link>
@@ -142,23 +150,25 @@ export const NavigationBar: React.FC = () => {
         <div className='items-center justify-between h-16 flex'>
           <div className='items-center flex'>
             <div className='flex-shrink-0 flex items-center'>
-              <Image
-                alt='Logo de Course Clash - Espada insertada en un birrete de graduación'
-                src='/logo_no_title.svg'
-                className='h-21 w-auto mr-1'
-                width={200}
-                height={80}
-                priority
-              />
-              <span className='text-white font-bold text-xl tracking-tight'>
-                CourseClash
-              </span>
+              <Link href='/' className='flex items-center hover:opacity-80 transition-opacity'>
+                <Image
+                  alt='Logo de Course Clash - Espada insertada en un birrete de graduación'
+                  src='/logo_no_title.svg'
+                  className='h-21 w-auto mr-1'
+                  width={200}
+                  height={80}
+                  priority
+                />
+                <span className='text-white font-bold text-xl tracking-tight'>
+                  CourseClash
+                </span>
+              </Link>
             </div>
             <div className='md:block hidden'>
               <div className='ml-10 items-baseline flex space-x-4'>
-                <Link href='/' className={linkClasses('/')}>
+                <Link href={isAuthenticated ? '/dashboard' : '/'} className={linkClasses(isAuthenticated ? '/dashboard' : '/')}>
                   <HomeIcon className='h-5 w-5' />
-                  Inicio
+                  {isAuthenticated ? 'Dashboard' : 'Inicio'}
                 </Link>
                 <Link
                   href='/#caracteristicas'
@@ -171,7 +181,7 @@ export const NavigationBar: React.FC = () => {
                   <TrophyIcon className='h-5 w-5' />
                   Duelos
                 </Link>
-                <Link href='/dashboard' className={linkClasses('/dashboard')}>
+                <Link href='/dashboard/cursos' className={linkClasses('/dashboard/cursos')}>
                   <AcademicCapIcon className='h-5 w-5' />
                   Mis Cursos
                 </Link>
@@ -247,9 +257,9 @@ export const NavigationBar: React.FC = () => {
       {mobileMenuOpen && (
         <div className='md:hidden bg-emerald-700'>
           <div className='px-2 pt-2 pb-3 sm:px-3 space-y-1'>
-            <Link href='/#inicio' className={linkClasses('/')}>
+            <Link href={isAuthenticated ? '/dashboard' : '/'} className={linkClasses(isAuthenticated ? '/dashboard' : '/')}>
               <HomeIcon className='h-5 w-5' />
-              Inicio
+              {isAuthenticated ? 'Dashboard' : 'Inicio'}
             </Link>
             <Link
               href='/#caracteristicas'
@@ -262,7 +272,7 @@ export const NavigationBar: React.FC = () => {
               <TrophyIcon className='h-5 w-5' />
               Duelos
             </Link>
-            <Link href='/dashboard' className={linkClasses('/dashboard')}>
+            <Link href='/dashboard/cursos' className={linkClasses('/dashboard/cursos')}>
               <AcademicCapIcon className='h-5 w-5' />
               Mis Cursos
             </Link>
