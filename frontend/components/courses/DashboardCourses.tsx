@@ -79,12 +79,25 @@ export default function DashboardCourses({ userRole, limit = 6 }: DashboardCours
           <p className="text-xs text-gray-600 mb-4">
             {userRole === 'teacher' ? 'Crea tu primer curso' : 'Explora cursos disponibles'}
           </p>
-          <button
-            onClick={handleViewAllCourses}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-          >
-            {userRole === 'teacher' ? 'Crear Curso' : 'Explorar Cursos'}
-          </button>
+          <div className="flex space-x-2">
+            {userRole === 'teacher' && (
+              <button
+                onClick={() => router.push('/dashboard/cursos/crear')}
+                className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 flex items-center"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Crear Curso
+              </button>
+            )}
+            <button
+              onClick={handleViewAllCourses}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+            >
+              {userRole === 'teacher' ? 'Ver Todos' : 'Explorar Cursos'}
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">

@@ -6,7 +6,7 @@ import MyCoursesList from '@/components/courses/MyCoursesList';
 // Simulación de contexto de usuario - en producción vendría del contexto de autenticación
 const mockUser = {
   id: '123',
-  role: 'student' as 'student' | 'teacher', // Cambiar a 'teacher' para vista de docente
+  role: 'teacher' as 'student' | 'teacher', // Cambiar a 'student' para vista de estudiante
   name: 'Usuario de Prueba'
 };
 
