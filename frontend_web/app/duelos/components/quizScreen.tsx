@@ -55,6 +55,7 @@ export default function QuizScreen({
   const [isInitializing, setIsInitializing] = useState(true);
   const [playerProgress, setPlayerProgress] = useState(0);
   const [opponentProgress, setOpponentProgress] = useState(0);
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState(0);
   const [totalQuestions] = useState(5);
   const [error, setError] = useState<string | null>(null);
   const [duelResults, setDuelResults] = useState<DuelResultsData | null>(null);
@@ -119,6 +120,8 @@ export default function QuizScreen({
           setHasAnswered(false); // Reset answer state for new question
           hasSubmittedRef.current = false; // Reset submission flag for new question
           setError(null);
+          // Increment current question number when a new question arrives
+          setCurrentQuestionNumber((prev) => prev + 1);
           // Update opponent progress when new question arrives
           setOpponentProgress((prev) => Math.min(prev + 1, totalQuestions) - 1);
         } else if (data.type === 'opponent_progress') {
@@ -182,10 +185,10 @@ export default function QuizScreen({
         `[${playerId}] Sincronización completada - conexión estabilizada`
       );
 
-      // Ping original (comentado por ahora)
-      // if (wsConnection.readyState === WebSocket.OPEN) {
-      //   wsConnection.send(JSON.stringify({ type: 'ping', playerId }));
-      // }
+      // Ping necesario para activar el servidor (debe ser ignorado por la lógica del juego)
+      if (wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.send(JSON.stringify({ type: 'ping', playerId }));
+      }
     }, 500);
 
     // Limpiar timer en cleanup
@@ -381,7 +384,7 @@ export default function QuizScreen({
 
           <Question
             key={currentQuestion.id}
-            questionNumber={playerProgress + 1}
+            questionNumber={currentQuestionNumber}
             totalQuestions={totalQuestions}
             question={currentQuestion.text}
             options={currentQuestion.options.map((option, index) => ({
