@@ -209,7 +209,7 @@ export default function QuizScreen({
         wsConnection.removeEventListener('error', handleError);
       }
     };
-  }, [wsConnection, playerId, totalQuestions]); // Removed isWaiting to prevent re-creating listeners
+  }, [wsConnection, playerId]); // Removed isWaiting to prevent re-creating listeners
 
   // Timer effect - improved to prevent duplicate submissions
   useEffect(() => {

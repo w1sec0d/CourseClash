@@ -108,8 +108,8 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 			
 			// Si llegamos aquí, ambas respuestas son válidas
 			needToResend = false
-			calculateScore(player1, question, answer1, startTime)
-			calculateScore(player2, question, answer2, startTime)
+			calculateScore(player1, question, answer1, time.Now())
+			calculateScore(player2, question, answer2, time.Now())
 			
 			log.Printf("Pregunta %d procesada exitosamente. Puntuaciones: P1: %d, P2: %d", i+1, player1.Score, player2.Score)
 		}
