@@ -1,14 +1,20 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { useActivitiesByCourse, useCreateActivity } from '@/lib/hooks/useActivities';
 import type { CreateActivityInput } from '@/lib/hooks/useActivities';
 
 interface ActivityListProps {
   courseId: string;
+  userPermissions?: {
+    canEdit?: boolean;
+    canPublish?: boolean;
+  };
 }
 
-export default function ActivityList({ courseId }: ActivityListProps) {
+export default function ActivityList({ courseId, userPermissions }: ActivityListProps) {
+  const router = useRouter();
   const { activities, loading, error, refetch } = useActivitiesByCourse(courseId);
   const { createActivity, loading: createLoading } = useCreateActivity();
 
@@ -20,6 +26,14 @@ export default function ActivityList({ courseId }: ActivityListProps) {
     } else {
       console.error('Error:', result.error);
     }
+  };
+
+  const handleViewActivity = (activityId: string) => {
+    router.push(`/curso/${courseId}/actividades/${activityId}`);
+  };
+
+  const handleEditActivity = (activityId: string) => {
+    router.push(`/curso/${courseId}/actividades/${activityId}/editar`);
   };
 
   if (loading) {
@@ -52,18 +66,20 @@ export default function ActivityList({ courseId }: ActivityListProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Actividades del Curso</h2>
-        <button
-          onClick={() => handleCreateActivity({
-            courseId: parseInt(courseId),
-            title: 'Nueva Actividad',
-            activityType: 'task',
-            description: 'Descripción de la actividad'
-          })}
-          disabled={createLoading}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
-        >
-          {createLoading ? 'Creando...' : 'Crear Actividad'}
-        </button>
+        {userPermissions?.canPublish && (
+          <button
+            onClick={() => handleCreateActivity({
+              courseId: parseInt(courseId),
+              title: 'Nueva Actividad',
+              activityType: 'task',
+              description: 'Descripción de la actividad'
+            })}
+            disabled={createLoading}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+          >
+            {createLoading ? 'Creando...' : 'Crear Actividad'}
+          </button>
+        )}
       </div>
 
       {activities.length === 0 ? (
@@ -107,12 +123,27 @@ export default function ActivityList({ courseId }: ActivityListProps) {
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                  <button 
+                    onClick={() => handleViewActivity(activity.id)}
+                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
                     Ver detalles
                   </button>
-                  <button className="text-gray-600 hover:text-gray-800 text-sm font-medium">
-                    Editar
-                  </button>
+                  {userPermissions?.canEdit && (
+                    <button 
+                      onClick={() => handleEditActivity(activity.id)}
+                      className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Editar
+                    </button>
+                  )}
                 </div>
               </div>
 

@@ -6,9 +6,34 @@ import ActivityView from '@/components/activities/ActivityView';
 
 // Simulación de contexto de usuario - en producción vendría del contexto de autenticación
 const mockUser = {
-  id: '123',
-  role: 'student' as 'student' | 'teacher', // 'student' | 'teacher'
-  name: 'Usuario de Prueba'
+  id: '4', // Usuario ID 4 que tiene permisos especiales
+  role: 'teacher' as 'student' | 'teacher',
+  name: 'Usuario con Permisos Especiales'
+};
+
+// Simulación de permisos por curso
+const getCoursePermissions = (userId: string, courseId: string) => {
+  const superAdminUsers = ['4'];
+  const coursePermissions: Record<string, string[]> = {
+    '1': ['1', '2'],
+    '2': ['3', '5'], 
+    '3': ['1', '6'],
+    '4': ['2', '7'],
+    '5': ['8', '9']
+  };
+
+  const isSuperAdmin = superAdminUsers.includes(userId);
+  const authorizedUsers = coursePermissions[courseId] || [];
+  const hasSpecificPermission = authorizedUsers.includes(userId);
+  const hasPermissions = isSuperAdmin || hasSpecificPermission;
+  
+  return {
+    canEdit: hasPermissions,
+    canPublish: hasPermissions,
+    canDelete: hasPermissions,
+    canViewSubmissions: hasPermissions,
+    isSuperAdmin: isSuperAdmin
+  };
 };
 
 export default function ActividadPage() {
@@ -20,8 +45,15 @@ export default function ActividadPage() {
   // En producción, estos datos vendrían del contexto de autenticación
   const [user] = useState(mockUser);
 
+  // Obtener permisos específicos del curso para el usuario actual
+  const userPermissions = getCoursePermissions(user.id, courseId);
+
   const handleBackToCourse = () => {
     router.push(`/curso/${courseId}`);
+  };
+
+  const handleEditActivity = () => {
+    router.push(`/curso/${courseId}/actividades/${activityId}/editar`);
   };
 
   return (
@@ -69,31 +101,37 @@ export default function ActividadPage() {
         />
 
         {/* Acciones adicionales para docentes */}
-        {user.role === 'teacher' && (
+        {userPermissions.canEdit && (
           <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Acciones del Docente
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Acciones del Docente
+              </h3>
+              {userPermissions.isSuperAdmin && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  👑 Admin
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={() => {
-                  // Implementar edición de actividad
-                  console.log('Editar actividad');
-                }}
+                onClick={handleEditActivity}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 ✏️ Editar Actividad
               </button>
               
-              <button
-                onClick={() => {
-                  // Implementar vista de entregas
-                  router.push(`/curso/${courseId}/actividades/${activityId}/entregas`);
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                📋 Ver Entregas
-              </button>
+              {userPermissions.canViewSubmissions && (
+                <button
+                  onClick={() => {
+                    // Implementar vista de entregas
+                    router.push(`/curso/${courseId}/actividades/${activityId}/entregas`);
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  📋 Ver Entregas
+                </button>
+              )}
               
               <button
                 onClick={() => {
@@ -105,23 +143,25 @@ export default function ActividadPage() {
                 📊 Estadísticas
               </button>
               
-              <button
-                onClick={() => {
-                  // Implementar eliminación con confirmación
-                  if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
-                    console.log('Eliminar actividad');
-                  }
-                }}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-              >
-                🗑️ Eliminar
-              </button>
+              {userPermissions.canDelete && (
+                <button
+                  onClick={() => {
+                    // Implementar eliminación con confirmación
+                    if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
+                      console.log('Eliminar actividad');
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  🗑️ Eliminar
+                </button>
+              )}
             </div>
           </div>
         )}
 
         {/* Información adicional para estudiantes */}
-        {user.role === 'student' && (
+        {!userPermissions.canEdit && (
           <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
             <div className="flex items-start">
               <div className="flex-shrink-0">

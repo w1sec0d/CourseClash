@@ -6,9 +6,9 @@ import ActivityList from '@/components/activities/ActivityList';
 
 // Simulación de contexto de usuario - en producción vendría del contexto de autenticación
 const mockUser = {
-  id: '123',
+  id: '4', // Usuario ID 4 que tiene permisos especiales
   role: 'teacher' as 'student' | 'teacher', // Cambiar a 'student' para probar vista de estudiante
-  name: 'Usuario de Prueba'
+  name: 'Usuario con Permisos Especiales'
 };
 
 export default function ActividadesPage() {
@@ -155,7 +155,13 @@ export default function ActividadesPage() {
         </div>
 
         {/* Lista de actividades */}
-        <ActivityList courseId={courseId} />
+        <ActivityList 
+          courseId={courseId} 
+          userPermissions={{
+            canEdit: user.role === 'teacher',
+            canPublish: user.role === 'teacher'
+          }}
+        />
 
         {/* Botón flotante para crear actividad en móvil (solo docentes) */}
         {user.role === 'teacher' && (

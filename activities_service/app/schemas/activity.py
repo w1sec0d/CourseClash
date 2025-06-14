@@ -47,11 +47,8 @@ class ActivityUpdate(BaseModel):
     due_date: Optional[datetime] = None
     file_url: Optional[str] = Field(None, max_length=255)
 
-    @validator('due_date')
-    def validate_due_date(cls, v):
-        if v and v <= datetime.now():
-            raise ValueError('La fecha límite debe ser futura')
-        return v
+    # Removemos el validador de fecha para permitir flexibilidad en actualizaciones
+    # El validador de due_date solo debe aplicarse en ActivityCreate
 
     @validator('file_url')
     def validate_file_url(cls, v):
@@ -59,9 +56,15 @@ class ActivityUpdate(BaseModel):
             raise ValueError('La URL del archivo debe ser válida')
         return v
 
-class ActivityResponse(ActivityBase):
+class ActivityResponse(BaseModel):
     """Schema for activity response"""
     id: int
+    course_id: int
+    title: str
+    description: Optional[str] = None
+    activity_type: ActivityType
+    due_date: Optional[datetime] = None
+    file_url: Optional[str] = None
     created_at: datetime
     created_by: int
 
