@@ -39,16 +39,73 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 	// Notificamos a los jugadores que el duelo va a comenzar
 	// ...
 
-	for _, question := range questions {
-		broadcastQuestion(player1, player2, question)
-		startTime := time.Now()
+	for i, question := range questions {
+		// Variable para controlar si necesitamos reenviar la pregunta
+		needToResend := true
+		maxRetries := 3
+		retryCount := 0
+		var lastAnswer1, lastAnswer2 string
+		
+		for needToResend && retryCount < maxRetries {
+			log.Printf("Enviando pregunta %d (%s) a jugadores %s y %s (intento %d)", i+1, question.ID, player1.ID, player2.ID, retryCount+1)
+			
+			broadcastQuestion(player1, player2, question)
+			startTime := time.Now()
 
-		// Envio sincronizado de respuestas.
-		answer1 := receiveAnswer(player1)
-		answer2 := receiveAnswer(player2)
-
-		calculateScore(player1, question, answer1, startTime)
-		calculateScore(player2, question, answer2, startTime)
+			// Envio sincronizado de respuestas.
+			answer1 := receiveAnswer(player1)
+			answer2 := receiveAnswer(player2)
+			
+			// Guardar las últimas respuestas para el caso de fallar todos los reintentos
+			lastAnswer1 = answer1
+			lastAnswer2 = answer2
+			
+			// Log de las respuestas recibidas
+			log.Printf("Respuestas recibidas - P1 (%s): '%s', P2 (%s): '%s'", player1.ID, answer1, player2.ID, answer2)
+			
+			// Verificar si alguna respuesta está vacía
+			answer1IsEmpty := answer1 == "" || answer1 == "ping" || answer1 == "connection_heartbeat"
+			answer2IsEmpty := answer2 == "" || answer2 == "ping" || answer2 == "connection_heartbeat"
+			
+			if answer1IsEmpty || answer2IsEmpty {
+				log.Printf("Respuesta vacía detectada - P1 vacía: %t, P2 vacía: %t. Reenviando pregunta %d", answer1IsEmpty, answer2IsEmpty, i+1)
+				retryCount++
+				
+				// Enviar mensaje informativo a los jugadores
+				if answer1IsEmpty {
+					player1.SafeWriteJSON(map[string]interface{}{
+						"type": "info",
+						"message": "Respuesta no válida detectada. Reenviando pregunta...",
+					})
+				}
+				if answer2IsEmpty {
+					player2.SafeWriteJSON(map[string]interface{}{
+						"type": "info", 
+						"message": "Respuesta no válida detectada. Reenviando pregunta...",
+					})
+				}
+				
+				// Pequeña pausa antes de reenviar
+				time.Sleep(1 * time.Second)
+				continue // Reenviar la misma pregunta
+			}
+			
+			// Si llegamos aquí, ambas respuestas son válidas
+			needToResend = false
+			calculateScore(player1, question, answer1, startTime)
+			calculateScore(player2, question, answer2, startTime)
+			
+			log.Printf("Pregunta %d procesada exitosamente. Puntuaciones: P1: %d, P2: %d", i+1, player1.Score, player2.Score)
+		}
+		
+		// Si después de todos los intentos aún hay respuestas vacías, procesar las últimas respuestas como incorrectas
+		if retryCount >= maxRetries {
+			log.Printf("Máximo de reintentos alcanzado para pregunta %d. Procesando últimas respuestas como finales", i+1)
+			
+			// Usar las últimas respuestas recibidas
+			calculateScore(player1, question, lastAnswer1, time.Now())
+			calculateScore(player2, question, lastAnswer2, time.Now())
+		}
 	}
 
 	// Enviar resultados finales
@@ -74,27 +131,82 @@ func broadcastQuestion(player1, player2 *models.Player, question models.Question
 // Esta función permite recibir un mapa con la clave answer, que representa la respuesta de los jugadores
 // Utilizando el método ReadJSON de la conexión WebSocket el servidor recibe las respuestas del jugador/cliente
 // * Es necesario que se envie desde el cliente para procesarlo.
+// Ahora filtra mensajes de sistema (ping, connection_heartbeat, etc.) y solo procesa respuestas válidas
 
 func receiveAnswer(player *models.Player) string {
-	var response map[string]string
-	player.Conn.ReadJSON(&response)
-	return response["answer"]
+	for {
+		var response map[string]interface{}
+		err := player.Conn.ReadJSON(&response)
+		if err != nil {
+			log.Printf("Error al leer respuesta del jugador %s: %v", player.ID, err)
+			return "" // Retornar respuesta vacía en caso de error
+		}
+		
+		// Log del mensaje recibido para debugging
+		log.Printf("Mensaje recibido del jugador %s: %+v", player.ID, response)
+		
+		// Verificar el tipo de mensaje
+		if msgType, exists := response["type"]; exists {
+			msgTypeStr, ok := msgType.(string)
+			if ok {
+				// Filtrar mensajes de sistema que no son respuestas
+				switch msgTypeStr {
+				case "ping", "connection_heartbeat", "connection_test", "ready_check":
+					log.Printf("Mensaje de sistema ignorado del jugador %s: tipo %s", player.ID, msgTypeStr)
+					continue // Continuar esperando la respuesta real
+				case "answer":
+					// Este es el mensaje que esperamos
+					if answer, answerExists := response["answer"]; answerExists {
+						if answerStr, ok := answer.(string); ok {
+							log.Printf("Respuesta válida recibida del jugador %s: '%s'", player.ID, answerStr)
+							return answerStr
+						}
+					}
+					log.Printf("Mensaje de respuesta malformado del jugador %s: falta campo 'answer' o no es string", player.ID)
+					return ""
+				default:
+					log.Printf("Tipo de mensaje desconocido del jugador %s: %s", player.ID, msgTypeStr)
+					continue // Continuar esperando
+				}
+			}
+		}
+		
+		// Si no hay campo "type", intentar obtener "answer" directamente (compatibilidad con versiones anteriores)
+		if answer, exists := response["answer"]; exists {
+			if answerStr, ok := answer.(string); ok {
+				log.Printf("Respuesta directa (sin tipo) recibida del jugador %s: '%s'", player.ID, answerStr)
+				return answerStr
+			}
+		}
+		
+		log.Printf("Mensaje no reconocido del jugador %s, continuando esperando respuesta válida", player.ID)
+	}
 }
 
 // Esta función es la encargada de calcular la puntuación de cada estudiante de acuerdo a si su respuesta fue correcta
 // *En caso de que la respuesta sea correcta se suma al puntaje +10, y de acuerdo al tiempo tardado calcula un bonus al estilo Quizzis
 // Si la respuesta queda mal se le restan 5 puntos
+// Si la respuesta está vacía o es un mensaje de sistema (ping, etc.), no se penaliza pero tampoco se otorgan puntos
 
 func calculateScore(player *models.Player, question models.Question, answer string, startTime time.Time) {
+	// Verificar si es una respuesta vacía o mensaje de sistema
+	if answer == "" || answer == "ping" || answer == "connection_heartbeat" {
+		log.Printf("Respuesta vacía o de sistema para jugador %s, no se modifica puntuación. Respuesta: '%s'", player.ID, answer)
+		return // No modificar puntuación para respuestas vacías
+	}
+	
 	if answer == question.Answer {
 		timeTaken := time.Since(startTime).Seconds()
 		bonus := int(float64(question.Duration) - timeTaken)
 		if bonus < 0 {
 			bonus = 0
 		}
-		player.Score += 10 + bonus
+		pointsEarned := 10 + bonus
+		player.Score += pointsEarned
+		log.Printf("Respuesta correcta para jugador %s. Puntos ganados: %d (base: 10, bonus: %d)", player.ID, pointsEarned, bonus)
 	} else {
 		player.Score -= 5
+		log.Printf("Respuesta incorrecta para jugador %s. Respuesta: '%s', Correcta: '%s'. Penalización: -5 puntos", player.ID, answer, question.Answer)
 	}
 }
 
