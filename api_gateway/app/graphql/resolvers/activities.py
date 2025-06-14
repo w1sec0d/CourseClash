@@ -17,7 +17,7 @@ ACTIVITIES_SERVICE_URL = os.getenv("ACTIVITIES_SERVICE_URL", "http://course_serv
 
 #Variable de entorno para ms de autenticacion
 # Environment variables
-AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth_user_service:8000")
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000")
 
 
 
@@ -337,33 +337,49 @@ class Mutation:
         #Obtenemos el token enviado en el header
         request = info.context["request"]
 
-        # Intentar obtener el token desde el header Authorization
-        auth_header = request.headers.get("authorization")
-        token = None
-
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
-        else:
-            # Si no hay header Authorization, intentar obtener desde cookies
-            token = request.cookies.get("auth_token")
-
-        if not token:
-            return ActivityError(message = "Token no proporcionado", code = "401")
+        # Verificar si estamos en modo desarrollo
+        dev_mode = request.headers.get("x-dev-mode") == "true"
+        dev_user_id = request.headers.get("x-dev-user-id")
         
-        #Verifica el token
-        try: 
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(
-                    f"{AUTH_SERVICE_URL}/auth/me",
-                    headers={"Authorization": f"Bearer {token}"},
-                )
+        if dev_mode and dev_user_id:
+            # Modo desarrollo: usar usuario ficticio
+            print(f"🔧 Modo desarrollo activado para usuario {dev_user_id}")
+            user_data = {
+                "id": int(dev_user_id),
+                "username": f"dev_user_{dev_user_id}",
+                "role": "teacher",  # Dar permisos de profesor en desarrollo
+                "email": f"dev_user_{dev_user_id}@example.com",
+                "dev_mode": True
+            }
+        else:
+            # Modo producción: verificar token real
+            # Intentar obtener el token desde el header Authorization
+            auth_header = request.headers.get("authorization")
+            token = None
 
-                if response.status_code != 200:
-                    return ActivityError(message = "Token invalido o expirado", code = "401")
-            user_data = response.json()
-        except Exception as e: 
-            print("❌ Error in la verificación del token :", str(e))
-            return ActivityError(message = "Error al verificar el token ", code = "401")
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header.split(" ")[1]
+            else:
+                # Si no hay header Authorization, intentar obtener desde cookies
+                token = request.cookies.get("auth_token")
+
+            if not token:
+                return ActivityError(message = "Token no proporcionado", code = "401")
+            
+            #Verifica el token
+            try: 
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.get(
+                        f"{AUTH_SERVICE_URL}/auth/me",
+                        headers={"Authorization": f"Bearer {token}"},
+                    )
+
+                    if response.status_code != 200:
+                        return ActivityError(message = "Token invalido o expirado", code = "401")
+                user_data = response.json()
+            except Exception as e: 
+                print("❌ Error in la verificación del token :", str(e))
+                return ActivityError(message = "Error al verificar el token ", code = "401")
         
 
         #Creación de la actividad en el microservicio
@@ -443,33 +459,49 @@ class Mutation:
         #Obtenemos el token enviado en el header
         request = info.context["request"]
 
-        # Intentar obtener el token desde el header Authorization
-        auth_header = request.headers.get("authorization")
-        token = None
-
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
-        else:
-            # Si no hay header Authorization, intentar obtener desde cookies
-            token = request.cookies.get("auth_token")
-
-        if not token:
-            return SubmissionsError(message = "Token no proporcionado", code = "401")
+        # Verificar si estamos en modo desarrollo
+        dev_mode = request.headers.get("x-dev-mode") == "true"
+        dev_user_id = request.headers.get("x-dev-user-id")
         
-        #Verifica el token
-        try: 
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(
-                    f"{AUTH_SERVICE_URL}/auth/me",
-                    headers={"Authorization": f"Bearer {token}"},
-                )
+        if dev_mode and dev_user_id:
+            # Modo desarrollo: usar usuario ficticio
+            print(f"🔧 Modo desarrollo activado para usuario {dev_user_id}")
+            user_data = {
+                "id": int(dev_user_id),
+                "username": f"dev_user_{dev_user_id}",
+                "role": "student",  # Para submissions, usar rol de estudiante
+                "email": f"dev_user_{dev_user_id}@example.com",
+                "dev_mode": True
+            }
+        else:
+            # Modo producción: verificar token real
+            # Intentar obtener el token desde el header Authorization
+            auth_header = request.headers.get("authorization")
+            token = None
 
-                if response.status_code != 200:
-                    return SubmissionsError(message = "Token invalido o expirado", code = "401")
-            user_data = response.json()
-        except Exception as e: 
-            print("❌ Error in la verificación del token :", str(e))
-            return SubmissionsError(message = "Error al verificar el token ", code = "401")
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header.split(" ")[1]
+            else:
+                # Si no hay header Authorization, intentar obtener desde cookies
+                token = request.cookies.get("auth_token")
+
+            if not token:
+                return SubmissionsError(message = "Token no proporcionado", code = "401")
+            
+            #Verifica el token
+            try: 
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.get(
+                        f"{AUTH_SERVICE_URL}/auth/me",
+                        headers={"Authorization": f"Bearer {token}"},
+                    )
+
+                    if response.status_code != 200:
+                        return SubmissionsError(message = "Token invalido o expirado", code = "401")
+                user_data = response.json()
+            except Exception as e: 
+                print("❌ Error in la verificación del token :", str(e))
+                return SubmissionsError(message = "Error al verificar el token ", code = "401")
         
         #Creación de la submisión del envio
         try:

@@ -66,12 +66,30 @@ export default function CreateActivityForm({
         reset();
         onSuccess?.(result.activity);
       } else {
-        await Swal.fire({
-          title: 'Error',
-          text: result.error || 'No se pudo crear la actividad',
-          icon: 'error',
-          confirmButtonColor: '#EF4444'
-        });
+        // Manejar errores de autenticación de forma especial
+        if (result.isAuthError) {
+          const authResult = await Swal.fire({
+            title: 'Sesión Expirada',
+            text: result.error || 'Tu sesión ha expirado. Debes iniciar sesión nuevamente.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3B82F6',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Iniciar Sesión',
+            cancelButtonText: 'Cancelar'
+          });
+
+          if (authResult.isConfirmed) {
+            window.location.href = '/login';
+          }
+        } else {
+          await Swal.fire({
+            title: 'Error',
+            text: result.error || 'No se pudo crear la actividad',
+            icon: 'error',
+            confirmButtonColor: '#EF4444'
+          });
+        }
       }
     } catch {
       await Swal.fire({

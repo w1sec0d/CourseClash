@@ -125,7 +125,8 @@ services:
     environment:
       - NODE_ENV=development
       - API_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_API_URL=http://cc_ag:8080
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:8080
       - WATCHPACK_POLLING=true  # Para sistemas de archivos que no soportan inotify
     volumes:
       - ./frontend:/app

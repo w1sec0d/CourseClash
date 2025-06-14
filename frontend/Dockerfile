@@ -39,7 +39,7 @@ WORKDIR /app
 # Set production environment
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:8000
+ENV NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:8080
 ENV NEXT_PUBLIC_AUTH_SERVICE_URL=http://localhost:8001
 
 # Create non-root user for security

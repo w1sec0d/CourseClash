@@ -134,7 +134,9 @@ export const useSubmissions = (activityId: string, userId: string, userRole: str
 
 // Hook para crear actividad
 export const useCreateActivity = () => {
-  const [createActivity, { loading, error }] = useMutation(CREATE_ACTIVITY);
+  const [createActivity, { loading, error }] = useMutation(CREATE_ACTIVITY, {
+    errorPolicy: 'all', // Permite capturar errores de autenticación
+  });
 
   const handleCreateActivity = async (input: CreateActivityInput) => {
     try {
@@ -161,9 +163,28 @@ export const useCreateActivity = () => {
         };
       }
     } catch (err) {
+      console.error('Error en createActivity:', err);
+      
+      // Manejar errores específicos de autenticación
+      let errorMessage = 'Error desconocido';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        
+        // Detectar errores de token
+        if (errorMessage.includes('Token inválido') || 
+            errorMessage.includes('Token expirado') ||
+            errorMessage.includes('unauthorized') ||
+            errorMessage.includes('Unauthorized') ||
+            errorMessage.includes('401')) {
+          errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
+        }
+      }
+      
       return {
         success: false,
-        error: err instanceof Error ? err.message : 'Error desconocido',
+        error: errorMessage,
+        isAuthError: errorMessage.includes('sesión') || errorMessage.includes('Token'),
       };
     }
   };
