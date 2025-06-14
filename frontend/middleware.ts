@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 // Lista de rutas protegidas que requieren autenticación
 const protectedRoutes = [
   '/dashboard',
-  '/duels',
+  '/duelos',
   '/courses',
   '/profile',
   '/configuracion',

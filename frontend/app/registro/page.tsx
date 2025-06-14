@@ -71,8 +71,8 @@ export default function Register() {
       const result = await registerUser(userData);
       console.log('✅ Registration successful with Apollo:', result);
 
-      // Redirect to dashboard after successful registration
-      router.push('/dashboard');
+      // Redirect to profile setup after successful registration
+      router.push('/perfil');
     } catch (error) {
       console.error('Registration error:', error);
 

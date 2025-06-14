@@ -7,7 +7,7 @@ import { useDuels } from '@/lib/duel-hooks-apollo';
 import Button from '@/components/Button';
 import { TrophyIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
-import ProtectedRoute from '@/components/ProtectedRoute';
+
 
 function DuelosContent() {
   const { user } = useAuthApollo();
@@ -641,9 +641,36 @@ function DuelosContent() {
 }
 
 export default function Duelos() {
-  return (
-    <ProtectedRoute>
-      <DuelosContent />
-    </ProtectedRoute>
-  );
+  const { isAuthenticated, isLoading } = useAuthApollo();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+            Acceso Restringido
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Necesitas iniciar sesión para acceder a los duelos.
+          </p>
+          <a
+            href="/login"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700"
+          >
+            Iniciar Sesión
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return <DuelosContent />;
 }

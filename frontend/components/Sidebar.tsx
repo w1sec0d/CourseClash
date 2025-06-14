@@ -9,6 +9,7 @@ import UserMetrics from './sidebar/UserMetrics';
 import CommonMenu from './sidebar/CommonMenu';
 import AuthenticatedMenu from './sidebar/AuthenticatedMenu';
 import CourseList from './sidebar/CourseList';
+import PublicMenu from './sidebar/PublicMenu';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -16,7 +17,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onClose }: SidebarProps) {
-  const { user, logout } = useAuthApollo();
+  const { user, logout, isAuthenticated } = useAuthApollo();
   const router = useRouter();
 
   const handleLogout = async (): Promise<boolean> => {
@@ -55,24 +56,59 @@ export default function Sidebar({ onClose }: SidebarProps) {
       className='h-full w-64 bg-white shadow-lg lg:translate-x-0 fixed left-0 top-16 border-r border-gray-200 transform -translate-x-full transition-transform duration-300 z-40'
       id='sidebar'
     >
-      <div className='p-4'>
-        {/* Sección de perfil */}
-        <UserProfile user={user} onLogout={handleLogout} />
+      <div className='p-4 h-full overflow-y-auto'>
+        {isAuthenticated ? (
+          <>
+            {/* Sección de perfil */}
+            <UserProfile user={user} onLogout={handleLogout} />
 
-        {/* Métricas del usuario (monedas, notificaciones) */}
-        <UserMetrics />
+            {/* Métricas del usuario (monedas, notificaciones) */}
+            <UserMetrics />
 
-        {/* Menú de navegación */}
-        <div className='space-y-2'>
-          {/* Enlaces comunes para todos */}
-          <CommonMenu />
+            {/* Menú de navegación */}
+            <div className='space-y-2'>
+              {/* Enlaces comunes para todos */}
+              <CommonMenu />
 
-          {/* Enlaces solo para usuarios autenticados */}
-          <AuthenticatedMenu />
-        </div>
+              {/* Enlaces solo para usuarios autenticados */}
+              <AuthenticatedMenu />
+            </div>
 
-        {/* Lista de cursos */}
-        <CourseList />
+            {/* Lista de cursos */}
+            <CourseList />
+          </>
+        ) : (
+          <>
+            {/* Menú para usuarios no autenticados */}
+            <PublicMenu />
+            
+            {/* Enlaces comunes */}
+            <div className='space-y-2'>
+              <CommonMenu />
+            </div>
+            
+            {/* Información adicional para usuarios no autenticados */}
+            <div className='mt-8 p-4 bg-emerald-50 rounded-lg'>
+              <h3 className='text-sm font-semibold text-emerald-800 mb-2'>
+                ¿Nuevo en Course Clash?
+              </h3>
+              <p className='text-xs text-emerald-700 mb-3'>
+                Únete a nuestra comunidad y comienza tu aventura académica
+              </p>
+              <ul className='text-xs text-emerald-600 space-y-1'>
+                <li className='flex items-center'>
+                  <span className='mr-1'>✓</span> Duelos académicos
+                </li>
+                <li className='flex items-center'>
+                  <span className='mr-1'>✓</span> Insignias y logros
+                </li>
+                <li className='flex items-center'>
+                  <span className='mr-1'>✓</span> Tienda de bonificaciones
+                </li>
+              </ul>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
