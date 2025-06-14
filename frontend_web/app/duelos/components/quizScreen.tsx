@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect, useRef } from 'react';
 import { Question } from './Question';
 import { DuelHeader } from './DuelHeader';
@@ -76,6 +77,8 @@ export default function QuizScreen({
     setIsInitializing(false); // Mark as initialized once we have a connection
 
     const handleMessage = (event: MessageEvent) => {
+      console.log('➡️📦recibiendo mensaje');
+      console.log(`[${playerId}] Timestamp: ${Date.now()}`);
       try {
         console.log(`[${playerId}] Raw WebSocket message:`, event.data);
         console.log(`[${playerId}] Message type:`, typeof event.data);
@@ -165,6 +168,13 @@ export default function QuizScreen({
     wsConnection.addEventListener('close', handleClose);
     wsConnection.addEventListener('error', handleError);
 
+    // Check if connection is already open
+    if (wsConnection.readyState === WebSocket.OPEN) {
+      console.log(
+        `[${playerId}] WebSocket already OPEN when setting up listeners`
+      );
+    }
+
     // Delay crítico para sincronización - NO REMOVER
     // Aparentemente este timing es necesario para la estabilidad
     const stabilizationTimer = setTimeout(() => {
@@ -196,7 +206,7 @@ export default function QuizScreen({
         wsConnection.removeEventListener('error', handleError);
       }
     };
-  }, [wsConnection, playerId]);
+  }, [wsConnection, playerId, totalQuestions]); // Removed isWaiting to prevent re-creating listeners
 
   // Timer effect - improved to prevent duplicate submissions
   useEffect(() => {

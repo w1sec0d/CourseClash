@@ -35,12 +35,31 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 	}()
 
 	log.Printf("Iniciando HandleDuel para %s y %s", player1.ID, player2.ID)
+	
+	// Verificar que ambos jugadores tienen conexiones válidas
+	if player1 == nil || player1.Conn == nil {
+		log.Printf("ERROR: Player1 es nil o no tiene conexión válida")
+		return
+	}
+	if player2 == nil || player2.Conn == nil {
+		log.Printf("ERROR: Player2 es nil o no tiene conexión válida")
+		return
+	}
+	
+	log.Printf("Ambos jugadores tienen conexiones válidas. Iniciando duelo con %d preguntas", len(questions))
 
 	// Notificamos a los jugadores que el duelo va a comenzar
 	// ...
 
-	for _, question := range questions {
-		broadcastQuestion(player1, player2, question)
+	for i, question := range questions {
+		log.Printf("Enviando pregunta %d/%d (ID: %s) a jugadores %s y %s", i+1, len(questions), question.ID, player1.ID, player2.ID)
+		
+		success := broadcastQuestion(player1, player2, question)
+		if !success {
+			log.Printf("Error al enviar pregunta %s. Terminando duelo prematuramente", question.ID)
+			return
+		}
+		
 		startTime := time.Now()
 
 		// Envio sincronizado de respuestas.
@@ -61,14 +80,32 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 // message es la estructura en que será enviada la pregunta, para ello se utiliza una instancia a la estructura de datos de más arriba
 // * Con WriteJSON básicamente se envía cada pregunta a cada jugador utilizando la conexión websocket
 
-func broadcastQuestion(player1, player2 *models.Player, question models.Question) {
+func broadcastQuestion(player1, player2 *models.Player, question models.Question) bool {
 	message := map[string]interface{}{
 		"type": "question",
 		"data": question,
 	}
-	// Envio sincronizado de preguntas usando los métodos seguros
-	player1.SafeWriteJSON(message)
-	player2.SafeWriteJSON(message)
+	
+	log.Printf("Enviando pregunta ID: %s a jugadores %s y %s", question.ID, player1.ID, player2.ID)
+	
+	// Enviar a Player1
+	err1 := player1.SafeWriteJSON(message)
+	if err1 != nil {
+		log.Printf("ERROR: No se pudo enviar pregunta a Player1 (%s): %v", player1.ID, err1)
+		return false
+	}
+	log.Printf("✅ Pregunta enviada exitosamente a Player1 (%s)", player1.ID)
+	
+	// Enviar a Player2
+	err2 := player2.SafeWriteJSON(message)
+	if err2 != nil {
+		log.Printf("ERROR: No se pudo enviar pregunta a Player2 (%s): %v", player2.ID, err2)
+		return false
+	}
+	log.Printf("✅ Pregunta enviada exitosamente a Player2 (%s)", player2.ID)
+	
+	log.Printf("✅ Pregunta ID: %s enviada exitosamente a ambos jugadores", question.ID)
+	return true
 }
 
 // Esta función permite recibir un mapa con la clave answer, que representa la respuesta de los jugadores
