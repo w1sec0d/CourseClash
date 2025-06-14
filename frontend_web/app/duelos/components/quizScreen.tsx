@@ -10,6 +10,7 @@ interface QuestionData {
   text: string;
   answer: string;
   options: string[];
+  duration: number;
 }
 
 interface DuelResultsData {
@@ -56,6 +57,8 @@ export default function QuizScreen({
   const [totalQuestions] = useState(5);
   const [error, setError] = useState<string | null>(null);
   const [duelResults, setDuelResults] = useState<DuelResultsData | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [hasAnswered, setHasAnswered] = useState<boolean>(false);
 
   useEffect(() => {
     if (!wsConnection) return;
@@ -102,6 +105,8 @@ export default function QuizScreen({
           console.log(`[${playerId}] Received question, starting quiz!`);
           setIsWaiting(false);
           setCurrentQuestion(data.data);
+          setTimeRemaining(data.data.duration || 30); // Set timer with duration from question
+          setHasAnswered(false); // Reset answer state for new question
           setError(null);
           // Update opponent progress when new question arrives
           setOpponentProgress((prev) => Math.min(prev + 1, totalQuestions) - 1);
@@ -178,8 +183,40 @@ export default function QuizScreen({
     };
   }, [wsConnection, playerId]);
 
+  // Timer effect
+  useEffect(() => {
+    if (!currentQuestion || hasAnswered || timeRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          // Time's up! Send incorrect answer automatically
+          if (!hasAnswered && wsConnection) {
+            try {
+              wsConnection.send(
+                JSON.stringify({
+                  type: "answer",
+                  questionId: currentQuestion.id,
+                  answer: "incorrecto",
+                })
+              );
+              setPlayerProgress((prev) => prev + 1);
+              setHasAnswered(true);
+            } catch (err) {
+              console.error("Error sending auto-incorrect answer:", err);
+            }
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [currentQuestion, hasAnswered, timeRemaining, wsConnection]);
+
   const handleAnswerSelect = (selectedOption: string) => {
-    if (!wsConnection || !currentQuestion) return;
+    if (!wsConnection || !currentQuestion || hasAnswered) return;
 
     try {
       wsConnection.send(
@@ -191,6 +228,7 @@ export default function QuizScreen({
       );
 
       setPlayerProgress((prev) => prev + 1);
+      setHasAnswered(true); // Mark as answered to stop timer
       setError(null);
     } catch (err) {
       console.error("Error sending answer:", err);
@@ -286,6 +324,9 @@ export default function QuizScreen({
               text: option,
             }))}
             onAnswerSelect={handleAnswerSelect}
+            timeRemaining={timeRemaining}
+            hasAnswered={hasAnswered}
+            totalTime={currentQuestion.duration || 30}
           />
 
           {/* <PowerUps />
