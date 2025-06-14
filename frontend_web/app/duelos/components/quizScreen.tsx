@@ -1,5 +1,4 @@
-'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Question } from './Question';
 import { DuelHeader } from './DuelHeader';
 import { DuelResults } from './DuelResults';
@@ -11,6 +10,7 @@ interface QuestionData {
   text: string;
   answer: string;
   options: string[];
+  duration: number;
 }
 
 interface DuelResultsData {
@@ -57,6 +57,12 @@ export default function QuizScreen({
   const [totalQuestions] = useState(5);
   const [error, setError] = useState<string | null>(null);
   const [duelResults, setDuelResults] = useState<DuelResultsData | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [hasAnswered, setHasAnswered] = useState<boolean>(false);
+
+  // Refs to prevent duplicate submissions
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasSubmittedRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (!wsConnection) return;
@@ -106,6 +112,9 @@ export default function QuizScreen({
           setIsWaiting(false);
           console.log('isWaiting falso', isWaiting);
           setCurrentQuestion(data.data);
+          setTimeRemaining(data.data.duration || 30); // Set timer with duration from question
+          setHasAnswered(false); // Reset answer state for new question
+          hasSubmittedRef.current = false; // Reset submission flag for new question
           setError(null);
           // Update opponent progress when new question arrives
           setOpponentProgress((prev) => Math.min(prev + 1, totalQuestions) - 1);
@@ -173,6 +182,13 @@ export default function QuizScreen({
     return () => {
       console.log(`[${playerId}] Cleaning up WebSocket connection`);
       clearTimeout(stabilizationTimer);
+
+      // Clean up timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
       if (wsConnection) {
         wsConnection.removeEventListener('message', handleMessage);
         wsConnection.removeEventListener('open', handleOpen);
@@ -180,10 +196,80 @@ export default function QuizScreen({
         wsConnection.removeEventListener('error', handleError);
       }
     };
-  }, [wsConnection, playerId, totalQuestions]);
+  }, [wsConnection, playerId]);
+
+  // Timer effect - improved to prevent duplicate submissions
+  useEffect(() => {
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Don't start timer if no question, already answered, or time is up
+    if (!currentQuestion || hasAnswered || timeRemaining <= 0) return;
+
+    console.log(
+      `[${playerId}] Starting timer for question ${currentQuestion.id}, time: ${timeRemaining}s`
+    );
+
+    timerRef.current = setInterval(() => {
+      setTimeRemaining((prev) => {
+        const newTime = prev - 1;
+        console.log(`[${playerId}] Timer tick: ${newTime}s remaining`);
+
+        // Time's up! Send incorrect answer automatically (only once)
+        if (newTime <= 0 && !hasSubmittedRef.current) {
+          console.log(`[${playerId}] Time's up! Sending auto-incorrect answer`);
+          hasSubmittedRef.current = true; // Set flag to prevent duplicate submissions
+
+          if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+            try {
+              wsConnection.send(
+                JSON.stringify({
+                  type: 'answer',
+                  questionId: currentQuestion.id,
+                  answer: 'incorrecto',
+                })
+              );
+              setPlayerProgress((prev) => prev + 1);
+              setHasAnswered(true);
+              console.log(
+                `[${playerId}] Auto-incorrect answer sent successfully`
+              );
+            } catch (err) {
+              console.error(
+                `[${playerId}] Error sending auto-incorrect answer:`,
+                err
+              );
+              hasSubmittedRef.current = false; // Reset flag on error to allow retry
+            }
+          }
+        }
+
+        return Math.max(newTime, 0);
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [currentQuestion?.id, hasAnswered]); // Removed timeRemaining from dependencies to prevent re-creation
 
   const handleAnswerSelect = (selectedOption: string) => {
-    if (!wsConnection || !currentQuestion) return;
+    if (
+      !wsConnection ||
+      !currentQuestion ||
+      hasAnswered ||
+      hasSubmittedRef.current
+    )
+      return;
+
+    console.log(`[${playerId}] User selected answer: ${selectedOption}`);
+    hasSubmittedRef.current = true; // Prevent duplicate submissions
 
     try {
       wsConnection.send(
@@ -195,10 +281,13 @@ export default function QuizScreen({
       );
 
       setPlayerProgress((prev) => prev + 1);
+      setHasAnswered(true); // Mark as answered to stop timer
       setError(null);
+      console.log(`[${playerId}] User answer sent successfully`);
     } catch (err) {
-      console.error('Error sending answer:', err);
+      console.error(`[${playerId}] Error sending answer:`, err);
       setError('Error al enviar la respuesta');
+      hasSubmittedRef.current = false; // Reset flag on error to allow retry
     }
   };
 
@@ -290,6 +379,9 @@ export default function QuizScreen({
               text: option,
             }))}
             onAnswerSelect={handleAnswerSelect}
+            timeRemaining={timeRemaining}
+            hasAnswered={hasAnswered}
+            totalTime={currentQuestion.duration || 30}
           />
 
           {/* <PowerUps />
