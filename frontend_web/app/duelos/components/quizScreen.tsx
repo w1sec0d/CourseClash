@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { Question } from "./Question";
-import { DuelHeader } from "./DuelHeader";
-import { DuelResults } from "./DuelResults";
+'use client';
+import { useState, useEffect, useRef } from 'react';
+import { Question } from './Question';
+import { DuelHeader } from './DuelHeader';
+import { DuelResults } from './DuelResults';
 // import { PowerUps } from './PowerUps';
 // import { StreakAlert } from './StreakAlert';
 
@@ -10,6 +11,7 @@ interface QuestionData {
   text: string;
   answer: string;
   options: string[];
+  duration: number;
 }
 
 interface DuelResultsData {
@@ -53,9 +55,16 @@ export default function QuizScreen({
   const [isInitializing, setIsInitializing] = useState(true);
   const [playerProgress, setPlayerProgress] = useState(0);
   const [opponentProgress, setOpponentProgress] = useState(0);
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState(0);
   const [totalQuestions] = useState(5);
   const [error, setError] = useState<string | null>(null);
   const [duelResults, setDuelResults] = useState<DuelResultsData | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [hasAnswered, setHasAnswered] = useState<boolean>(false);
+
+  // Refs to prevent duplicate submissions
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasSubmittedRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (!wsConnection) return;
@@ -64,9 +73,13 @@ export default function QuizScreen({
     console.log(
       `[${playerId}] WebSocket readyState: ${wsConnection.readyState}`
     );
+    console.log(`[${playerId}] WebSocket URL: ${wsConnection.url}`);
+    console.log(`[${playerId}] useEffect execution time: ${Date.now()}`);
     setIsInitializing(false); // Mark as initialized once we have a connection
 
     const handleMessage = (event: MessageEvent) => {
+      console.log('➡️📦recibiendo mensaje');
+      console.log(`[${playerId}] Timestamp: ${Date.now()}`);
       try {
         console.log(`[${playerId}] Raw WebSocket message:`, event.data);
         console.log(`[${playerId}] Message type:`, typeof event.data);
@@ -77,6 +90,7 @@ export default function QuizScreen({
 
           if (event.data.includes("Esperando al oponente")) {
             setIsWaiting(true);
+            console.log('isWaiting de esperando al oponente', isWaiting);
             setError(null);
           } else if (
             event.data === "¡Oponente conectado! El duelo comenzará pronto." ||
@@ -86,6 +100,7 @@ export default function QuizScreen({
               `[${playerId}] Both players connected, waiting for first question...`
             );
             setIsWaiting(true);
+            console.log('isWaiting de elseIf', isWaiting);
             setError(null);
           }
           return;
@@ -99,8 +114,14 @@ export default function QuizScreen({
         if (data.type === "question") {
           console.log(`[${playerId}] Received question, starting quiz!`);
           setIsWaiting(false);
+          console.log('isWaiting falso', isWaiting);
           setCurrentQuestion(data.data);
+          setTimeRemaining(data.data.duration || 30); // Set timer with duration from question
+          setHasAnswered(false); // Reset answer state for new question
+          hasSubmittedRef.current = false; // Reset submission flag for new question
           setError(null);
+          // Increment current question number when a new question arrives
+          setCurrentQuestionNumber((prev) => prev + 1);
           // Update opponent progress when new question arrives
           setOpponentProgress((prev) => Math.min(prev + 1, totalQuestions) - 1);
         } else if (data.type === "opponent_progress") {
@@ -150,23 +171,118 @@ export default function QuizScreen({
     wsConnection.addEventListener("close", handleClose);
     wsConnection.addEventListener("error", handleError);
 
-    // Send a ping message to test the connection
+    // Check if connection is already open
     if (wsConnection.readyState === WebSocket.OPEN) {
-      console.log(`[${playerId}] Sending ping message to test connection`);
-      wsConnection.send(JSON.stringify({ type: "ping", playerId }));
+      console.log(
+        `[${playerId}] WebSocket already OPEN when setting up listeners`
+      );
     }
 
+    // Delay crítico para sincronización - NO REMOVER
+    // Aparentemente este timing es necesario para la estabilidad
+    const stabilizationTimer = setTimeout(() => {
+      console.log(
+        `[${playerId}] Sincronización completada - conexión estabilizada`
+      );
+
+      // Ping necesario para activar el servidor (debe ser ignorado por la lógica del juego)
+      if (wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.send(JSON.stringify({ type: 'ping', playerId }));
+      }
+    }, 500);
+
+    // Limpiar timer en cleanup
     return () => {
       console.log(`[${playerId}] Cleaning up WebSocket connection`);
-      wsConnection.removeEventListener("message", handleMessage);
-      wsConnection.removeEventListener("open", handleOpen);
-      wsConnection.removeEventListener("close", handleClose);
-      wsConnection.removeEventListener("error", handleError);
+      clearTimeout(stabilizationTimer);
+
+      // Clean up timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      if (wsConnection) {
+        wsConnection.removeEventListener('message', handleMessage);
+        wsConnection.removeEventListener('open', handleOpen);
+        wsConnection.removeEventListener('close', handleClose);
+        wsConnection.removeEventListener('error', handleError);
+      }
     };
-  }, [wsConnection, playerId]);
+  }, [wsConnection, playerId]); // Removed isWaiting to prevent re-creating listeners
+
+  // Timer effect - improved to prevent duplicate submissions
+  useEffect(() => {
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Don't start timer if no question, already answered, or time is up
+    if (!currentQuestion || hasAnswered || timeRemaining <= 0) return;
+
+    console.log(
+      `[${playerId}] Starting timer for question ${currentQuestion.id}, time: ${timeRemaining}s`
+    );
+
+    timerRef.current = setInterval(() => {
+      setTimeRemaining((prev) => {
+        const newTime = prev - 1;
+        console.log(`[${playerId}] Timer tick: ${newTime}s remaining`);
+
+        // Time's up! Send incorrect answer automatically (only once)
+        if (newTime <= 0 && !hasSubmittedRef.current) {
+          console.log(`[${playerId}] Time's up! Sending auto-incorrect answer`);
+          hasSubmittedRef.current = true; // Set flag to prevent duplicate submissions
+
+          if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+            try {
+              wsConnection.send(
+                JSON.stringify({
+                  type: 'answer',
+                  questionId: currentQuestion.id,
+                  answer: 'incorrecto',
+                })
+              );
+              setPlayerProgress((prev) => prev + 1);
+              setHasAnswered(true);
+              console.log(
+                `[${playerId}] Auto-incorrect answer sent successfully`
+              );
+            } catch (err) {
+              console.error(
+                `[${playerId}] Error sending auto-incorrect answer:`,
+                err
+              );
+              hasSubmittedRef.current = false; // Reset flag on error to allow retry
+            }
+          }
+        }
+
+        return Math.max(newTime, 0);
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [currentQuestion?.id, hasAnswered]); // Removed timeRemaining from dependencies to prevent re-creation
 
   const handleAnswerSelect = (selectedOption: string) => {
-    if (!wsConnection || !currentQuestion) return;
+    if (
+      !wsConnection ||
+      !currentQuestion ||
+      hasAnswered ||
+      hasSubmittedRef.current
+    )
+      return;
+
+    console.log(`[${playerId}] User selected answer: ${selectedOption}`);
+    hasSubmittedRef.current = true; // Prevent duplicate submissions
 
     try {
       wsConnection.send(
@@ -178,10 +294,13 @@ export default function QuizScreen({
       );
 
       setPlayerProgress((prev) => prev + 1);
+      setHasAnswered(true); // Mark as answered to stop timer
       setError(null);
+      console.log(`[${playerId}] User answer sent successfully`);
     } catch (err) {
-      console.error("Error sending answer:", err);
-      setError("Error al enviar la respuesta");
+      console.error(`[${playerId}] Error sending answer:`, err);
+      setError('Error al enviar la respuesta');
+      hasSubmittedRef.current = false; // Reset flag on error to allow retry
     }
   };
 
@@ -265,7 +384,7 @@ export default function QuizScreen({
 
           <Question
             key={currentQuestion.id}
-            questionNumber={playerProgress + 1}
+            questionNumber={currentQuestionNumber}
             totalQuestions={totalQuestions}
             question={currentQuestion.text}
             options={currentQuestion.options.map((option, index) => ({
@@ -273,6 +392,9 @@ export default function QuizScreen({
               text: option,
             }))}
             onAnswerSelect={handleAnswerSelect}
+            timeRemaining={timeRemaining}
+            hasAnswered={hasAnswered}
+            totalTime={currentQuestion.duration || 30}
           />
 
           {/* <PowerUps />

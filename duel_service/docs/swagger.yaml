@@ -3,7 +3,7 @@ definitions:
   models.AcceptDuelRequest:
     properties:
       duel_id:
-        example: player123_vs_player456
+        example: "123"
         type: string
     required:
     - duel_id
@@ -11,7 +11,7 @@ definitions:
   models.AcceptDuelResponse:
     properties:
       duel_id:
-        example: player123_vs_player456
+        example: "123"
         type: string
       message:
         example: Duel accepted
@@ -74,7 +74,7 @@ definitions:
   models.RequestDuelResponse:
     properties:
       duel_id:
-        example: player123_vs_player456
+        example: "123"
         type: string
       message:
         example: Duel successfully requested
@@ -204,6 +204,26 @@ paths:
       summary: Conexión WebSocket para duelo
       tags:
       - duelos
+  /ws/notifications/{user_id}:
+    get:
+      description: Establece una conexión WebSocket para recibir notificaciones de
+        duelos en tiempo real
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Conexión WebSocket establecida para recibir notificaciones
+          schema:
+            type: string
+      summary: Conexión WebSocket para notificaciones
+      tags:
+      - notificaciones
 schemes:
 - http
 swagger: "2.0"
