@@ -91,7 +91,8 @@ func NotificationHandler(w http.ResponseWriter, r *http.Request, userID string) 
 				break
 			}
 		} else {
-			log.Printf("Mensaje recibido en la conexión de notificaciones de %s: %s", userID, message)
+			// log.Printf("Mensaje recibido en la conexión de notificaciones de %s: %s", userID, message)
+			_ = message // Silenciar warning de variable no usada
 		}
 	}
 } 

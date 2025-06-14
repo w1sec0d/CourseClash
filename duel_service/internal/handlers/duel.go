@@ -122,7 +122,8 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 			calculateScore(player1, question, lastAnswer1, time.Now())
 			calculateScore(player2, question, lastAnswer2, time.Now())
 		}
-	}
+	
+	log.Printf("🏁 [TODAS LAS PREGUNTAS COMPLETADAS] Enviando resultados finales del duelo %s", duelID)
 
 	// Enviar resultados finales
 	endDuel(player1, player2, duelID)
@@ -135,6 +136,7 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 // * Con WriteJSON básicamente se envía cada pregunta a cada jugador utilizando la conexión websocket
 
 func broadcastQuestion(player1, player2 *models.Player, question models.Question) bool {
+  
 	message := map[string]interface{}{
 		"type": "question",
 		"data": question,
