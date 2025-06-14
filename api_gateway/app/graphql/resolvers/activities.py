@@ -53,6 +53,7 @@ class Activity:
 class Submissions:
     id: int
     activity_id: int
+    user_id: int
     submitted_at: Optional[datetime] = None
     content: Optional[str] = None
     file_url: Optional[str] = None
@@ -285,7 +286,7 @@ class Query:
                     submitted_at = datetime.fromisoformat(submitted_at_str.replace("Z", "+00:00")) if submitted_at_str else None
 
                     submission["submitted_at"] = submitted_at
-                    submission.pop("user_id", None)  # Elimina el campo user_id si existe
+                    # Mantener el user_id para la respuesta GraphQL
 
                     submission_instance = Submissions(**submission)
                     submissions_list.append(submission_instance)
