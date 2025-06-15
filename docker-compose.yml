@@ -115,35 +115,35 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 
   # Frontend
-  # cc_fe_web:
-  #   container_name: cc_fe_web
-  #   build:
-  #     context: ./frontend_web
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - '3000:3000'
-  #   environment:
-  #     - NODE_ENV=production
-  #     - API_URL=http://cc_ag:8080
-  #     - NEXT_PUBLIC_API_URL=http://cc_ag:8080
-  #   depends_on:
-  #     - cc_ag
-  #   networks:
-  #     - courseclash-network
-  #   healthcheck:
-  #     test:
-  #       [
-  #         'CMD',
-  #         'wget',
-  #         '--no-verbose',
-  #         '--tries=1',
-  #         '--spider',
-  #         'http://0.0.0.0:3000',
-  #       ]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 60s
+  cc_fe_web:
+    container_name: cc_fe_web
+    build:
+      context: ./frontend_web
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://cc_ag:8080
+      - NEXT_PUBLIC_API_URL=http://cc_ag:8080
+    depends_on:
+      - cc_ag
+    networks:
+      - courseclash-network
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://0.0.0.0:3000',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   # Base de datos MySQL (para auth_user_service)
   cc_authcourses_db:

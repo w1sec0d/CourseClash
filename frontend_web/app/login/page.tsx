@@ -30,8 +30,7 @@ export default function Login() {
       rememberMe: false,
     },
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, resetPassword, updatePassword } = useAuthApollo();
+  const { login, resetPassword, updatePassword, isLoading } = useAuthApollo();
   const router = useRouter();
 
   const handleForgotPassword = async () => {
@@ -175,10 +174,10 @@ export default function Login() {
   };
 
   const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading(true);
     try {
       // Call the login function from Apollo auth context
       await login(data.email, data.password);
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Redirect to dashboard after successful login
       router.push('/dashboard');
@@ -219,8 +218,6 @@ export default function Login() {
           type: 'UNKNOWN_ERROR',
         });
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
