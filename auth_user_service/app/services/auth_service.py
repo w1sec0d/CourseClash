@@ -24,6 +24,8 @@ def transform_user(user: tuple) -> UserInterno:
         is_active=user[5],
         is_superuser=user[6],
         created_at=str(user[7]),
+        avatar_url=user[8],
+        bio=user[9]
     )
 
 

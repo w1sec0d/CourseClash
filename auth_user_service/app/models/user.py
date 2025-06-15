@@ -26,6 +26,8 @@ class UserInterno(BaseModel):
     is_active: bool
     is_superuser: bool
     created_at: str
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
 
 
 # Modelo de usuario para el registro de un usuario
@@ -36,6 +38,7 @@ class UserCreate(BaseModel):
     full_name: Optional[str] = None
     is_active: bool = True
     is_superuser: bool = False
+    role: str
 
 
 # Modelo de usuario para la actualización de este
