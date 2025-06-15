@@ -121,7 +121,7 @@ class WebSocketManager:
     async def send_question_to_duel(self, data: dict):
         """Send question to duel participants"""
         duel_id = data.get("duelId")
-        question_data = data.get("question")
+        question_data = data.get("data")  # Changed from "question" to "data"
 
         if duel_id in self.duel_connections:
             message = {"type": "question", "data": question_data}
@@ -140,7 +140,7 @@ class WebSocketManager:
     async def send_results_to_duel(self, data: dict):
         """Send duel results to participants"""
         duel_id = data.get("duelId")
-        results = data.get("results")
+        results = data.get("data")  # Changed from "results" to "data"
 
         if duel_id in self.duel_connections:
             message = {"type": "duel_end", "data": results}

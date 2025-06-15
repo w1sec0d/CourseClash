@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	_ "courseclash/duel-service/docs"
@@ -50,6 +51,17 @@ func main() {
 	}
 
 	r := gin.Default()
+	
+	// Add request logging middleware
+	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
+		return fmt.Sprintf("🌐 [HTTP] %s %s %d %v\n",
+			param.Method,
+			param.Path,
+			param.StatusCode,
+			param.Latency,
+		)
+	}))
+	
 	RegisterRoutes(r)
 
 	log.Println("Servicio de Duelos iniciado en el puerto 8002")

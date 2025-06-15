@@ -10,6 +10,7 @@ import (
 	duelhandlers "courseclash/duel-service/internal/handlers"
 	"courseclash/duel-service/internal/models"
 	"courseclash/duel-service/internal/repositories"
+	"courseclash/duel-service/internal/services"
 
 	"log"
 
@@ -128,11 +129,16 @@ func requestDuelHandler(c *gin.Context) {
 // @Failure 404 {object} models.ErrorResponseDuelNotFound "No se encontró el duelo con el ID proporcionado"
 // @Router /api/duels/accept [post]
 func acceptDuelHandler(c *gin.Context) {
+	log.Printf("🎯 [ACCEPT DUEL] Request received")
+	
 	var accept models.AcceptDuelRequest
 	if err := c.ShouldBindJSON(&accept); err != nil {
+		log.Printf("❌ [ACCEPT DUEL] Invalid request body: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Peticion invalida"})
 		return
 	}
+	
+	log.Printf("🎯 [ACCEPT DUEL] Processing duel ID: %s", accept.DuelID)
 	
 	// Verificar que el duelo existe en la base de datos
 	duelRepo := repositories.NewDuelRepository()
@@ -167,32 +173,56 @@ func acceptDuelHandler(c *gin.Context) {
 	duelsync.Mu.Unlock()
 	
 	if exists {
-		channel <- true
+		log.Printf("✅ [ACCEPT DUEL] Duel %s found, sending acceptance signal", accept.DuelID)
+		
+		// Send acceptance signal in a non-blocking way
+		go func() {
+			select {
+			case channel <- true:
+				log.Printf("✅ [ACCEPT DUEL] Acceptance signal sent for duel %s", accept.DuelID)
+			case <-time.After(1 * time.Second):
+				log.Printf("⚠️ [ACCEPT DUEL] Timeout sending acceptance signal for duel %s", accept.DuelID)
+			}
+		}()
+		
+		// Respond immediately to avoid timeout
+		log.Printf("📤 [ACCEPT DUEL] Sending HTTP response for duel %s", accept.DuelID)
 		c.JSON(http.StatusOK, gin.H{
 			"duel_id": accept.DuelID,
 			"message": "Duelo aceptado exitosamente",
 		})
+		log.Printf("✅ [ACCEPT DUEL] HTTP response sent successfully for duel %s", accept.DuelID)
+		
+		// Start the RabbitMQ-based duel asynchronously (non-blocking)
+		go func() {
+			// Wait a moment for players to connect to WebSocket Manager
+			time.Sleep(5 * time.Second)
+			
+			// Get questions for the duel
+			questionService := services.NewQuestionService()
+			questions, err := questionService.GetQuestionsForDuel(123)
+			if err != nil {
+				log.Printf("Error getting questions for duel %s: %v. Using backup questions.", accept.DuelID, err)
+				questions = []models.Question{
+					{ID: "backup1", Text: "¿Cuál es el río más largo del mundo?", Answer: "Nilo", Options: []string{"Amazonas", "Nilo", "Misisipi", "Yangtsé"}, Duration: 30},
+					{ID: "backup2", Text: "¿Cuánto es 2+2?", Answer: "4", Options: []string{"3", "4", "5", "6"}, Duration: 30},
+					{ID: "backup3", Text: "¿Quién pintó la Mona Lisa?", Answer: "Leonardo da Vinci", Options: []string{"Pablo Picasso", "Vincent van Gogh", "Leonardo da Vinci", "Miguel Ángel"}, Duration: 30},
+					{ID: "backup4", Text: "¿Cuál es el planeta más grande del sistema solar?", Answer: "Júpiter", Options: []string{"Tierra", "Júpiter", "Saturno", "Marte"}, Duration: 30},
+					{ID: "backup5", Text: "¿En qué año comenzó la Segunda Guerra Mundial?", Answer: "1939", Options: []string{"1914", "1939", "1945", "1918"}, Duration: 30},
+				}
+			}
+			
+			log.Printf("Starting RabbitMQ-based duel %s between %s and %s", accept.DuelID, duel.ChallengerID, duel.OpponentID)
+			duelhandlers.HandleDuelViaRabbitMQ(duel.ChallengerID, duel.OpponentID, questions, accept.DuelID)
+		}()
+		
 	} else {
+		log.Printf("❌ [ACCEPT DUEL] Duel %s not found in active sessions", accept.DuelID)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Duelo no encontrado en la sesión activa"})
 	}
 }
 
-// wsDuelHandler maneja la conexión WebSocket para un duelo.
-// @Summary Conexión WebSocket para duelo
-// @Description Establece una conexión WebSocket para un jugador en un duelo. Permite la comunicación en tiempo real durante el duelo.
-// @Tags duelos
-// @Produce json
-// @Param duel_id path string true "ID del duelo" example:"player123_vs_player456"
-// @Param player_id path string true "ID del jugador" example:"player123"
-// @Success 101 {string} string "Conexión WebSocket establecida para comunicación en tiempo real durante el duelo"
-// @Failure 404 {object} string "Duelo no encontrado"
-// @Failure 401 {object} string "Jugador no autorizado para este duelo"
-// @Router /ws/duels/{duel_id}/{player_id} [get]
-func wsDuelHandler(c *gin.Context) {
-	duelID := c.Param("duel_id")
-	playerID := c.Param("player_id")
-	duelhandlers.WsHandler(c.Writer, c.Request, duelID, playerID)
-}
+// wsDuelHandler has been removed - duels now work entirely through WebSocket Manager + RabbitMQ
 
 // wsNotificationHandler maneja la conexión WebSocket para notificaciones.
 // @Summary Conexión WebSocket para notificaciones
@@ -237,7 +267,7 @@ func getPlayerHandler(c *gin.Context) {
 func RegisterRoutes(r *gin.Engine) {
 	r.POST("/api/duels/request", requestDuelHandler)
 	r.POST("/api/duels/accept", acceptDuelHandler)
-	r.GET("/ws/duels/:duel_id/:player_id", wsDuelHandler)
+	// Removed /ws/duels/:duel_id/:player_id - now handled by WebSocket Manager
 	r.GET("/ws/notifications/:user_id", wsNotificationHandler)
 	r.GET("/api/players/:player_id", getPlayerHandler)
 }
