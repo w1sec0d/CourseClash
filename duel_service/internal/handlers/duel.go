@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"courseclash/duel-service/internal/broker"
 	"courseclash/duel-service/internal/duelsync"
 	"courseclash/duel-service/internal/models"
 	"courseclash/duel-service/internal/repositories"
@@ -48,8 +49,11 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 	
 	log.Printf("Ambos jugadores tienen conexiones válidas. Iniciando duelo con %d preguntas", len(questions))
 
-	// Notificamos a los jugadores que el duelo va a comenzar
-	// ...
+	// Notificar a través de RabbitMQ que el duelo está comenzando
+	err := broker.PublishStatusToWebSocket(duelID, "¡Duelo listo!")
+	if err != nil {
+		log.Printf("Error al publicar estado inicial del duelo: %v", err)
+	}
 
 	for i, question := range questions {
 		// Variable para controlar si necesitamos reenviar la pregunta
@@ -61,7 +65,7 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 		for needToResend && retryCount < maxRetries {
 			log.Printf("Enviando pregunta %d (%s) a jugadores %s y %s (intento %d)", i+1, question.ID, player1.ID, player2.ID, retryCount+1)
 			
-			success := broadcastQuestion(player1, player2, question)
+			success := broadcastQuestion(player1, player2, question, duelID)
 			if !success {
 				log.Printf("Error al enviar pregunta %s. Terminando duelo prematuramente", question.ID)
 				return
@@ -87,18 +91,12 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 				log.Printf("Respuesta vacía detectada - P1 vacía: %t, P2 vacía: %t. Reenviando pregunta %d", answer1IsEmpty, answer2IsEmpty, i+1)
 				retryCount++
 				
-				// Enviar mensaje informativo a los jugadores
-				if answer1IsEmpty {
-					player1.SafeWriteJSON(map[string]interface{}{
-						"type": "info",
-						"message": "Respuesta no válida detectada. Reenviando pregunta...",
-					})
-				}
-				if answer2IsEmpty {
-					player2.SafeWriteJSON(map[string]interface{}{
-						"type": "info", 
-						"message": "Respuesta no válida detectada. Reenviando pregunta...",
-					})
+				// Enviar mensaje informativo a los jugadores via RabbitMQ
+				if answer1IsEmpty || answer2IsEmpty {
+					err := broker.PublishStatusToWebSocket(duelID, "Respuesta no válida detectada. Reenviando pregunta...")
+					if err != nil {
+						log.Printf("Error al publicar estado de reenvío: %v", err)
+					}
 				}
 				
 				// Pequeña pausa antes de reenviar
@@ -134,8 +132,9 @@ func HandleDuel(player1 *models.Player, player2 *models.Player, questions []mode
 // Esta función es la que se encarga en esencia de enviar las preguntas via WebSocket a los jugadores
 // message es la estructura en que será enviada la pregunta, para ello se utiliza una instancia a la estructura de datos de más arriba
 // * Con WriteJSON básicamente se envía cada pregunta a cada jugador utilizando la conexión websocket
+// Ahora también publica la pregunta a RabbitMQ para que el WebSocket Manager la envíe a los clientes
 
-func broadcastQuestion(player1, player2 *models.Player, question models.Question) bool {
+func broadcastQuestion(player1, player2 *models.Player, question models.Question, duelID string) bool {
   
 	message := map[string]interface{}{
 		"type": "question",
@@ -144,6 +143,21 @@ func broadcastQuestion(player1, player2 *models.Player, question models.Question
 	
 	log.Printf("Enviando pregunta ID: %s a jugadores %s y %s", question.ID, player1.ID, player2.ID)
 	
+	// Publicar la pregunta a RabbitMQ para que el WebSocket Manager la envíe
+	questionData := map[string]interface{}{
+		"id":       question.ID,
+		"text":     question.Text,
+		"options":  question.Options,
+		"answer":   question.Answer,
+		"duration": question.Duration,
+	}
+	
+	err := broker.PublishQuestionToWebSocket(duelID, questionData)
+	if err != nil {
+		log.Printf("Error al publicar pregunta a RabbitMQ: %v", err)
+	}
+	
+	// Mantener el envío directo por WebSocket como respaldo
 	// Enviar a Player1
 	err1 := player1.SafeWriteJSON(message)
 	if err1 != nil {
@@ -313,30 +327,38 @@ func endDuel(player1 *models.Player, player2 *models.Player, duelID string) {
 		log.Printf("Error al actualizar datos del jugador %s en MongoDB: %v", player2.ID, err)
 	}
 
-	finalMessage := map[string]interface{}{
-		"type": "duel_end",
-		"data": map[string]interface{}{
-			"player1_id": player1.ID,
-			"player2_id": player2.ID,
-			"player1_score": player1.Score,
-			"player2_score": player2.Score,
-			"player1_elo": map[string]interface{}{
-				"previous": oldElo1,
-				"current":  player1.Elo,
-				"change":   player1.Elo - oldElo1,
-			},
-			"player2_elo": map[string]interface{}{
-				"previous": oldElo2,
-				"current":  player2.Elo,
-				"change":   player2.Elo - oldElo2,
-			},
-			"player1_rank": player1.Rank,
-			"player2_rank": player2.Rank,
-			"is_draw":      isDraw,
-			"winner_id":    winnerID, // Será una cadena vacía si isDraw es true
+	resultsData := map[string]interface{}{
+		"player1_id": player1.ID,
+		"player2_id": player2.ID,
+		"player1_score": player1.Score,
+		"player2_score": player2.Score,
+		"player1_elo": map[string]interface{}{
+			"previous": oldElo1,
+			"current":  player1.Elo,
+			"change":   player1.Elo - oldElo1,
 		},
+		"player2_elo": map[string]interface{}{
+			"previous": oldElo2,
+			"current":  player2.Elo,
+			"change":   player2.Elo - oldElo2,
+		},
+		"player1_rank": player1.Rank,
+		"player2_rank": player2.Rank,
+		"is_draw":      isDraw,
+		"winner_id":    winnerID, // Será una cadena vacía si isDraw es true
 	}
 
+	finalMessage := map[string]interface{}{
+		"type": "duel_end",
+		"data": resultsData,
+	}
+
+	// Publicar resultados a RabbitMQ para que el WebSocket Manager los envíe
+	if err := broker.PublishResultsToWebSocket(duelID, resultsData); err != nil {
+		log.Printf("Error al publicar resultados a RabbitMQ: %v", err)
+	}
+
+	// Mantener el envío directo por WebSocket como respaldo
 	if player1.Conn != nil {
 		if err := player1.SafeWriteJSON(finalMessage); err != nil {
 			log.Printf("Error al enviar mensaje final a jugador %s: %v", player1.ID, err)

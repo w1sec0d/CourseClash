@@ -71,10 +71,10 @@ services:
     environment:
       - GIN_MODE=debug
       - MONGODB_URI=mongodb://cc_duels_db:27017/duels_db
-      - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/courseclash
+      - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
     depends_on:
       - cc_duels_db
-      - cc_broker
+      - cc_broker_init
     networks:
       - courseclash-network
     healthcheck:
@@ -215,9 +215,10 @@ services:
       - RABBITMQ_DEFAULT_USER=courseclash
       - RABBITMQ_DEFAULT_PASS=courseclash123
       - RABBITMQ_DEFAULT_VHOST=/courseclash
+      - RABBITMQ_MANAGEMENT_LOAD_DEFINITIONS=/etc/rabbitmq/definitions.json
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./broker_service/definitions.json:/etc/rabbitmq/definitions.json:ro
     networks:
       - courseclash-network
     healthcheck:
@@ -226,6 +227,21 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+
+  # RabbitMQ Initializer Service (runs once to setup broker)
+  cc_broker_init:
+    container_name: cc_broker_init
+    image: curlimages/curl:8.4.0
+    volumes:
+      - ./broker_service/definitions.json:/definitions.json:ro
+      - ./broker_service/init_rabbitmq_definitions.sh:/init_script.sh:ro
+    depends_on:
+      cc_broker:
+        condition: service_healthy
+    networks:
+      - courseclash-network
+    command: sh /init_script.sh
+    restart: 'no'
 
   # WebSocket Manager Service
   cc_websocket_manager:
@@ -236,7 +252,7 @@ services:
     ports:
       - '8003:8003'
     environment:
-      - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/courseclash
+      - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
       - AUTH_SERVICE_URL=http://cc_auth_ms:8000
       - DUEL_SERVICE_URL=http://cc_duels_ms:8002
     volumes:
@@ -244,6 +260,8 @@ services:
     depends_on:
       cc_broker:
         condition: service_healthy
+      cc_broker_init:
+        condition: service_completed_successfully
     networks:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload

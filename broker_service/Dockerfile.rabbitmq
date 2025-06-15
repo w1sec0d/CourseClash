@@ -1,0 +1,20 @@
+FROM rabbitmq:4-management
+
+# Copiar el archivo de definiciones
+COPY definitions.json /etc/rabbitmq/definitions.json
+
+# Copiar script de inicialización
+COPY init_rabbitmq_definitions.sh /usr/local/bin/init_definitions.sh
+RUN chmod +x /usr/local/bin/init_definitions.sh
+
+# Variables de entorno
+ENV RABBITMQ_DEFAULT_USER=courseclash
+ENV RABBITMQ_DEFAULT_PASS=courseclash123
+ENV RABBITMQ_DEFAULT_VHOST=/courseclash
+
+# Script personalizado de inicio
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["rabbitmq-server"] 

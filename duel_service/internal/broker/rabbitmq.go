@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -23,15 +24,39 @@ type DuelEvent struct {
 }
 
 func NewRabbitMQClient() (*RabbitMQClient, error) {
+	return NewRabbitMQClientWithRetry(5) // 5 reintentos
+}
+
+func NewRabbitMQClientWithRetry(maxRetries int) (*RabbitMQClient, error) {
 	rabbitmqURL := os.Getenv("RABBITMQ_URL")
 	if rabbitmqURL == "" {
 		rabbitmqURL = "amqp://courseclash:courseclash123@cc_broker:5672/courseclash"
 	}
 
-	conn, err := amqp.Dial(rabbitmqURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to RabbitMQ: %v", err)
+	var conn *amqp.Connection
+	var err error
+
+	for i := 0; i < maxRetries; i++ {
+		log.Printf("Intentando conectar a RabbitMQ (intento %d/%d)...", i+1, maxRetries)
+		
+		conn, err = amqp.Dial(rabbitmqURL)
+		if err == nil {
+			break
+		}
+		
+		log.Printf("Error en intento %d: %v", i+1, err)
+		if i < maxRetries-1 {
+			waitTime := time.Duration(i+1) * 2 * time.Second
+			log.Printf("Esperando %v antes del próximo intento...", waitTime)
+			time.Sleep(waitTime)
+		}
 	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to RabbitMQ after %d attempts: %v", maxRetries, err)
+	}
+
+	log.Println("✅ Conectado a RabbitMQ exitosamente")
 
 	ch, err := conn.Channel()
 	if err != nil {

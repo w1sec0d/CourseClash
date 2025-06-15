@@ -1,0 +1,86 @@
+# Alternativa usando Dockerfile personalizado para RabbitMQ
+# Para usar esta versión, ejecuta: docker-compose -f docker-compose.alt.yml up -d
+
+version: '3.8'
+
+services:
+  # RabbitMQ Message Broker (Personalizado con definiciones automáticas)
+  cc_broker:
+    container_name: cc_broker
+    build:
+      context: ./broker_service
+      dockerfile: Dockerfile.rabbitmq
+    ports:
+      - '5672:5672' # AMQP port
+      - '15672:15672' # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - courseclash-network
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s # Más tiempo para que importe las definiciones
+
+  # Servicio de Duelos (simplificado, solo depende del broker)
+  cc_duels_ms:
+    build:
+      context: ./duel_service
+      dockerfile: Dockerfile
+    container_name: cc_duels_ms
+    ports:
+      - '8002:8002'
+    restart: unless-stopped
+    environment:
+      - GIN_MODE=debug
+      - MONGODB_URI=mongodb://cc_duels_db:27017/duels_db
+      - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
+    depends_on:
+      cc_broker:
+        condition: service_healthy
+      cc_duels_db:
+        condition: service_started
+    networks:
+      - courseclash-network
+
+  # Base de datos Mongo (para Duelos)
+  cc_duels_db:
+    image: mongo:latest
+    container_name: cc_duels_db
+    ports:
+      - '27018:27017'
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - courseclash-network
+
+  # WebSocket Manager Service
+  cc_websocket_manager:
+    container_name: cc_websocket_manager
+    image: python:3.11-slim
+    build:
+      context: ./websocket_manager
+    ports:
+      - '8003:8003'
+    environment:
+      - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
+      - AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - DUEL_SERVICE_URL=http://cc_duels_ms:8002
+    volumes:
+      - ./websocket_manager:/app
+    depends_on:
+      cc_broker:
+        condition: service_healthy
+    networks:
+      - courseclash-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
+
+volumes:
+  rabbitmq_data:
+  mongo_data:
+
+networks:
+  courseclash-network:
+    driver: bridge
