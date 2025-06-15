@@ -13,7 +13,7 @@ import httpx
 import os
 
 #Variable de entorno para ms de actividades
-ACTIVITIES_SERVICE_URL = os.getenv("ACTIVITIES_SERVICE_URL", "http://course_service:8003")
+ACTIVITIES_SERVICE_URL = os.getenv("ACTIVITIES_SERVICE_URL", "http://cc_activities_ms:8003")
 
 #Variable de entorno para ms de autenticacion
 # Environment variables
