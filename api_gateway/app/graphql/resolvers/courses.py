@@ -12,7 +12,7 @@ import httpx
 import os
 
 # Environment variables
-COURSE_SERVICE_URL = os.getenv("COURSE_SERVICE_URL", "http://course_service:8003")
+COURSE_SERVICE_URL = os.getenv("COURSE_SERVICE_URL", "http://cc_courses_ms:8001")
 
 
 @strawberry.type
@@ -21,11 +21,8 @@ class Course:
     title: str
     description: Optional[str] = None
     created_at: str
-    updated_at: Optional[str] = None
-    teacher_id: str
-    status: str
-    level: str
-    category: str
+    creator_id: str
+    is_active: bool
 
 
 @strawberry.type
@@ -37,12 +34,13 @@ class Query:
         """
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(f"{COURSE_SERVICE_URL}/courses/{id}")
+                response = await client.get(f"{COURSE_SERVICE_URL}/api/courses/{id}")
+                print(response.json()['course'])
 
                 if response.status_code != 200:
-                    return None
+                    return "Error de consulta"
 
-                course_data = response.json()
+                course_data = response.json()['course']
                 return Course(**course_data)
         except Exception as e:
             print(f"Error getting course: {str(e)}")
@@ -55,7 +53,7 @@ class Query:
         """
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(f"{COURSE_SERVICE_URL}/courses")
+                response = await client.get(f"{COURSE_SERVICE_URL}/api/courses")
 
                 if response.status_code != 200:
                     return []
@@ -74,9 +72,8 @@ class Mutation:
         self,
         info,
         title: str,
-        description: Optional[str] = None,
-        level: str = "BEGINNER",
-        category: str = "GENERAL",
+        description: str,
+        creator_id: str
     ) -> Optional[Course]:
         """
         Crea un nuevo curso.
@@ -92,8 +89,7 @@ class Mutation:
                     json={
                         "title": title,
                         "description": description,
-                        "level": level,
-                        "category": category,
+                        "creator_id": creator_id
                     },
                     headers={"Authorization": auth_header},
                 )

@@ -32,7 +32,7 @@ services:
     ports:
       - '8001:8001'
     environment:
-      - DATABASE_URL=mysql://root:password@cc_courses_db:3306/courseClash
+      - DATABASE_URL=mysql+pymysql://root:password@cc_courses_db:3306/courseClash
       - JWT_SECRET=your_jwt_secret_key
     volumes:
       - ./course_service:/app
@@ -40,7 +40,7 @@ services:
       - cc_courses_db
     networks:
       - courseclash-network
-    command: php artisan serve --host="0.0.0.0" --port="8001"
+    command: php artisan serve --server="swoole" --host="0.0.0.0" --port="8001"
 
   # Servicio de actividades
   # cc_activities_ms:

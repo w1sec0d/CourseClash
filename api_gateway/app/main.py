@@ -69,8 +69,7 @@ app = FastAPI(
         id
         title
         description
-        level
-        category
+        creator_id
       }
     }
     ```
@@ -152,9 +151,7 @@ app.include_router(
                                 {
                                     "id": "1",
                                     "title": "Matemáticas Básicas",
-                                    "description": "Curso introductorio",
-                                    "level": "BEGINNER",
-                                    "category": "MATH",
+                                    "description": "Curso introductorio"
                                 }
                             ]
                         }
