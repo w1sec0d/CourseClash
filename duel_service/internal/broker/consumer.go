@@ -6,8 +6,6 @@ import (
 	"os"
 	"sync"
 
-	"courseclash/duel-service/internal/duelsync"
-
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -239,18 +237,7 @@ func IsPlayerConnected(duelID, playerID string) bool {
 
 // checkAndStartDuel checks if both players are connected and starts the duel
 func checkAndStartDuel(duelID string) {
-	// Get duel info from database to know who the players are
-	duelsync.Mu.Lock()
-	duelExists := false
-	_, duelExists = duelsync.DuelRequests[duelID]
-	duelsync.Mu.Unlock()
-	
-	if !duelExists {
-		log.Printf("Duel %s not found in active requests, cannot start", duelID)
-		return
-	}
-	
-	// This is a simplified check - in a real implementation you'd get player IDs from the database
-	// For now, we'll let the existing WebSocket handler logic handle the duel start
-	log.Printf("Player connection registered for duel %s, letting WebSocket handler manage start", duelID)
+	// In 100% RabbitMQ architecture, duel start is handled by HandleDuelViaRabbitMQ
+	// This function is now just for logging player connections
+	log.Printf("Player connection registered for duel %s - duel management handled by RabbitMQ flow", duelID)
 } 
