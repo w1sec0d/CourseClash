@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"courseclash/duel-service/internal/broker"
 	"courseclash/duel-service/internal/duelsync"
 	duelhandlers "courseclash/duel-service/internal/handlers"
 	"courseclash/duel-service/internal/models"
@@ -78,13 +79,37 @@ func requestDuelHandler(c *gin.Context) {
 		"timestamp": time.Now().Format(time.RFC3339),
 	}
 	
-	// Intentar enviar la notificación (no bloqueante)
+	// Enviar notificación a través de RabbitMQ (no bloqueante)
 	go func() {
-		sent := duelsync.SendNotification(request.OpponentID, notification)
-		if sent {
-			log.Printf("Notificación de duelo enviada a %s para el duelo %s", request.OpponentID, duelID)
+		// Usar el broker para enviar la notificación a través de RabbitMQ
+		client := broker.GetGlobalClient()
+		if client != nil {
+			// Crear el evento de notificación
+			notificationEvent := broker.DuelEvent{
+				Type:   "notification",
+				DuelID: duelID,
+				UserID: request.OpponentID,
+				Data:   map[string]interface{}{
+					"userId":       request.OpponentID,
+					"notification": notification,
+				},
+			}
+			
+			err := client.PublishDuelEvent("duel.websocket.notification", notificationEvent)
+			if err != nil {
+				log.Printf("Error al enviar notificación a RabbitMQ para usuario %s: %v", request.OpponentID, err)
+			} else {
+				log.Printf("Notificación de duelo enviada a RabbitMQ para usuario %s, duelo %s", request.OpponentID, duelID)
+			}
 		} else {
-			log.Printf("No se pudo enviar notificación a %s (posiblemente no conectado)", request.OpponentID)
+			log.Printf("RabbitMQ client no disponible, intentando envío directo")
+			// Fallback al método directo
+			sent := duelsync.SendNotification(request.OpponentID, notification)
+			if sent {
+				log.Printf("Notificación de duelo enviada directamente a %s para el duelo %s", request.OpponentID, duelID)
+			} else {
+				log.Printf("No se pudo enviar notificación a %s (posiblemente no conectado)", request.OpponentID)
+			}
 		}
 	}()
 	

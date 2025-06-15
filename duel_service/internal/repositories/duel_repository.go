@@ -68,11 +68,8 @@ func (r *DuelRepository) CreateDuel(challengerID, opponentID string) (*DuelData,
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Verificar si ya existe un duelo pendiente entre estos jugadores
-	existingDuel, err := r.GetPendingDuelBetweenPlayers(challengerID, opponentID)
-	if err == nil && existingDuel != nil {
-		return nil, errors.New("ya existe un duelo pendiente entre estos jugadores")
-	}
+	// Note: Allowing multiple pending duels between same players
+	// No validation - users can create multiple duel requests
 
 	// Obtener el siguiente ID consecutivo
 	duelID, err := r.GetNextDuelID()
