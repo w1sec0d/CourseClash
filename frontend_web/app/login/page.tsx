@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
