@@ -182,13 +182,43 @@ export function useCurrentUserApollo() {
     skip: typeof window === 'undefined' || !getAuthToken(),
     errorPolicy: 'all',
     notifyOnNetworkStatusChange: true,
+    onError: (apolloError) => {
+      console.log('🔍 Apollo ME_QUERY error:', apolloError);
+
+      // Check for authentication errors
+      if (
+        apolloError.networkError &&
+        'statusCode' in apolloError.networkError
+      ) {
+        const statusCode = apolloError.networkError.statusCode;
+        if (statusCode === 401 || statusCode === 403) {
+          console.log(
+            '🚨 Authentication error detected, will handle token expiry'
+          );
+        }
+      }
+    },
   });
 
   // Handle token expiry in useEffect to avoid rendering issues
   useEffect(() => {
     const currentToken = getAuthToken();
     const hasToken = !!currentToken;
-    const userIsNull = data && data.me === null;
+
+    // Properly detect when user should exist but doesn't
+    // Case 1: data exists but me is null (explicit null from server = expired token)
+    // Case 2: data is undefined but we have token and finished loading (network error or expired token)
+    // Case 3: Got authentication error (401/403)
+    const userIsNull = data?.me === null;
+    const noUserDataWithToken = !loading && hasToken && data === undefined;
+    const hasAuthError =
+      error &&
+      error.networkError &&
+      'statusCode' in error.networkError &&
+      (error.networkError.statusCode === 401 ||
+        error.networkError.statusCode === 403);
+    const tokenExpiredOrInvalid =
+      userIsNull || noUserDataWithToken || hasAuthError;
 
     // Reset reloadAttemptedRef if token has changed
     if (currentToken !== lastTokenRef.current) {
@@ -196,12 +226,30 @@ export function useCurrentUserApollo() {
       lastTokenRef.current = currentToken;
     }
 
+    console.log({
+      userIsLoading: loading,
+      userIsNull,
+      noUserDataWithToken,
+      hasAuthError,
+      tokenExpiredOrInvalid,
+      hasToken,
+      dataExists: !!data,
+      errorStatus:
+        error?.networkError && 'statusCode' in error.networkError
+          ? error.networkError.statusCode
+          : null,
+    });
+
     const shouldHandleExpiry =
-      !loading && hasToken && userIsNull && !reloadAttemptedRef.current;
+      !loading &&
+      hasToken &&
+      tokenExpiredOrInvalid &&
+      !reloadAttemptedRef.current;
 
     if (shouldHandleExpiry) {
       console.log(
-        '🚨 Token presente pero usuario null - token expirado, limpiando cookies y cache'
+        '🚨 Token expirado o inválido detectado - limpiando cookies y cache',
+        { userIsNull, noUserDataWithToken, hasAuthError }
       );
 
       // Mark that we've attempted a reload to prevent infinite loops
@@ -261,7 +309,7 @@ export function useCurrentUserApollo() {
         }
       }
     }
-  }, [data, loading, router, apolloClient]);
+  }, [data, loading, error, router, apolloClient]);
 
   return {
     user: data?.me as User | null,
