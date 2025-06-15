@@ -40,7 +40,7 @@ services:
       - cc_courses_db
     networks:
       - courseclash-network
-    command: php artisan serve --server="swoole" --host="0.0.0.0" --port="8001"
+    command: php artisan serve --host="0.0.0.0" --port="8001"
 
   # Servicio de actividades
   # cc_activities_ms:
