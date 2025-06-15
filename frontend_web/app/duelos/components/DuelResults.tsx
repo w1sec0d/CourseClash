@@ -27,12 +27,14 @@ interface DuelResultsProps {
   results: DuelResultsData;
   playerId: string;
   opponentId: string;
+  onExit?: () => void;
 }
 
 export function DuelResults({
   results,
   playerId,
   opponentId,
+  onExit,
 }: DuelResultsProps) {
   const isWinner = results.winner_id === playerId;
   const isPlayer1 = playerId === results.player1_id;
@@ -168,10 +170,10 @@ export function DuelResults({
 
         <div className='mt-8 text-center'>
           <button
-            onClick={() => window.location.reload()}
-            className='bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors'
+            onClick={() => (onExit ? onExit() : window.location.reload())}
+            className='bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors mr-4'
           >
-            Volver a Jugar
+            Volver a Duelos
           </button>
         </div>
       </div>

@@ -3,9 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
 import Swal from 'sweetalert2';
-import ProtectedRoute from '@/components/ProtectedRoute';
 
-function DashboardContent() {
+export default function Dashboard() {
   const { user } = useAuthApollo();
   const hasShownWelcome = useRef(false);
 
@@ -985,13 +984,5 @@ function DashboardContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function Dashboard() {
-  return (
-    <ProtectedRoute>
-      <DashboardContent />
-    </ProtectedRoute>
   );
 }

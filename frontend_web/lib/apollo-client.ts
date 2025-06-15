@@ -95,6 +95,7 @@ export const apolloClient = new ApolloClient({
       errorPolicy: 'all',
     },
   },
+  connectToDevTools: true,
   ssrMode: typeof window === 'undefined',
 });
 
