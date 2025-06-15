@@ -55,7 +55,7 @@ func (s *QuestionService) GetQuestionsForDuel(category string) ([]models.Questio
 		ID       string   `bson:"_id,omitempty"`
 		Category string   `bson:"category"`
 		Question string   `bson:"question"`
-		Answer   string   `bson:"answer"`
+		Answer   string   `bson:"correct_answer"`
 		Options  []string `bson:"options"`
 		Duration int      `bson:"duration"`
 	}
