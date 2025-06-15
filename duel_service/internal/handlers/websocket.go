@@ -232,19 +232,61 @@ func WsHandler(w http.ResponseWriter, r *http.Request, duelID string, playerID s
 		// Obtener preguntas aleatorias de la base de datos para el duelo
 		questionService := services.NewQuestionService()
 		log.Printf("🔍 [DEBUG] Intentando obtener preguntas de la base de datos para el duelo %s", duelID)
-		questions, err := questionService.GetQuestionsForDuel(123)
+		
+		// Por defecto usar "matematica" como categoría, luego se implementará que venga del request
+		category := "matematica"
+		if duel.Category != "" {
+			category = duel.Category
+		}
+		
+		log.Printf("🔍 [DEBUG] Obteniendo preguntas para la categoría: %s", category)
+		questions, err := questionService.GetQuestionsForDuel(category)
 		if err != nil {
 			log.Printf("❌ [ERROR] Error al obtener preguntas para el duelo %s: %v. Usando preguntas de respaldo.", duelID, err)
-			questions = []models.Question{
-				{ID: "backup1", Text: "¿Cuál es el río más largo del mundo?", Answer: "Nilo", Options: []string{"Amazonas", "Nilo", "Misisipi", "Yangtsé"}, Duration: 30},
-				{ID: "backup2", Text: "¿Cuánto es 2+2?", Answer: "4", Options: []string{"3", "4", "5", "6"}, Duration: 30},
-				{ID: "backup3", Text: "¿Quién pintó la Mona Lisa?", Answer: "Leonardo da Vinci", Options: []string{"Pablo Picasso", "Vincent van Gogh", "Leonardo da Vinci", "Miguel Ángel"}, Duration: 30},
-				{ID: "backup4", Text: "¿Cuál es el planeta más grande del sistema solar?", Answer: "Júpiter", Options: []string{"Tierra", "Júpiter", "Saturno", "Marte"}, Duration: 30},
-				{ID: "backup5", Text: "¿En qué año comenzó la Segunda Guerra Mundial?", Answer: "1939", Options: []string{"1914", "1939", "1945", "1918"}, Duration: 30},
+			
+			// Preguntas de respaldo específicas por categoría
+			switch category {
+			case "matematica":
+				questions = []models.Question{
+					{ID: "backup_math1", Text: "¿Cuánto es 2+2?", Answer: "4", Options: []string{"3", "4", "5", "6"}, Duration: 30, Category: "matematica"},
+					{ID: "backup_math2", Text: "¿Cuál es la raíz cuadrada de 16?", Answer: "4", Options: []string{"2", "4", "6", "8"}, Duration: 30, Category: "matematica"},
+					{ID: "backup_math3", Text: "¿Cuánto es 5 × 7?", Answer: "35", Options: []string{"30", "35", "40", "45"}, Duration: 30, Category: "matematica"},
+				}
+			case "historia":
+				questions = []models.Question{
+					{ID: "backup_hist1", Text: "¿En qué año comenzó la Segunda Guerra Mundial?", Answer: "1939", Options: []string{"1914", "1939", "1945", "1918"}, Duration: 30, Category: "historia"},
+					{ID: "backup_hist2", Text: "¿Quién fue el primer presidente de Estados Unidos?", Answer: "George Washington", Options: []string{"Thomas Jefferson", "George Washington", "John Adams", "Benjamin Franklin"}, Duration: 30, Category: "historia"},
+					{ID: "backup_hist3", Text: "¿En qué año cayó el Muro de Berlín?", Answer: "1989", Options: []string{"1987", "1989", "1991", "1993"}, Duration: 30, Category: "historia"},
+				}
+			case "geografia":
+				questions = []models.Question{
+					{ID: "backup_geo1", Text: "¿Cuál es el río más largo del mundo?", Answer: "Nilo", Options: []string{"Amazonas", "Nilo", "Misisipi", "Yangtsé"}, Duration: 30, Category: "geografia"},
+					{ID: "backup_geo2", Text: "¿Cuál es la capital de Australia?", Answer: "Canberra", Options: []string{"Sídney", "Melbourne", "Canberra", "Perth"}, Duration: 30, Category: "geografia"},
+					{ID: "backup_geo3", Text: "¿En qué continente está ubicado Egipto?", Answer: "África", Options: []string{"Asia", "África", "Europa", "América"}, Duration: 30, Category: "geografia"},
+				}
+			case "ciencias":
+				questions = []models.Question{
+					{ID: "backup_sci1", Text: "¿Cuál es el planeta más grande del sistema solar?", Answer: "Júpiter", Options: []string{"Tierra", "Júpiter", "Saturno", "Marte"}, Duration: 30, Category: "ciencias"},
+					{ID: "backup_sci2", Text: "¿Cuál es el símbolo químico del oro?", Answer: "Au", Options: []string{"Go", "Au", "Ag", "Al"}, Duration: 30, Category: "ciencias"},
+					{ID: "backup_sci3", Text: "¿Cuántos huesos tiene un adulto humano?", Answer: "206", Options: []string{"206", "208", "210", "212"}, Duration: 30, Category: "ciencias"},
+				}
+			case "literatura":
+				questions = []models.Question{
+					{ID: "backup_lit1", Text: "¿Quién escribió 'Don Quijote de la Mancha'?", Answer: "Miguel de Cervantes", Options: []string{"Federico García Lorca", "Miguel de Cervantes", "Francisco de Quevedo", "Lope de Vega"}, Duration: 30, Category: "literatura"},
+					{ID: "backup_lit2", Text: "¿Quién escribió 'Cien años de soledad'?", Answer: "Gabriel García Márquez", Options: []string{"Mario Vargas Llosa", "Gabriel García Márquez", "Jorge Luis Borges", "Octavio Paz"}, Duration: 30, Category: "literatura"},
+					{ID: "backup_lit3", Text: "¿En qué siglo vivió William Shakespeare?", Answer: "XVI-XVII", Options: []string{"XV-XVI", "XVI-XVII", "XVII-XVIII", "XVIII-XIX"}, Duration: 30, Category: "literatura"},
+				}
+			default:
+				// Preguntas generales si la categoría no coincide
+				questions = []models.Question{
+					{ID: "backup_gen1", Text: "¿Quién pintó la Mona Lisa?", Answer: "Leonardo da Vinci", Options: []string{"Pablo Picasso", "Vincent van Gogh", "Leonardo da Vinci", "Miguel Ángel"}, Duration: 30, Category: "general"},
+					{ID: "backup_gen2", Text: "¿Cuál es el océano más grande?", Answer: "Pacífico", Options: []string{"Atlántico", "Pacífico", "Índico", "Ártico"}, Duration: 30, Category: "general"},
+					{ID: "backup_gen3", Text: "¿Cuántos continentes hay?", Answer: "7", Options: []string{"5", "6", "7", "8"}, Duration: 30, Category: "general"},
+				}
 			}
-			log.Printf("⚠️ [RESPALDO] Se usaron %d preguntas hardcodeadas como respaldo", len(questions))
+			log.Printf("⚠️ [RESPALDO] Se usaron %d preguntas hardcodeadas de categoría '%s' como respaldo", len(questions), category)
 		} else {
-			log.Printf("✅ [BD ÉXITO] Se obtuvieron %d preguntas de la base de datos", len(questions))
+			log.Printf("✅ [BD ÉXITO] Se obtuvieron %d preguntas de la base de datos para categoría '%s'", len(questions), category)
 		}
 		
 		log.Printf("📋 [PREGUNTAS FINALES] Total de preguntas preparadas para el duelo %s: %d", duelID, len(questions))

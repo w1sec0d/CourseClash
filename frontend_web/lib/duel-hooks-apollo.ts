@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useLazyQuery, gql } from '@apollo/client';
+import { useMutation, useLazyQuery, useQuery, gql } from '@apollo/client';
 
 // Queries
 const GET_USER_BY_EMAIL_QUERY = gql`
@@ -14,6 +14,16 @@ const GET_USER_BY_EMAIL_QUERY = gql`
       role
       createdAt
       updatedAt
+    }
+  }
+`;
+
+const GET_DUEL_CATEGORIES_QUERY = gql`
+  query GetDuelCategories {
+    getDuelCategories {
+      name
+      displayName
+      description
     }
   }
 `;
@@ -68,6 +78,20 @@ export function useSearchUserByEmail() {
   };
 }
 
+// Hook para obtener categorías de duelos
+export function useGetDuelCategories() {
+  const { loading, error, data } = useQuery(GET_DUEL_CATEGORIES_QUERY, {
+    errorPolicy: 'all',
+    fetchPolicy: 'cache-first',
+  });
+
+  return {
+    categories: data?.getDuelCategories || [],
+    loading,
+    error: error?.message || null,
+  };
+}
+
 // Hook para solicitar duelo
 export function useRequestDuel() {
   const [requestDuelMutation, { loading, error }] = useMutation(
@@ -77,13 +101,14 @@ export function useRequestDuel() {
     }
   );
 
-  const requestDuel = async (requesterId: string, opponentId: string) => {
+  const requestDuel = async (requesterId: string, opponentId: string, category: string) => {
     try {
       const { data } = await requestDuelMutation({
         variables: {
           input: {
             requesterId,
             opponentId,
+            category,
           },
         },
       });
@@ -135,6 +160,12 @@ export function useDuels() {
   } = useSearchUserByEmail();
 
   const {
+    categories,
+    loading: categoriesLoading,
+    error: categoriesError,
+  } = useGetDuelCategories();
+
+  const {
     requestDuel,
     loading: requestLoading,
     error: requestError,
@@ -153,6 +184,11 @@ export function useDuels() {
     searchLoading,
     searchError,
 
+    // Categories functionality
+    categories,
+    categoriesLoading,
+    categoriesError,
+
     // Duel request functionality
     requestDuel,
     requestLoading,
@@ -164,7 +200,7 @@ export function useDuels() {
     acceptError,
 
     // Combined loading states
-    isLoading: searchLoading || requestLoading || acceptLoading,
-    error: searchError || requestError || acceptError,
+    isLoading: searchLoading || requestLoading || acceptLoading || categoriesLoading,
+    error: searchError || requestError || acceptError || categoriesError,
   };
 }
