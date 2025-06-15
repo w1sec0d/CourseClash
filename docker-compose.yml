@@ -216,9 +216,11 @@ services:
       - RABBITMQ_DEFAULT_PASS=courseclash123
       - RABBITMQ_DEFAULT_VHOST=/courseclash
       - RABBITMQ_MANAGEMENT_LOAD_DEFINITIONS=/etc/rabbitmq/definitions.json
+      - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - ./broker_service/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./broker_service/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     networks:
       - courseclash-network
     healthcheck:

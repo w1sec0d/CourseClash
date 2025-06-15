@@ -84,7 +84,10 @@ class WebSocketManager:
 
         # WebSocket events queue (for messages to be sent to frontend)
         websocket_queue = await self.rabbitmq_channel.declare_queue(
-            "websocket.events", durable=False, auto_delete=True
+            "websocket.events",
+            durable=True,
+            auto_delete=False,
+            arguments={"x-message-ttl": 60000},  # 1 minute TTL
         )
 
         # Bind to receive duel events that should go to WebSocket
