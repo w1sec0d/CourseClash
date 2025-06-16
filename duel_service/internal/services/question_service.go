@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"log"
+	"math/rand"
 	"time"
 
 	"courseclash/duel-service/internal/db"
@@ -152,9 +153,10 @@ func getBackupQuestions() []models.Question {
 
 // GetBackupQuestionsByCategory proporciona preguntas de respaldo específicas por categoría
 func GetBackupQuestionsByCategory(category string) []models.Question {
+	var questions []models.Question
 	switch category {
 	case "matematica":
-		return []models.Question{
+		questions = []models.Question{
 			{ID: "backup_math1", Text: "¿Cuánto es 2+2?", Answer: "4", Options: []string{"3", "4", "5", "6"}, Duration: 30, Category: "matematica"},
 			{ID: "backup_math2", Text: "¿Cuál es la raíz cuadrada de 16?", Answer: "4", Options: []string{"2", "4", "6", "8"}, Duration: 30, Category: "matematica"},
 			{ID: "backup_math3", Text: "¿Cuánto es 5 × 7?", Answer: "35", Options: []string{"30", "35", "40", "45"}, Duration: 30, Category: "matematica"},
@@ -165,7 +167,7 @@ func GetBackupQuestionsByCategory(category string) []models.Question {
 			{ID: "backup_math8", Text: "¿Cuánto es 8²?", Answer: "64", Options: []string{"56", "64", "72", "80"}, Duration: 30, Category: "matematica"},
 		}
 	case "historia":
-		return []models.Question{
+		questions = []models.Question{
 			{ID: "backup_hist1", Text: "¿En qué año comenzó la Segunda Guerra Mundial?", Answer: "1939", Options: []string{"1914", "1939", "1945", "1918"}, Duration: 30, Category: "historia"},
 			{ID: "backup_hist2", Text: "¿Quién fue el primer presidente de Estados Unidos?", Answer: "George Washington", Options: []string{"Thomas Jefferson", "George Washington", "John Adams", "Benjamin Franklin"}, Duration: 30, Category: "historia"},
 			{ID: "backup_hist3", Text: "¿En qué año cayó el Muro de Berlín?", Answer: "1989", Options: []string{"1987", "1989", "1991", "1993"}, Duration: 30, Category: "historia"},
@@ -176,7 +178,7 @@ func GetBackupQuestionsByCategory(category string) []models.Question {
 			{ID: "backup_hist8", Text: "¿En qué siglo ocurrió la Revolución Francesa?", Answer: "XVIII", Options: []string{"XVII", "XVIII", "XIX", "XVI"}, Duration: 30, Category: "historia"},
 		}
 	case "geografia":
-		return []models.Question{
+		questions = []models.Question{
 			{ID: "backup_geo1", Text: "¿Cuál es el río más largo del mundo?", Answer: "Nilo", Options: []string{"Amazonas", "Nilo", "Mississippi", "Yangtsé"}, Duration: 30, Category: "geografia"},
 			{ID: "backup_geo2", Text: "¿Cuál es la capital de Australia?", Answer: "Canberra", Options: []string{"Sydney", "Melbourne", "Canberra", "Perth"}, Duration: 30, Category: "geografia"},
 			{ID: "backup_geo3", Text: "¿En qué continente está ubicado Egipto?", Answer: "África", Options: []string{"Asia", "África", "Europa", "América"}, Duration: 30, Category: "geografia"},
@@ -187,7 +189,7 @@ func GetBackupQuestionsByCategory(category string) []models.Question {
 			{ID: "backup_geo8", Text: "¿En qué país se encuentra Machu Picchu?", Answer: "Perú", Options: []string{"Bolivia", "Perú", "Ecuador", "Colombia"}, Duration: 30, Category: "geografia"},
 		}
 	case "ciencias":
-		return []models.Question{
+		questions = []models.Question{
 			{ID: "backup_sci1", Text: "¿Cuál es el planeta más grande del sistema solar?", Answer: "Júpiter", Options: []string{"Tierra", "Júpiter", "Saturno", "Marte"}, Duration: 30, Category: "ciencias"},
 			{ID: "backup_sci2", Text: "¿Cuál es el símbolo químico del oro?", Answer: "Au", Options: []string{"Go", "Au", "Ag", "Al"}, Duration: 30, Category: "ciencias"},
 			{ID: "backup_sci3", Text: "¿Cuántos huesos tiene un adulto humano?", Answer: "206", Options: []string{"206", "208", "210", "212"}, Duration: 30, Category: "ciencias"},
@@ -198,7 +200,7 @@ func GetBackupQuestionsByCategory(category string) []models.Question {
 			{ID: "backup_sci8", Text: "¿Cuál es la velocidad de la luz en el vacío?", Answer: "300,000 km/s", Options: []string{"300,000 km/s", "150,000 km/s", "450,000 km/s", "600,000 km/s"}, Duration: 30, Category: "ciencias"},
 		}
 	case "literatura":
-		return []models.Question{
+		questions = []models.Question{
 			{ID: "backup_lit1", Text: "¿Quién escribió 'Don Quijote de la Mancha'?", Answer: "Miguel de Cervantes", Options: []string{"Federico García Lorca", "Miguel de Cervantes", "Francisco de Quevedo", "Lope de Vega"}, Duration: 30, Category: "literatura"},
 			{ID: "backup_lit2", Text: "¿Quién escribió 'Cien años de soledad'?", Answer: "Gabriel García Márquez", Options: []string{"Mario Vargas Llosa", "Gabriel García Márquez", "Jorge Luis Borges", "Octavio Paz"}, Duration: 30, Category: "literatura"},
 			{ID: "backup_lit3", Text: "¿En qué siglo vivió William Shakespeare?", Answer: "XVI-XVII", Options: []string{"XV-XVI", "XVI-XVII", "XVII-XVIII", "XVIII-XIX"}, Duration: 30, Category: "literatura"},
@@ -209,7 +211,7 @@ func GetBackupQuestionsByCategory(category string) []models.Question {
 			{ID: "backup_lit8", Text: "¿En qué obra aparece el personaje de Sherlock Holmes?", Answer: "Obras de Arthur Conan Doyle", Options: []string{"Obras de Agatha Christie", "Obras de Arthur Conan Doyle", "Obras de Edgar Allan Poe", "Obras de Raymond Chandler"}, Duration: 30, Category: "literatura"},
 		}
 	case "fisica":
-		return []models.Question{
+		questions = []models.Question{
 			{ID: "backup_fis1", Text: "¿Cuál es la unidad de medida de la fuerza en el Sistema Internacional?", Answer: "Newton", Options: []string{"Joule", "Newton", "Pascal", "Watt"}, Duration: 30, Category: "fisica"},
 			{ID: "backup_fis2", Text: "¿Quién formuló la ley de la gravedad universal?", Answer: "Newton", Options: []string{"Einstein", "Galileo", "Newton", "Kepler"}, Duration: 30, Category: "fisica"},
 			{ID: "backup_fis3", Text: "¿Cuál es la velocidad de caída libre en la Tierra?", Answer: "9.8 m/s²", Options: []string{"9.8 m/s²", "10 m/s²", "9 m/s²", "8.9 m/s²"}, Duration: 30, Category: "fisica"},
@@ -220,7 +222,7 @@ func GetBackupQuestionsByCategory(category string) []models.Question {
 			{ID: "backup_fis8", Text: "¿Qué tipo de ondas son las ondas de sonido?", Answer: "Ondas mecánicas", Options: []string{"Ondas electromagnéticas", "Ondas mecánicas", "Ondas gravitacionales", "Ondas cuánticas"}, Duration: 30, Category: "fisica"},
 		}
 	case "quimica":
-		return []models.Question{
+		questions = []models.Question{
 			{ID: "backup_qui1", Text: "¿Cuál es el símbolo químico del hierro?", Answer: "Fe", Options: []string{"Hi", "Fe", "Ir", "He"}, Duration: 30, Category: "quimica"},
 			{ID: "backup_qui2", Text: "¿Cuántos elementos hay en la tabla periódica actual?", Answer: "118", Options: []string{"116", "117", "118", "119"}, Duration: 30, Category: "quimica"},
 			{ID: "backup_qui3", Text: "¿Cuál es el pH del agua pura?", Answer: "7", Options: []string{"6", "7", "8", "9"}, Duration: 30, Category: "quimica"},
@@ -231,7 +233,7 @@ func GetBackupQuestionsByCategory(category string) []models.Question {
 			{ID: "backup_qui8", Text: "¿Cuál es el elemento químico más abundante en el universo?", Answer: "Hidrógeno", Options: []string{"Oxígeno", "Carbono", "Hidrógeno", "Helio"}, Duration: 30, Category: "quimica"},
 		}
 	case "biologia":
-		return []models.Question{
+		questions = []models.Question{
 			{ID: "backup_bio1", Text: "¿Cuál es la unidad básica de la vida?", Answer: "Célula", Options: []string{"Átomo", "Molécula", "Célula", "Tejido"}, Duration: 30, Category: "biologia"},
 			{ID: "backup_bio2", Text: "¿Qué proceso permite a las plantas producir su propio alimento?", Answer: "Fotosíntesis", Options: []string{"Respiración", "Fotosíntesis", "Digestión", "Fermentación"}, Duration: 30, Category: "biologia"},
 			{ID: "backup_bio3", Text: "¿Cuántos cromosomas tiene una célula humana normal?", Answer: "46", Options: []string{"44", "45", "46", "47"}, Duration: 30, Category: "biologia"},
@@ -243,12 +245,27 @@ func GetBackupQuestionsByCategory(category string) []models.Question {
 		}
 	default:
 		// Preguntas generales si la categoría no coincide
-		return []models.Question{
+		questions = []models.Question{
 			{ID: "backup_gen1", Text: "¿Quién pintó la Mona Lisa?", Answer: "Leonardo da Vinci", Options: []string{"Pablo Picasso", "Vincent van Gogh", "Leonardo da Vinci", "Miguel Ángel"}, Duration: 30, Category: "general"},
 			{ID: "backup_gen2", Text: "¿Cuál es el océano más grande?", Answer: "Pacífico", Options: []string{"Atlántico", "Pacífico", "Índico", "Ártico"}, Duration: 30, Category: "general"},
 			{ID: "backup_gen3", Text: "¿Cuántos continentes hay?", Answer: "7", Options: []string{"5", "6", "7", "8"}, Duration: 30, Category: "general"},
 		}
 	}
+	
+	// Randomly select MaxQuestionsPerDuel questions from available questions
+	if len(questions) > MaxQuestionsPerDuel {
+		// Create a random permutation of indices
+		indices := rand.Perm(len(questions))
+		
+		// Select the first MaxQuestionsPerDuel questions from the shuffled indices
+		selectedQuestions := make([]models.Question, MaxQuestionsPerDuel)
+		for i := 0; i < MaxQuestionsPerDuel; i++ {
+			selectedQuestions[i] = questions[indices[i]]
+		}
+		questions = selectedQuestions
+	}
+	
+	return questions
 }
 
 // GetAvailableCategories devuelve las categorías disponibles para duelos

@@ -169,7 +169,7 @@ func acceptDuelHandler(c *gin.Context) {
 		
 		// Get questions for the duel
 		questionService := services.NewQuestionService()
-		questions, err := questionService.GetQuestionsForDuel(123)
+		questions, err := questionService.GetQuestionsForDuel(duel.Category)
 		if err != nil {
 			log.Printf("Error getting questions for duel %s: %v. Using backup questions.", accept.DuelID, err)
 			questions = []models.Question{
