@@ -2,13 +2,13 @@ package models
 
 // RequestDuelResponse representa la respuesta exitosa al solicitar un duelo.
 type RequestDuelResponse struct {
-	DuelID  string `json:"duel_id" example:"player123_vs_player456"`
+	DuelID  string `json:"duel_id" example:"123"`
 	Message string `json:"message" example:"Duel successfully requested"`
 }
 
 // AcceptDuelResponse representa la respuesta exitosa al aceptar un duelo.
 type AcceptDuelResponse struct {
-	DuelID  string `json:"duel_id" example:"player123_vs_player456"`
+	DuelID  string `json:"duel_id" example:"123"`
 	Message string `json:"message" example:"Duel accepted"`
 }
 

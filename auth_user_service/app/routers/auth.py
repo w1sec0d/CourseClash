@@ -549,6 +549,7 @@ def update_password(
 def register(user: UserCreate, db: Session = Depends(get_db)):
     try:
         logger.info("🔑 Register request:")
+
         # Verificar si el correo ya está registrado
         if USE_MOCK_DATA:
             # Crear usuario en datos mock
@@ -583,7 +584,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
                     "email": user.email,
                     "fullName": user.full_name,
                     "avatar": None,
-                    "role": "ADMIN" if result["user"]["is_superuser"] else "STUDENT",
+                    "role": "TEACHER" if result["user"]["is_superuser"] else "STUDENT",
                     "createdAt": result["user"]["created_at"],
                     "updatedAt": None,
                 },
@@ -610,6 +611,8 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         # Cifrado de contraseña
         password_hash = hash_password(user.password)
 
+        is_superuser = 1 if user.role and user.role.upper() in ("TEACHER", "ADMIN") else 0
+
         query = text(
             """
                     INSERT INTO users (username, email, hashed_password, full_name, is_active, is_superuser) 
@@ -625,7 +628,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
                 "password_hash": password_hash,
                 "full_name": user.full_name,
                 "is_active": 1 if user.is_active else 0,
-                "is_superuser": 1 if user.is_superuser else 0,
+                "is_superuser": is_superuser
             },
         )
         db.commit()
@@ -653,7 +656,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
                 "email": user.email,
                 "fullName": user.full_name,
                 "avatar": None,
-                "role": "ADMIN" if bool(result[3]) else "STUDENT",
+                "role": "TEACHER" if bool(result[3]) else "STUDENT",
                 "createdAt": str(result[1]) if result and len(result) > 1 else None,
                 "updatedAt": None,
             },

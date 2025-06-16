@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema } from '@/lib/form-schemas';
 import { useState } from 'react';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
-import { useRouter } from 'next/navigation';
 import { AuthError } from '@/lib/auth-types';
 
 interface RegisterFormValues {
@@ -40,7 +39,6 @@ export default function Register() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const { register: registerUser } = useAuthApollo();
-  const router = useRouter();
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
@@ -72,7 +70,7 @@ export default function Register() {
       console.log('✅ Registration successful with Apollo:', result);
 
       // Redirect to dashboard after successful registration
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error('Registration error:', error);
 

@@ -5,7 +5,7 @@ services:
     build:
       context: ./auth_user_service
     ports:
-      - '8000:8000'
+      - "8000:8000"
     environment:
       - DATABASE_URL=mysql+pymysql://root:password@cc_authcourses_db:3306/authcourses_db
       - SECRET=Arquisoft
@@ -45,19 +45,38 @@ services:
   # cc_activities_ms:
   #   container_name: cc_activities_ms
   #   build:
-  #     context: ./activities_service
+  #     context: ./course_service
   #   ports:
-  #     - "8003:8003"
+  #     - "8001:8001"
   #   environment:
-  #     - DATABASE_URL=mysql+pymysql://root:password@cc_activities_db:3306/activities_db
-  #     - JWT_SECRET=your_jwt_secret_key12
+  #     - DATABASE_URL=mysql+pymysql://root:password@cc_courses_db:3306/courseClash
+  #     - JWT_SECRET=your_jwt_secret_key
   #   volumes:
-  #     - ./activities_service:/app
+  #     - ./course_service:/app
   #   depends_on:
-  #     - cc_activities_db
+  #     - cc_courses_db
   #   networks:
   #     - courseclash-network
-  #   command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
+  #   command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+
+  # Servicio de actividades
+  cc_activities_ms:
+    container_name: cc_activities_ms
+    build:
+      context: ./activities_service
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:password@cc_activities_db:3306/activities_db
+      - JWT_SECRET=your_jwt_secret_key12
+    volumes:
+      - ./activities_service:/app
+    depends_on:
+      cc_activities_db:
+        condition: service_healthy
+    networks:
+      - courseclash-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
 
   # Servicio de Duelos
   cc_duels_ms:
@@ -66,24 +85,26 @@ services:
       dockerfile: Dockerfile
     container_name: cc_duels_ms
     ports:
-      - '8002:8002'
+      - "8002:8002"
     restart: unless-stopped
     environment:
       - GIN_MODE=debug
       - MONGODB_URI=mongodb://cc_duels_db:27017/duels_db
+      - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
     depends_on:
       - cc_duels_db
+      - cc_broker_init
     networks:
       - courseclash-network
     healthcheck:
       test:
         [
-          'CMD',
-          'wget',
-          '--no-verbose',
-          '--tries=1',
-          '--spider',
-          'http://localhost:8002/swagger/index.html',
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8002/swagger/index.html",
         ]
       interval: 30s
       timeout: 10s
@@ -96,11 +117,13 @@ services:
     build:
       context: ./api_gateway
     ports:
-      - '8080:8080'
+      - "8080:8080"
     environment:
       - AUTH_SERVICE_URL=http://cc_auth_ms:8000
       - COURSE_SERVICE_URL=http://cc_courses_ms:8001
       - DUEL_SERVICE_URL=http://cc_duels_ms:8002
+      - ACTIVITIES_SERVICE_URL=http://cc_activities_ms:8003
+      - WEBSOCKET_SERVICE_URL=http://cc_websocket_manager:8004
       - JWT_SECRET=your_jwt_secret_key
     volumes:
       - ./api_gateway:/app
@@ -119,7 +142,7 @@ services:
       context: ./frontend_web
       dockerfile: Dockerfile
     ports:
-      - '3000:3000'
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - API_URL=http://cc_ag:8080
@@ -131,12 +154,12 @@ services:
     healthcheck:
       test:
         [
-          'CMD',
-          'wget',
-          '--no-verbose',
-          '--tries=1',
-          '--spider',
-          'http://0.0.0.0:3000',
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://0.0.0.0:3000",
         ]
       interval: 30s
       timeout: 10s
@@ -148,7 +171,7 @@ services:
     container_name: cc_authcourses_db
     image: mysql:8.0
     ports:
-      - '3306:3306'
+      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=authcourses_db
@@ -179,34 +202,119 @@ services:
   #   container_name: cc_activities_db
   #   image: mysql:8.0
   #   ports:
-  #     - "3308:3306"
+  #     - "3307:3306"
   #   environment:
   #     - MYSQL_ROOT_PASSWORD=password
-  #     - MYSQL_DATABASE=activities_db
+  #     - MYSQL_DATABASE=courseClash
   #   volumes:
-  #     - activities_mysql_data:/var/lib/mysql
-  #     - ./mysql_activities:/docker-entrypoint-initdb.d
+  #     - courses_mysql_data:/var/lib/mysql
+  #     - ./mysql_courses:/docker-entrypoint-initdb.d
   #   networks:
   #     - courseclash-network
   #   command: --default-authentication-plugin=mysql_native_password
+
+  cc_activities_db:
+    container_name: cc_activities_db
+    image: mysql:8.0
+    ports:
+      - "3308:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=activities_db
+    volumes:
+      - activities_mysql_data:/var/lib/mysql
+      - ./mysql_activities:/docker-entrypoint-initdb.d
+    networks:
+      - courseclash-network
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Base de datos Mongo (para Duelos)
   cc_duels_db:
     image: mongo:latest
     container_name: cc_duels_db
     ports:
-      - '27018:27017'
+      - "27018:27017"
     volumes:
       - mongo_data:/data/db
       - ./mongo_service/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
       - courseclash-network
 
+  # RabbitMQ Message Broker
+  cc_broker:
+    container_name: cc_broker
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=courseclash
+      - RABBITMQ_DEFAULT_PASS=courseclash123
+      - RABBITMQ_DEFAULT_VHOST=/courseclash
+      - RABBITMQ_MANAGEMENT_LOAD_DEFINITIONS=/etc/rabbitmq/definitions.json
+      - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./broker_service/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./broker_service/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    networks:
+      - courseclash-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # RabbitMQ Initializer Service (runs once to setup broker)
+  cc_broker_init:
+    container_name: cc_broker_init
+    image: curlimages/curl:8.4.0
+    volumes:
+      - ./broker_service/definitions.json:/definitions.json:ro
+      - ./broker_service/init_rabbitmq_definitions.sh:/init_script.sh:ro
+    depends_on:
+      cc_broker:
+        condition: service_healthy
+    networks:
+      - courseclash-network
+    command: sh /init_script.sh
+    restart: "no"
+
+  # WebSocket Manager Service
+  cc_websocket_manager:
+    container_name: cc_websocket_manager
+    image: python:3.11-slim
+    build:
+      context: ./websocket_manager
+    ports:
+      - "8004:8004"
+    environment:
+      - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
+      - AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - DUEL_SERVICE_URL=http://cc_duels_ms:8002
+    volumes:
+      - ./websocket_manager:/app
+    depends_on:
+      cc_broker:
+        condition: service_healthy
+      cc_broker_init:
+        condition: service_completed_successfully
+    networks:
+      - courseclash-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload
+
 volumes:
   auth_mysql_data:
   courses_mysql_data:
   activities_mysql_data:
   mongo_data:
+  rabbitmq_data:
 
 networks:
   courseclash-network:

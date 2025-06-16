@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
-import { useRouter } from 'next/navigation';
 
 // Componentes modularizados del sidebar
 import UserProfile from './sidebar/UserProfile';
@@ -17,15 +16,16 @@ interface SidebarProps {
 
 export default function Sidebar({ onClose }: SidebarProps) {
   const { user, logout } = useAuthApollo();
-  const router = useRouter();
 
   const handleLogout = async (): Promise<boolean> => {
     try {
       console.log('🚪 Sidebar logout attempt with Apollo');
       await logout();
       console.log('✅ Sidebar logout successful with Apollo');
-      router.push('/');
       onClose();
+
+      // Use window.location.href for hard navigation to ensure middleware sees the cleared cookies
+      window.location.href = '/';
       return true;
     } catch (error) {
       console.error('❌ Sidebar logout error:', error);
@@ -35,8 +35,9 @@ export default function Sidebar({ onClose }: SidebarProps) {
       clearAuthTokens();
       console.log('🧹 Cleaned cookies manually after logout error');
 
-      router.push('/');
       onClose();
+      // Use window.location.href for hard navigation
+      window.location.href = '/';
       return false;
     }
   };
