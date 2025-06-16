@@ -74,6 +74,7 @@ func requestDuelHandler(c *gin.Context) {
 		"duelId": duelID,
 		"requesterId": request.RequesterID,
 		"requesterName": requesterName,
+		"category": request.Category,
 		"timestamp": time.Now().Format(time.RFC3339),
 	}
 	
