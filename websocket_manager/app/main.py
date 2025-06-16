@@ -14,6 +14,7 @@ from typing import Dict, Set, Optional
 
 import aio_pika
 import httpx
+import redis.asyncio as redis
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -28,6 +29,7 @@ RABBITMQ_URL = os.getenv(
 )
 AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://cc_auth_ms:8000")
 DUEL_SERVICE_URL = os.getenv("DUEL_SERVICE_URL", "http://cc_duels_ms:8002")
+REDIS_URL = os.getenv("REDIS_URL", "redis://:courseclash123@cc_redis_cache:6379/0")
 
 app = FastAPI(
     title="CourseClash WebSocket Manager",
@@ -49,7 +51,7 @@ app.add_middleware(
 
 
 class WebSocketManager:
-    """Manages WebSocket connections and RabbitMQ integration"""
+    """Manages WebSocket connections, RabbitMQ integration, and Redis caching"""
 
     def __init__(self):
         self.user_connections: Dict[str, Set[WebSocket]] = {}
@@ -58,6 +60,7 @@ class WebSocketManager:
         )  # duel_id -> {user_id: websocket}
         self.rabbitmq_connection: Optional[aio_pika.Connection] = None
         self.rabbitmq_channel: Optional[aio_pika.Channel] = None
+        self.redis_client: Optional[redis.Redis] = None
 
     async def connect_rabbitmq(self):
         """Initialize RabbitMQ connection"""
@@ -73,6 +76,74 @@ class WebSocketManager:
         except Exception as e:
             logger.error(f"Failed to connect to RabbitMQ: {e}")
             raise
+
+    async def connect_redis(self):
+        """Initialize Redis connection"""
+        try:
+            self.redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+            # Test connection
+            await self.redis_client.ping()
+            logger.info("Redis connection established successfully")
+        except Exception as e:
+            logger.error(f"Failed to connect to Redis: {e}")
+            raise
+
+    async def cache_user_session(
+        self, user_id: str, session_data: dict, ttl: int = 3600
+    ):
+        """Cache user session data in Redis"""
+        if self.redis_client:
+            try:
+                await self.redis_client.setex(
+                    f"user_session:{user_id}", ttl, json.dumps(session_data)
+                )
+                logger.debug(f"Cached session for user {user_id}")
+            except Exception as e:
+                logger.error(f"Failed to cache user session: {e}")
+
+    async def get_cached_user_session(self, user_id: str) -> Optional[dict]:
+        """Get cached user session from Redis"""
+        if self.redis_client:
+            try:
+                session_data = await self.redis_client.get(f"user_session:{user_id}")
+                if session_data:
+                    return json.loads(session_data)
+            except Exception as e:
+                logger.error(f"Failed to get cached user session: {e}")
+        return None
+
+    async def cache_duel_state(self, duel_id: str, state_data: dict, ttl: int = 1800):
+        """Cache duel state in Redis"""
+        if self.redis_client:
+            try:
+                await self.redis_client.setex(
+                    f"duel_state:{duel_id}", ttl, json.dumps(state_data)
+                )
+                logger.debug(f"Cached state for duel {duel_id}")
+            except Exception as e:
+                logger.error(f"Failed to cache duel state: {e}")
+
+    async def get_cached_duel_state(self, duel_id: str) -> Optional[dict]:
+        """Get cached duel state from Redis"""
+        if self.redis_client:
+            try:
+                state_data = await self.redis_client.get(f"duel_state:{duel_id}")
+                if state_data:
+                    return json.loads(state_data)
+            except Exception as e:
+                logger.error(f"Failed to get cached duel state: {e}")
+        return None
+
+    async def track_user_presence(self, user_id: str, status: str = "online"):
+        """Track user presence in Redis"""
+        if self.redis_client:
+            try:
+                await self.redis_client.setex(
+                    f"user_presence:{user_id}", 300, status
+                )  # 5 min TTL
+                logger.debug(f"Updated presence for user {user_id}: {status}")
+            except Exception as e:
+                logger.error(f"Failed to track user presence: {e}")
 
     async def setup_consumers(self):
         """Setup RabbitMQ consumers for WebSocket events"""
@@ -168,6 +239,17 @@ class WebSocketManager:
             self.user_connections[user_id] = set()
         self.user_connections[user_id].add(websocket)
 
+        # Track user presence in Redis
+        await self.track_user_presence(user_id, "online")
+
+        # Cache user session
+        session_data = {
+            "connected_at": time.time(),
+            "connection_type": "notifications",
+            "status": "active",
+        }
+        await self.cache_user_session(user_id, session_data)
+
         # Send welcome message
         welcome_msg = {
             "type": "welcome",
@@ -190,6 +272,17 @@ class WebSocketManager:
         if duel_id not in self.duel_connections:
             self.duel_connections[duel_id] = {}
         self.duel_connections[duel_id][user_id] = websocket
+
+        # Track user presence and cache duel state
+        await self.track_user_presence(user_id, f"in_duel:{duel_id}")
+
+        # Cache duel participant info
+        duel_state = {
+            "participants": list(self.duel_connections[duel_id].keys()),
+            "status": "active",
+            "last_activity": time.time(),
+        }
+        await self.cache_duel_state(duel_id, duel_state)
 
         logger.info(f"User {user_id} connected to duel {duel_id}")
 
@@ -355,6 +448,7 @@ manager = WebSocketManager()
 async def startup():
     """Initialize the WebSocket manager on startup"""
     await manager.connect_rabbitmq()
+    await manager.connect_redis()
     logger.info("WebSocket Manager service started successfully")
 
 
@@ -363,6 +457,8 @@ async def shutdown():
     """Cleanup on shutdown"""
     if manager.rabbitmq_connection:
         await manager.rabbitmq_connection.close()
+    if manager.redis_client:
+        await manager.redis_client.close()
     logger.info("WebSocket Manager service stopped")
 
 
@@ -416,10 +512,19 @@ async def root():
 @app.get("/health")
 async def health():
     """Detailed health check"""
+    redis_connected = False
+    if manager.redis_client:
+        try:
+            await manager.redis_client.ping()
+            redis_connected = True
+        except:
+            redis_connected = False
+
     return {
         "status": "healthy",
         "user_connections": len(manager.user_connections),
         "duel_connections": len(manager.duel_connections),
         "rabbitmq_connected": manager.rabbitmq_connection is not None
         and not manager.rabbitmq_connection.is_closed,
+        "redis_connected": redis_connected,
     }
