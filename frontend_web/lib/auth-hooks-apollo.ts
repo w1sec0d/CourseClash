@@ -171,8 +171,6 @@ export function useLoginApollo() {
 
 // Hook para obtener usuario actual
 export function useCurrentUserApollo() {
-  console.log('🔑 useCurrentUserApollo');
-  console.log('🔑 getAuthToken():', getAuthToken());
   const reloadAttemptedRef = useRef(false);
   const lastTokenRef = useRef<string | null>(null);
   const router = useRouter();
