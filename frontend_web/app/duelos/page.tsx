@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { TrophyIcon } from '@heroicons/react/24/outline';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
 import QuizScreen from './components/quizScreen';
@@ -15,6 +15,7 @@ import DuelLanding from './components/DuelLanding';
 import OpponentSearch from './components/OpponentSearch';
 import PendingChallenges from './components/PendingChallenges';
 import DuelInfo from './components/DuelInfo';
+import { PlayerEloDisplay } from '@/components/PlayerEloDisplay';
 
 // Utils
 import { getUserId, validateUserSession } from './utils/userUtils';
@@ -24,6 +25,7 @@ export default function Duelos() {
   const [showQuiz, setShowQuiz] = useState(false);
   const [preparingDuel, setPreparingDuel] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forceRefreshElo, setForceRefreshElo] = useState(0); // Estado para forzar refresh
 
   // Custom hooks
   const {
@@ -61,6 +63,41 @@ export default function Duelos() {
 
   // Combine all errors
   const combinedError = error || notificationError || duelConnectionError;
+
+  // Detectar cuando la página gana el foco para refrescar el ELO
+  useEffect(() => {
+    const handleFocus = () => {
+      // Forzar refresh del ELO cuando se vuelve a la página
+      setForceRefreshElo(prev => prev + 1);
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // La página volvió a ser visible
+        setForceRefreshElo(prev => prev + 1);
+      }
+    };
+
+    const handlePopState = () => {
+      // Se detectó navegación hacia atrás/adelante
+      setForceRefreshElo(prev => prev + 1);
+    };
+
+    // Agregar listeners
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('popstate', handlePopState);
+
+    // Refresh inicial cuando se monta el componente
+    setForceRefreshElo(prev => prev + 1);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   // Handle opponent search
   const handleSearchOpponent = useCallback(async () => {
@@ -205,6 +242,8 @@ export default function Duelos() {
     setPreparingDuel(false);
     disconnectDuel();
     clearAll();
+    // Forzar refresh del ELO después de completar un duelo
+    setForceRefreshElo(prev => prev + 1);
   }, [disconnectDuel, clearAll]);
 
   if (preparingDuel) {
@@ -262,6 +301,9 @@ export default function Duelos() {
                 : 'Desconectado de notificaciones'}
             </span>
           </div>
+
+          {/* ELO del jugador */}
+          <PlayerEloDisplay className="mt-2" refreshTrigger={forceRefreshElo} />
         </div>
 
         <div className='lg:flex-row flex flex-col gap-8'>
