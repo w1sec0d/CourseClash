@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import {
   CalendarDaysIcon,
   ClockIcon,
@@ -357,33 +358,21 @@ const EnhancedActivitiesTab: React.FC<EnhancedActivitiesTabProps> = ({
 
                     {/* Acciones */}
                     <div className="flex flex-col gap-2 ml-4">
-                      {activity.activityType === 'TASK' && (
+                      <Link href={`/actividad/${activity.id}`}>
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+                          className={`px-4 py-2 text-white rounded-lg text-sm font-medium transition ${
+                            activity.activityType === 'TASK' ? 'bg-blue-600 hover:bg-blue-700' :
+                            activity.activityType === 'QUIZ' ? 'bg-red-600 hover:bg-red-700' :
+                            'bg-green-600 hover:bg-green-700'
+                          }`}
                         >
-                          Ver Tarea
+                          {activity.activityType === 'TASK' ? 'Ver Tarea' :
+                           activity.activityType === 'QUIZ' ? 'Ver Quiz' :
+                           'Ver Detalles'}
                         </motion.button>
-                      )}
-                      {activity.activityType === 'QUIZ' && (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition"
-                        >
-                          Tomar Quiz
-                        </motion.button>
-                      )}
-                      {activity.activityType === 'ANNOUNCEMENT' && (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition"
-                        >
-                          Ver Detalles
-                        </motion.button>
-                      )}
+                      </Link>
                     </div>
                   </div>
                 </div>

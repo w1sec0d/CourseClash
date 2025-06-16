@@ -522,6 +522,112 @@ class Mutation:
         except Exception as e: 
             print("❌ Error al crear la actividad:", str(e))
             return ActivityError(message="Error al registrar la actividad", code="500")
+
+    @strawberry.mutation
+    async def updateActivity(
+        self,
+        info,
+        id: str,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        activityType: Optional[TypeActivity] = None,
+        dueDate: Optional[datetime] = None,
+        fileUrl: Optional[str] = None
+    ) -> ActivityResult:
+        """
+        Actualiza una actividad existente.
+
+        Args:
+            id (str): Identificador de la actividad
+            title (Optional[str]): Nuevo título de la actividad
+            description (Optional[str]): Nueva descripción de la actividad
+            activityType (Optional[TypeActivity]): Nuevo tipo de actividad
+            dueDate (Optional[datetime]): Nueva fecha límite de entrega
+            fileUrl (Optional[str]): Nueva URL del archivo
+
+        Returns:
+            ActivityResult: Resultado de la actualización
+        """
+        # Obtener el token desde el header
+        request = info.context["request"]
+        auth_header = request.headers.get("authorization")
+        token = None
+
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+        else:
+            token = request.cookies.get("auth_token")
+
+        if not token:
+            return ActivityError(message="Token no proporcionado", code="401")
+        
+        # Verificar el token
+        try: 
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{AUTH_SERVICE_URL}/auth/me",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+
+                if response.status_code != 200:
+                    return ActivityError(message="Token inválido o expirado", code="401")
+                user_data = response.json()
+        except Exception as e: 
+            print("❌ Error en la verificación del token:", str(e))
+            return ActivityError(message="Error al verificar el token", code="401")
+
+        # Actualizar la actividad en el microservicio
+        try: 
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                # Preparar payload solo con campos que no son None
+                activity_payload = {}
+                if title is not None:
+                    activity_payload["title"] = title
+                if description is not None:
+                    activity_payload["description"] = description
+                if activityType is not None:
+                    activity_payload["activity_type"] = activityType.value
+                if dueDate is not None:
+                    activity_payload["due_date"] = dueDate.isoformat()
+                if fileUrl is not None:
+                    activity_payload["file_url"] = fileUrl
+
+                activity_response = await client.put(
+                    f"{ACTIVITIES_SERVICE_URL}/api/activities/{id}",
+                    json=activity_payload,
+                    headers={"User_id": str(user_data["id"])}
+                )
+
+                if activity_response.status_code != 200: 
+                    error_data = activity_response.json()
+                    error_detail = "Error al actualizar la actividad"
+                    error_code = "UPDATE_ERROR"
+
+                    if "detail" in error_data:
+                        if isinstance(error_data["detail"], dict):
+                            error_detail = error_data["detail"].get("message", error_detail)
+                            error_code = error_data["detail"].get("code", error_code)
+                        else:
+                            error_detail = error_data["detail"]
+                    return ActivityError(message=error_detail, code=error_code)
+
+                activity_data = activity_response.json()
+                updated_activity = Activity(
+                    id=activity_data["id"],
+                    courseId=activity_data["course_id"],
+                    title=activity_data["title"],
+                    description=activity_data.get("description"),
+                    activityType=TypeActivity(activity_data["activity_type"]),
+                    dueDate=datetime.fromisoformat(activity_data["due_date"].replace("Z", "+00:00"))
+                        if activity_data.get("due_date") else None,
+                    fileUrl=activity_data.get("file_url"),
+                    createdAt=datetime.fromisoformat(activity_data["created_at"].replace("Z", "+00:00")),
+                    createdBy=activity_data["created_by"]
+                )
+                return ActivitySuccess(activity=updated_activity)
+        except Exception as e: 
+            print("❌ Error al actualizar la actividad:", str(e))
+            return ActivityError(message="Error al actualizar la actividad", code="500")
         
     @strawberry.mutation
     async def createSubmissions(

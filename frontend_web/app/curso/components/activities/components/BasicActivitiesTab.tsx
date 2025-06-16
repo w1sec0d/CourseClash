@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 interface Activity {
   id: number;
@@ -121,9 +122,11 @@ const BasicActivitiesTab: React.FC<BasicActivitiesTabProps> = ({
               </div>
 
               <div className="flex flex-col gap-2 ml-4">
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                  Ver Detalles
-                </button>
+                <Link href={`/actividad/${activity.id}`}>
+                  <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+                    Ver Detalles
+                  </button>
+                </Link>
               </div>
             </div>
           </div>

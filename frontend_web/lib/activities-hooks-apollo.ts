@@ -226,7 +226,7 @@ export function useCreateActivityApollo() {
       const { data } = await createActivityMutation({
         variables: {
           ...activityData,
-          activityType: activityData.activityType, // Mantener en mayúsculas como espera el enum
+          activityType: activityData.activityType.toLowerCase() as 'task' | 'quiz' | 'announcement',
         },
       });
 
