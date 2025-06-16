@@ -9,6 +9,7 @@ import (
 	duelhandlers "courseclash/duel-service/internal/handlers"
 	"courseclash/duel-service/internal/models"
 	"courseclash/duel-service/internal/repositories"
+	"courseclash/duel-service/internal/services"
 
 	"log"
 
@@ -33,9 +34,9 @@ func requestDuelHandler(c *gin.Context) {
 		return
 	}
 	
-	// Crear el duelo usando el repositorio
+	// Crear el duelo usando el repositorio con la categoría especificada
 	duelRepo := repositories.NewDuelRepository()
-	duel, err := duelRepo.CreateDuel(request.RequesterID, request.OpponentID)
+	duel, err := duelRepo.CreateDuel(request.RequesterID, request.OpponentID, request.Category)
 	if err != nil {
 		if err.Error() == "ya existe un duelo pendiente entre estos jugadores" {
 			c.JSON(http.StatusConflict, gin.H{"error": "Duel already requested"})
@@ -208,10 +209,30 @@ func getPlayerHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, playerData)
 }
 
+// getCategoriesHandler obtiene las categorías disponibles para duelos.
+// @Summary Obtiene categorías disponibles
+// @Description Obtiene la lista de categorías disponibles para los duelos
+// @Tags categorias
+// @Produce json
+// @Success 200 {array} models.Category "Lista de categorías disponibles"
+// @Failure 500 {object} models.ErrorResponse "Error interno del servidor"
+// @Router /api/duels/categories [get]
+func getCategoriesHandler(c *gin.Context) {
+	// Crear una instancia del servicio de preguntas
+	questionService := services.NewQuestionService()
+	
+	// Obtener las categorías disponibles
+	categories := questionService.GetAvailableCategories()
+	
+	// Devolver las categorías
+	c.JSON(http.StatusOK, categories)
+}
+
 // RegisterRoutes configura todas las rutas del servidor Gin.
 func RegisterRoutes(r *gin.Engine) {
 	r.POST("/api/duels/request", requestDuelHandler)
 	r.POST("/api/duels/accept", acceptDuelHandler)
+	r.GET("/api/duels/categories", getCategoriesHandler)
 	r.GET("/ws/duels/:duel_id/:player_id", wsDuelHandler)
 	r.GET("/ws/notifications/:user_id", wsNotificationHandler)
 	r.GET("/api/players/:player_id", getPlayerHandler)

@@ -28,14 +28,14 @@ func NewQuestionService() *QuestionService {
 	}
 }
 
-// GetQuestionsForDuel obtiene preguntas aleatorias para un duelo específico
-func (s *QuestionService) GetQuestionsForDuel(courseID int) ([]models.Question, error) {
+// GetQuestionsForDuel obtiene preguntas aleatorias para un duelo específico por categoría
+func (s *QuestionService) GetQuestionsForDuel(category string) ([]models.Question, error) {
 	// Busca preguntas en la base de datos con un timeout de 5 segundos
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Filtrar por el curso específico
-	filter := bson.M{"course_id": courseID}
+	// Filtrar por la categoría específica
+	filter := bson.M{"category": category}
 
 	// Configurar el pipeline de agregación para obtener documentos aleatorios
 	pipeline := mongo.Pipeline{
@@ -45,7 +45,7 @@ func (s *QuestionService) GetQuestionsForDuel(courseID int) ([]models.Question, 
 
 	cursor, err := s.collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		log.Printf("Error al obtener preguntas aleatorias para el curso %d: %v", courseID, err)
+		log.Printf("Error al obtener preguntas aleatorias para la categoría %s: %v", category, err)
 		return getBackupQuestions(), nil
 	}
 	defer cursor.Close(ctx)
@@ -53,9 +53,9 @@ func (s *QuestionService) GetQuestionsForDuel(courseID int) ([]models.Question, 
 	// Estructura para mapear los documentos de MongoDB
 	type DBQuestion struct {
 		ID       string   `bson:"_id,omitempty"`
-		CourseID int      `bson:"course_id"`
+		Category string   `bson:"category"`
 		Question string   `bson:"question"`
-		Answer   string   `bson:"answer"`
+		Answer   string   `bson:"correct_answer"`
 		Options  []string `bson:"options"`
 		Duration int      `bson:"duration"`
 	}
@@ -68,7 +68,7 @@ func (s *QuestionService) GetQuestionsForDuel(courseID int) ([]models.Question, 
 
 	// Si no hay preguntas en la base de datos, usar preguntas de respaldo
 	if len(dbQuestions) == 0 {
-		log.Printf("No hay preguntas en la base de datos para el curso %d. Usando preguntas de respaldo.", courseID)
+		log.Printf("No hay preguntas en la base de datos para la categoría %s. Usando preguntas de respaldo.", category)
 		return getBackupQuestions(), nil
 	}
 
@@ -81,12 +81,13 @@ func (s *QuestionService) GetQuestionsForDuel(courseID int) ([]models.Question, 
 			Answer:   q.Answer,
 			Options:  q.Options,
 			Duration: q.Duration,
+			Category: q.Category,
 		})
 	}
 
 	// Si no hay suficientes preguntas, complementar con preguntas de respaldo
 	if len(questions) < MaxQuestionsPerDuel {
-		log.Printf("No hay suficientes preguntas en la base de datos para el curso %d. Complementando con preguntas de respaldo.", courseID)
+		log.Printf("No hay suficientes preguntas en la base de datos para la categoría %s. Complementando con preguntas de respaldo.", category)
 		backupQuestions := getBackupQuestions()
 		
 		// Añadir preguntas de respaldo hasta completar el máximo
@@ -112,6 +113,7 @@ func getBackupQuestions() []models.Question {
 			Answer:   "Nilo",
 			Options:  []string{"Amazonas", "Nilo", "Misisipi", "Yangtsé"},
 			Duration: 30,
+			Category: "geografia",
 		},
 		{
 			ID:       "backup2",
@@ -119,6 +121,7 @@ func getBackupQuestions() []models.Question {
 			Answer:   "Oxígeno",
 			Options:  []string{"Oro", "Osmio", "Oxígeno", "Boro"},
 			Duration: 30,
+			Category: "ciencias",
 		},
 		{
 			ID:       "backup3",
@@ -126,13 +129,15 @@ func getBackupQuestions() []models.Question {
 			Answer:   "1492",
 			Options:  []string{"1492", "1592", "1392", "1500"},
 			Duration: 30,
+			Category: "historia",
 		},
 		{
 			ID:       "backup4",
-			Text:     "¿Cuál es el planeta más cercano al Sol?",
-			Answer:   "Mercurio",
-			Options:  []string{"Venus", "Mercurio", "Tierra", "Marte"},
+			Text:     "¿Cuál es 2 + 2?",
+			Answer:   "4",
+			Options:  []string{"3", "4", "5", "6"},
 			Duration: 30,
+			Category: "matematica",
 		},
 		{
 			ID:       "backup5",
@@ -140,6 +145,21 @@ func getBackupQuestions() []models.Question {
 			Answer:   "Gabriel García Márquez",
 			Options:  []string{"Mario Vargas Llosa", "Gabriel García Márquez", "Julio Cortázar", "Pablo Neruda"},
 			Duration: 30,
+			Category: "literatura",
 		},
+	}
+}
+
+// GetAvailableCategories devuelve las categorías disponibles para duelos
+func (s *QuestionService) GetAvailableCategories() []models.Category {
+	return []models.Category{
+		{ID: "matematica", Name: "Matemática"},
+		{ID: "historia", Name: "Historia"},
+		{ID: "geografia", Name: "Geografía"},
+		{ID: "ciencias", Name: "Ciencias"},
+		{ID: "literatura", Name: "Literatura"},
+		{ID: "fisica", Name: "Física"},
+		{ID: "quimica", Name: "Química"},
+		{ID: "biologia", Name: "Biología"},
 	}
 }

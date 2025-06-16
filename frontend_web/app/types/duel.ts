@@ -14,9 +14,16 @@ export interface AcceptDuelResponse {
   message: string;
 }
 
+export interface Category {
+  name: string;
+  displayName: string;
+  description: string;
+}
+
 export interface RequestDuelInput {
   requesterId: string;
   opponentId: string;
+  category: string;
 }
 
 export interface AcceptDuelInput {

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDuels } from '@/lib/duel-hooks-apollo';
-import { RequestDuelResponse } from '../../types/duel';
+import { RequestDuelResponse, Category } from '../../types/duel';
 
 interface User {
   id: string;
@@ -19,10 +19,17 @@ interface UseDuelOperationsReturn {
   searchLoading: boolean;
   clearFoundUser: () => void;
 
+  // Categories
+  categories: Category[];
+  categoriesLoading: boolean;
+  selectedCategory: string;
+  setSelectedCategory: (category: string) => void;
+
   // Duel operations
   requestDuel: (
     requesterId: string,
-    opponentId: string
+    opponentId: string,
+    category: string
   ) => Promise<RequestDuelResponse>;
   acceptDuel: (duelId: string) => Promise<RequestDuelResponse>;
   requestLoading: boolean;
@@ -40,11 +47,14 @@ export const useDuelOperations = (): UseDuelOperationsReturn => {
     null
   );
   const [foundUser, setFoundUser] = useState<User | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState('matematica'); // Default category
 
   const {
     searchUserByEmail,
     foundUser: apolloFoundUser,
     searchLoading,
+    categories,
+    categoriesLoading,
     requestDuel: apolloRequestDuel,
     requestLoading,
     acceptDuel: apolloAcceptDuel,
@@ -69,9 +79,10 @@ export const useDuelOperations = (): UseDuelOperationsReturn => {
   const requestDuel = useCallback(
     async (
       requesterId: string,
-      opponentId: string
+      opponentId: string,
+      category: string
     ): Promise<RequestDuelResponse> => {
-      const response = await apolloRequestDuel(requesterId, opponentId);
+      const response = await apolloRequestDuel(requesterId, opponentId, category);
       setDuelResponse(response);
       return response;
     },
@@ -99,6 +110,7 @@ export const useDuelOperations = (): UseDuelOperationsReturn => {
     setOpponentEmail('');
     setFoundUser(null);
     setDuelResponse(null);
+    setSelectedCategory('matematica'); // Reset to default category
   }, []);
 
   return {
@@ -107,6 +119,13 @@ export const useDuelOperations = (): UseDuelOperationsReturn => {
     foundUser,
     searchUser,
     searchLoading,
+    
+    // Categories
+    categories,
+    categoriesLoading,
+    selectedCategory,
+    setSelectedCategory,
+    
     requestDuel,
     acceptDuel,
     requestLoading,
