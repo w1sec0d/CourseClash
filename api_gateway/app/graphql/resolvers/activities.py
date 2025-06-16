@@ -412,7 +412,7 @@ class Mutation:
 
                 if response.status_code != 200:
                     return ActivityError(message = "Token invalido o expirado", code = "401")
-            user_data = response.json()
+                user_data = response.json()
         except Exception as e: 
             print("❌ Error in la verificación del token :", str(e))
             return ActivityError(message = "Error al verificar el token ", code = "401")
@@ -518,7 +518,7 @@ class Mutation:
 
                 if response.status_code != 200:
                     return SubmissionsError(message = "Token invalido o expirado", code = "401")
-            user_data = response.json()
+                user_data = response.json()
         except Exception as e: 
             print("❌ Error in la verificación del token :", str(e))
             return SubmissionsError(message = "Error al verificar el token ", code = "401")
@@ -625,7 +625,7 @@ class Mutation:
 
                 if response.status_code != 200:
                     return SubmissionsError(message = "Token invalido o expirado", code = "401")
-            user_data = response.json()
+                user_data = response.json()
         except Exception as e: 
             print("❌ Error in la verificación del token :", str(e))
             return SubmissionsError(message = "Error al verificar el token ", code = "401")
@@ -728,7 +728,7 @@ class Mutation:
 
                 if response.status_code != 200:
                     return GradeError(message = "Token invalido o expirado", code = "401")
-            user_data = response.json()
+                user_data = response.json()
         except Exception as e:
             print("❌ Error in la verificación del token :", str(e))
             return GradeError(message = "Error al verificar el token ", code = "401")
@@ -833,7 +833,7 @@ class Mutation:
 
                 if response.status_code != 200:
                     return CommentError(message = "Token invalido o expirado", code = "401")
-            user_data = response.json()
+                user_data = response.json()
         except Exception as e: 
             print("❌ Error in la verificación del token :", str(e))
             return CommentError(message = "Error al verificar el token ", code = "401")
