@@ -42,6 +42,23 @@ export default function OpponentSearch({
     await onSearch();
   };
 
+  // Mapeo de emojis para categorías
+  const categoryEmojis: { [key: string]: string } = {
+    matematica: "🔢",
+    historia: "📚",
+    geografia: "🌍",
+    ciencias: "🔬",
+    literatura: "📖",
+    fisica: "⚛️",
+    quimica: "🧪",
+    biologia: "🧬",
+  };
+
+  // Función para obtener el emoji de una categoría
+  const getCategoryEmoji = (categoryName: string) => {
+    return categoryEmojis[categoryName] || "📝";
+  };
+
   return (
     <div className="lg:w-full bg-white rounded-xl shadow-lg border border-emerald-100 p-6 flex flex-col justify-center">
       <div className="items-center mb-6 flex">
@@ -140,7 +157,7 @@ export default function OpponentSearch({
               ) : (
                 categories.map((category) => (
                   <option key={category.name} value={category.name}>
-                    {category.displayName}
+                    {getCategoryEmoji(category.name)} {category.displayName}
                   </option>
                 ))
               )}
@@ -164,7 +181,7 @@ export default function OpponentSearch({
           </div>
           {selectedCategory && !categoriesLoading && (
             <p className="text-sm text-gray-600 mt-1">
-              {categories.find(cat => cat.name === selectedCategory)?.description}
+              {getCategoryEmoji(selectedCategory)} {categories.find(cat => cat.name === selectedCategory)?.description}
             </p>
           )}
         </div>
