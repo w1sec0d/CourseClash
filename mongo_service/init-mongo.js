@@ -4,7 +4,7 @@ db = db.getSiblingDB("duels_db");
 db.duels.drop();
 
 // Crear el índice único para el contador de duelos
-db.counters.createIndex({ _id: 1 }, { unique: true });
+db.counters.createIndex({ _id: 1 });
 
 // Inicializar el contador de duelos
 db.counters.insertOne({
