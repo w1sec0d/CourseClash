@@ -7,6 +7,7 @@ import { AnunciosTab, MaterialesTab, TareasTab, DuelosTab, RankingTab, Estadisti
 import { useCourseApollo } from '@/lib/course-hooks-apollo';
 import { useActivitiesApollo } from '@/lib/activities-hooks-apollo';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
+import CreateActivityModal from './components/CreateActivityModal';
 
 export default function Curso() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -18,7 +19,13 @@ export default function Curso() {
   // Hooks para datos
   const { user } = useAuthApollo();
   const { course, loading: courseLoading, error: courseError } = useCourseApollo(courseId);
-  const { activities, error: activitiesError } = useActivitiesApollo(courseId);
+  const { activities, error: activitiesError, refetch: refetchActivities } = useActivitiesApollo(courseId);
+  
+  // Estado para el modal de crear actividad
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
+  // Verificar si el usuario es profesor o admin
+  const isTeacherOrAdmin = user?.role === 'TEACHER' || user?.role === 'ADMIN';
 
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
@@ -164,6 +171,21 @@ export default function Curso() {
               textColor="gray-50"
             />
             
+            {/* Botón de crear actividad para profesores */}
+            {isTeacherOrAdmin && (
+              <div className="mb-6 flex justify-end">
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-lg font-medium"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Crear Actividad
+                </button>
+              </div>
+            )}
+            
             {/* Contenido dinámico según la pestaña seleccionada */}
             <div className="mt-6">
               {activeTab === 'TodasActividades' && (
@@ -224,6 +246,17 @@ export default function Curso() {
             )}
           </div>
         </div>
+        
+        {/* Modal de crear actividad */}
+        <CreateActivityModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          courseId={courseId}
+          onActivityCreated={() => {
+            refetchActivities();
+            setIsCreateModalOpen(false);
+          }}
+        />
     </div>
   );
 }
