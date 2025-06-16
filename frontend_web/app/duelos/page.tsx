@@ -15,6 +15,7 @@ import DuelLanding from './components/DuelLanding';
 import OpponentSearch from './components/OpponentSearch';
 import PendingChallenges from './components/PendingChallenges';
 import DuelInfo from './components/DuelInfo';
+import { PlayerEloDisplay } from '@/components/PlayerEloDisplay';
 
 // Utils
 import { getUserId, validateUserSession } from './utils/userUtils';
@@ -262,6 +263,9 @@ export default function Duelos() {
                 : 'Desconectado de notificaciones'}
             </span>
           </div>
+
+          {/* ELO del jugador */}
+          <PlayerEloDisplay className="mt-2" />
         </div>
 
         <div className='lg:flex-row flex flex-col gap-8'>

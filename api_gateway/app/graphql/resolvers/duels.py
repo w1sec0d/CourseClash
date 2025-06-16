@@ -34,7 +34,13 @@ class Query:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{DUEL_SERVICE_URL}/api/players/{player_id}")
             if response.status_code == 200:
-                return PlayerData(**response.json())
+                data = response.json()
+                # Map the response fields to match GraphQL type
+                return PlayerData(
+                    playerId=data["player_id"],
+                    elo=data["elo"],
+                    rank=data["rank"]
+                )
             raise Exception(f"Error getting player data: {response.text}")
 
     @strawberry.field
