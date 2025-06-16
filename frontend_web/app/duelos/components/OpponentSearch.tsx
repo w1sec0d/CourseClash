@@ -1,5 +1,6 @@
 import { FormEvent } from "react";
 import Button from "@/components/Button";
+import { Category } from "../../types/duel";
 
 interface User {
   id: string;
@@ -17,6 +18,10 @@ interface OpponentSearchProps {
   foundUser: User | null;
   searchLoading: boolean;
   requestLoading: boolean;
+  categories: Category[];
+  categoriesLoading: boolean;
+  selectedCategory: string;
+  setSelectedCategory: (category: string) => void;
 }
 
 export default function OpponentSearch({
@@ -27,6 +32,10 @@ export default function OpponentSearch({
   foundUser,
   searchLoading,
   requestLoading,
+  categories,
+  categoriesLoading,
+  selectedCategory,
+  setSelectedCategory,
 }: OpponentSearchProps) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -93,6 +102,73 @@ export default function OpponentSearch({
             />
           </div>
         </div>
+
+        <div>
+          <label
+            htmlFor="category"
+            className="text-sm font-medium text-gray-700 mb-1 block"
+          >
+            Categoría del duelo
+          </label>
+          <div className="relative">
+            <div className="pl-3 items-center absolute inset-y-0 left-0 flex pointer-events-none">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 11H5m14-4H9m4 8H5m6-4h4"
+                />
+              </svg>
+            </div>
+            <select
+              name="category"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition pl-10 w-full py-3 rounded-lg appearance-none bg-white"
+              id="category"
+              disabled={categoriesLoading}
+            >
+              {categoriesLoading ? (
+                <option value="">Cargando categorías...</option>
+              ) : (
+                categories.map((category) => (
+                  <option key={category.name} value={category.name}>
+                    {category.displayName}
+                  </option>
+                ))
+              )}
+            </select>
+            <div className="pr-3 items-center absolute inset-y-0 right-0 flex pointer-events-none">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+          </div>
+          {selectedCategory && !categoriesLoading && (
+            <p className="text-sm text-gray-600 mt-1">
+              {categories.find(cat => cat.name === selectedCategory)?.description}
+            </p>
+          )}
+        </div>
+
         <div className="pt-2">
           <Button
             type="submit"

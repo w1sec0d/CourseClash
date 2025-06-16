@@ -18,6 +18,7 @@ type DuelData struct {
 	ID           int    `bson:"_id" json:"id"`
 	ChallengerID string `bson:"challenger_id" json:"challenger_id"`
 	OpponentID   string `bson:"opponent_id" json:"opponent_id"`
+	Category     string `bson:"category" json:"category"`
 	Status       string `bson:"status" json:"status"`
 	WinnerID     string `bson:"winner_id,omitempty" json:"winner_id,omitempty"`
 	CreatedAt    time.Time `bson:"created_at" json:"created_at"`
@@ -64,7 +65,7 @@ func (r *DuelRepository) GetNextDuelID() (int, error) {
 }
 
 // CreateDuel crea un nuevo duelo con ID único consecutivo
-func (r *DuelRepository) CreateDuel(challengerID, opponentID string) (*DuelData, error) {
+func (r *DuelRepository) CreateDuel(challengerID, opponentID, category string) (*DuelData, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -81,6 +82,7 @@ func (r *DuelRepository) CreateDuel(challengerID, opponentID string) (*DuelData,
 		ID:           duelID,
 		ChallengerID: challengerID,
 		OpponentID:   opponentID,
+		Category:     category,
 		Status:       "pending",
 		CreatedAt:    time.Now(),
 	}

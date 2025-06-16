@@ -45,6 +45,13 @@ type Question struct {
 	Answer   string   `json:"answer"`
 	Options  []string `json:"options"`
 	Duration int      `json:"duration"`
+	Category string   `json:"category"` // Nueva categoría
+}
+
+// Category representa una categoría de preguntas disponible
+type Category struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // DuelConnection almacena los jugadores de un duelo.
@@ -57,6 +64,7 @@ type DuelConnection struct {
 type RequestDuelRequest struct {
 	RequesterID string `json:"requester_id" example:"player123" binding:"required"`
 	OpponentID  string `json:"opponent_id" example:"player456" binding:"required"`
+	Category    string `json:"category" example:"matematica" binding:"required"` // Nueva categoría
 }
 
 // AcceptDuelRequest representa el body para aceptar un duelo.
