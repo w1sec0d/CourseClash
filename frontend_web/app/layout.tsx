@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { AuthProviderApollo } from '@/lib/auth-context-apollo';
 import { ConditionalLayout } from '@/components/ConditionalLayout';
 import { ApolloProviderWrapper } from '@/lib/apollo-provider';
+import RouteGuard from '../components/RouteGuard';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -28,7 +29,9 @@ export default function RootLayout({
         <ApolloProviderWrapper>
           <AuthProviderApollo>
             <NavigationBar />
-            <ConditionalLayout>{children}</ConditionalLayout>
+            <RouteGuard>
+              <ConditionalLayout>{children}</ConditionalLayout>
+            </RouteGuard>
           </AuthProviderApollo>
         </ApolloProviderWrapper>
       </body>

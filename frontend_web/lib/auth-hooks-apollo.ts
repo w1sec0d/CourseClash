@@ -321,24 +321,53 @@ export function useCurrentUserApollo() {
 export function useLogoutApollo() {
   const [logoutMutation, { loading }] = useMutation(LOGOUT_MUTATION);
   const [error, setError] = useState<string | null>(null);
+  const apolloClient = useApolloClient();
 
   const logout = async () => {
     setError(null);
+    console.log('🚪 Executing logout mutation...');
 
     try {
       await logoutMutation();
+      console.log('✅ Logout mutation successful');
 
       // Limpiar tokens de cookies
       clearAuthTokens();
+      console.log('🧹 Auth tokens cleared');
+
+      // Clear Apollo cache to remove all user data
+      try {
+        await apolloClient.clearStore();
+        console.log('✅ Apollo cache cleared completely');
+      } catch (cacheError) {
+        console.warn('⚠️ Failed to clear Apollo cache:', cacheError);
+        // Fallback: clear specific queries
+        apolloClient.cache.evict({ fieldName: 'me' });
+        apolloClient.cache.gc();
+        console.log('🔄 Apollo ME query evicted as fallback');
+      }
 
       return true;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to logout';
       setError(errorMessage);
+      console.error('❌ Logout mutation failed:', errorMessage);
 
       // Limpiar tokens incluso si falla la petición
       clearAuthTokens();
+      console.log('🧹 Auth tokens cleared after error');
+
+      // Clear cache even if logout fails
+      try {
+        await apolloClient.clearStore();
+        console.log('✅ Apollo cache cleared after logout error');
+      } catch (cacheError) {
+        console.warn(
+          '⚠️ Failed to clear cache after logout error:',
+          cacheError
+        );
+      }
 
       return false;
     }

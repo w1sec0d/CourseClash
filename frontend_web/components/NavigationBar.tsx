@@ -12,13 +12,12 @@ import {
   UserPlusIcon,
   AcademicCapIcon,
 } from '@heroicons/react/24/outline';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
 
 export const NavigationBar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAuthenticated, logout, isInitialized } = useAuthApollo();
-  const router = useRouter();
   const pathname = usePathname();
 
   const toggleMobileMenu = () => {
@@ -30,9 +29,9 @@ export const NavigationBar: React.FC = () => {
       console.log('🚪 Logout attempt with Apollo');
       await logout();
       console.log('✅ Logout successful with Apollo');
-      await new Promise((resolve) => setTimeout(resolve, 50));
 
-      router.push('/');
+      // Use window.location.href for hard navigation to ensure middleware sees the cleared cookies
+      window.location.href = '/';
     } catch (error) {
       console.error('❌ Logout error:', error);
 
@@ -40,10 +39,9 @@ export const NavigationBar: React.FC = () => {
       const { clearAuthTokens } = await import('@/lib/cookie-utils');
       clearAuthTokens();
       console.log('🧹 Cleaned cookies manually after logout error');
-      await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Redirigir de todas formas
-      router.push('/');
+      // Use window.location.href for hard navigation
+      window.location.href = '/';
     }
   };
 
