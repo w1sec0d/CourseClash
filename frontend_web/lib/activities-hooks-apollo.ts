@@ -126,6 +126,29 @@ const GET_SUBMISSIONS_QUERY = gql`
   }
 `;
 
+const GRADE_SUBMISSION_MUTATION = gql`
+  mutation GradeSubmission($submissionId: Int!, $score: Float!, $feedback: String) {
+    gradeSubmission(submissionId: $submissionId, score: $score, feedback: $feedback) {
+      __typename
+      ... on GradeSuccess {
+        grades {
+          id
+          submissionId
+          gradedBy
+          gradedAt
+          score
+          feedback
+          scorePercentage
+        }
+      }
+      ... on GradeError {
+        message
+        code
+      }
+    }
+  }
+`;
+
 // Tipos de datos
 export interface ActivityComment {
   id: number;
@@ -272,5 +295,38 @@ export function useSubmissionsApollo(activityId: string, userId: string, userRol
     loading,
     error: errorMessage || null,
     refetch,
+  };
+}
+
+// Hook para calificar una submission
+export function useGradeSubmissionApollo() {
+  const [gradeSubmissionMutation, { loading, error }] = useMutation(GRADE_SUBMISSION_MUTATION);
+
+  const gradeSubmission = async (gradeData: {
+    submissionId: number;
+    score: number;
+    feedback?: string;
+  }) => {
+    try {
+      const { data } = await gradeSubmissionMutation({
+        variables: gradeData,
+      });
+
+      const result = data?.gradeSubmission;
+      if (result?.__typename === 'GradeError') {
+        throw new Error(result.message);
+      }
+
+      return result?.grades || null;
+    } catch (err) {
+      console.error('Error grading submission:', err);
+      throw err;
+    }
+  };
+
+  return {
+    gradeSubmission,
+    loading,
+    error: error?.message || null,
   };
 } 
