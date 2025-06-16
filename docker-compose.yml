@@ -21,8 +21,7 @@ services:
     #   - cc_authcourses_db
     networks:
       - courseclash-network
-    command: 
-     app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   # Servicio de Cursos
   cc_courses_ms:
@@ -165,7 +164,7 @@ services:
     container_name: cc_courses_db
     image: mysql:8.0
     ports:
-      - "3307:3306"
+      - '3307:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=courseClash

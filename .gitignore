@@ -32,3 +32,5 @@ venv/
 # OS files
 .DS_Store
 Thumbs.db
+
+/websocket_manager/app/__pycache__
