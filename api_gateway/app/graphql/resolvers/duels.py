@@ -15,6 +15,7 @@ from app.graphql.types.duel import (
     PlayerData,
     RequestDuelResponse,
     AcceptDuelResponse,
+    Category,
     ErrorResponse,
     RequestDuelInput,
     AcceptDuelInput,
@@ -36,6 +37,23 @@ class Query:
                 return PlayerData(**response.json())
             raise Exception(f"Error getting player data: {response.text}")
 
+    @strawberry.field
+    async def get_duel_categories(self) -> List[Category]:
+        """Obtiene las categorías disponibles para duelos"""
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{DUEL_SERVICE_URL}/api/duels/categories")
+            if response.status_code == 200:
+                categories_data = response.json()
+                return [
+                    Category(
+                        name=category["id"],
+                        displayName=category["name"],
+                        description=f"Preguntas de {category['name']}"
+                    ) 
+                    for category in categories_data
+                ]
+            raise Exception(f"Error getting categories: {response.text}")
+
 
 @strawberry.type
 class Mutation:
@@ -48,6 +66,7 @@ class Mutation:
                 json={
                     "requester_id": input.requesterId,
                     "opponent_id": input.opponentId,
+                    "category": input.category,
                 },
             )
             if response.status_code == 200:

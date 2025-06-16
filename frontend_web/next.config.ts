@@ -21,7 +21,16 @@ const nextConfig: NextConfig = {
   },
   // Configuración de imágenes externas
   images: {
-    domains: ['placehold.co', 'randomuser.me'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'randomuser.me',
+      },
+    ],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
