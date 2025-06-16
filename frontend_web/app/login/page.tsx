@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '@/lib/form-schemas';
@@ -30,7 +29,6 @@ export default function Login() {
     },
   });
   const { login, resetPassword, updatePassword, isLoading } = useAuthApollo();
-  const router = useRouter();
 
   const handleForgotPassword = async () => {
     const { value: email, isConfirmed } = await Swal.fire({
@@ -176,10 +174,10 @@ export default function Login() {
     try {
       // Call the login function from Apollo auth context
       await login(data.email, data.password);
-      await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Redirect to dashboard after successful login
-      router.push('/dashboard');
+      // Wait for auth state to be fully synchronized
+      // Use window.location.href for hard navigation to ensure middleware sees the updated cookie
+      window.location.href = '/dashboard';
     } catch (error) {
       // Set form error to display to the user
       if (error instanceof AuthError) {
