@@ -59,6 +59,21 @@ export default function OpponentSearch({
     return categoryEmojis[categoryName] || "📝";
   };
 
+  // Función para traducir roles
+  const translateRole = (role: string) => {
+    const roleTranslations: { [key: string]: string } = {
+      student: "Estudiante",
+      STUDENT: "Estudiante",
+      teacher: "Profesor",
+      TEACHER: "Profesor",
+      admin: "Administrador",
+      ADMIN: "Administrador",
+      user: "Usuario",
+      USER: "Usuario",
+    };
+    return roleTranslations[role] || role;
+  };
+
   return (
     <div className="lg:w-full bg-white rounded-xl shadow-lg border border-emerald-100 p-6 flex flex-col justify-center">
       <div className="items-center mb-6 flex">
@@ -198,21 +213,52 @@ export default function OpponentSearch({
       </form>
 
       {foundUser && (
-        <div className="mt-6 p-4 bg-emerald-50 rounded-lg">
-          <h3 className="font-bold text-emerald-800 mb-2">
-            Oponente Encontrado:
+        <div className="mt-6 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+          <h3 className="font-bold text-emerald-800 mb-3 flex items-center">
+            <span className="bg-emerald-100 rounded-full p-1 mr-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 text-emerald-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </span>
+            Oponente Encontrado
           </h3>
-          <p className="text-gray-700">
-            Nombre: {foundUser.fullName || foundUser.username}
-          </p>
-          <p className="text-gray-700">Correo: {foundUser.email}</p>
-          <p className="text-gray-700">Rol: {foundUser.role}</p>
+          <div className="space-y-2">
+            <p className="text-gray-700 flex items-center">
+              <span className="font-medium text-gray-800 min-w-[80px]">Nombre:</span>
+              <span className="ml-2">{foundUser.fullName || foundUser.username}</span>
+            </p>
+            <p className="text-gray-700 flex items-center">
+              <span className="font-medium text-gray-800 min-w-[80px]">Correo:</span>
+              <span className="ml-2">{foundUser.email}</span>
+            </p>
+            <p className="text-gray-700 flex items-center">
+              <span className="font-medium text-gray-800 min-w-[80px]">Rol:</span>
+              <span className="ml-2">{translateRole(foundUser.role || "")}</span>
+            </p>
+            <p className="text-gray-700 flex items-center">
+              <span className="font-medium text-gray-800 min-w-[80px]">Categoría:</span>
+              <span className="ml-2 bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-sm font-medium">
+                {getCategoryEmoji(selectedCategory)} {categories.find(cat => cat.name === selectedCategory)?.displayName}
+              </span>
+            </p>
+          </div>
           <Button
             onClick={onRequestDuel}
             disabled={requestLoading}
             className="mt-4 hover:bg-emerald-700 transition duration-300 hover:shadow-lg transform hover:-translate-y-1 w-full bg-emerald-600 text-white font-bold py-3 rounded-lg shadow-md"
           >
-            {requestLoading ? "Solicitando..." : "Solicitar Duelo"}
+            {requestLoading ? "Solicitando..." : `Solicitar Duelo de ${categories.find(cat => cat.name === selectedCategory)?.displayName || "Conocimiento"}`}
           </Button>
         </div>
       )}
