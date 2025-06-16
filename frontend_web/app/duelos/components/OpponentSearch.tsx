@@ -1,6 +1,7 @@
 import { FormEvent } from "react";
 import Button from "@/components/Button";
 import { Category } from "../../types/duel";
+import { OpponentInfo } from "@/components/OpponentInfo";
 
 interface User {
   id: string;
@@ -59,20 +60,7 @@ export default function OpponentSearch({
     return categoryEmojis[categoryName] || "📝";
   };
 
-  // Función para traducir roles
-  const translateRole = (role: string) => {
-    const roleTranslations: { [key: string]: string } = {
-      student: "Estudiante",
-      STUDENT: "Estudiante",
-      teacher: "Profesor",
-      TEACHER: "Profesor",
-      admin: "Administrador",
-      ADMIN: "Administrador",
-      user: "Usuario",
-      USER: "Usuario",
-    };
-    return roleTranslations[role] || role;
-  };
+  // Función para traducir roles (removida porque ahora está en OpponentInfo)
 
   return (
     <div className="lg:w-full bg-white rounded-xl shadow-lg border border-emerald-100 p-6 flex flex-col justify-center">
@@ -196,7 +184,11 @@ export default function OpponentSearch({
           </div>
           {selectedCategory && !categoriesLoading && (
             <p className="text-sm text-gray-600 mt-1">
-              {getCategoryEmoji(selectedCategory)} {categories.find(cat => cat.name === selectedCategory)?.description}
+              {getCategoryEmoji(selectedCategory)}{" "}
+              {
+                categories.find((cat) => cat.name === selectedCategory)
+                  ?.description
+              }
             </p>
           )}
         </div>
@@ -234,22 +226,24 @@ export default function OpponentSearch({
             Oponente Encontrado
           </h3>
           <div className="space-y-2">
+            <OpponentInfo
+              opponentId={foundUser.id}
+              opponentName={
+                foundUser.fullName || foundUser.username || "Usuario"
+              }
+              opponentEmail={foundUser.email}
+              opponentRole={foundUser.role || ""}
+            />
             <p className="text-gray-700 flex items-center">
-              <span className="font-medium text-gray-800 min-w-[80px]">Nombre:</span>
-              <span className="ml-2">{foundUser.fullName || foundUser.username}</span>
-            </p>
-            <p className="text-gray-700 flex items-center">
-              <span className="font-medium text-gray-800 min-w-[80px]">Correo:</span>
-              <span className="ml-2">{foundUser.email}</span>
-            </p>
-            <p className="text-gray-700 flex items-center">
-              <span className="font-medium text-gray-800 min-w-[80px]">Rol:</span>
-              <span className="ml-2">{translateRole(foundUser.role || "")}</span>
-            </p>
-            <p className="text-gray-700 flex items-center">
-              <span className="font-medium text-gray-800 min-w-[80px]">Categoría:</span>
+              <span className="font-medium text-gray-800 min-w-[80px]">
+                Categoría:
+              </span>
               <span className="ml-2 bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-sm font-medium">
-                {getCategoryEmoji(selectedCategory)} {categories.find(cat => cat.name === selectedCategory)?.displayName}
+                {getCategoryEmoji(selectedCategory)}{" "}
+                {
+                  categories.find((cat) => cat.name === selectedCategory)
+                    ?.displayName
+                }
               </span>
             </p>
           </div>
@@ -258,7 +252,12 @@ export default function OpponentSearch({
             disabled={requestLoading}
             className="mt-4 hover:bg-emerald-700 transition duration-300 hover:shadow-lg transform hover:-translate-y-1 w-full bg-emerald-600 text-white font-bold py-3 rounded-lg shadow-md"
           >
-            {requestLoading ? "Solicitando..." : `Solicitar Duelo de ${categories.find(cat => cat.name === selectedCategory)?.displayName || "Conocimiento"}`}
+            {requestLoading
+              ? "Solicitando..."
+              : `Solicitar Duelo de ${
+                  categories.find((cat) => cat.name === selectedCategory)
+                    ?.displayName || "Conocimiento"
+                }`}
           </Button>
         </div>
       )}
