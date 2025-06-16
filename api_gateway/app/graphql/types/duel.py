@@ -26,6 +26,13 @@ class AcceptDuelResponse:
 
 
 @strawberry.type
+class Category:
+    name: str
+    displayName: str = strawberry.field(name="displayName")
+    description: str
+
+
+@strawberry.type
 class ErrorResponse:
     error: str
 
@@ -34,6 +41,7 @@ class ErrorResponse:
 class RequestDuelInput:
     requesterId: str = strawberry.field(name="requesterId")
     opponentId: str = strawberry.field(name="opponentId")
+    category: str
 
 
 @strawberry.input

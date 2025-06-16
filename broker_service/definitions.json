@@ -1,0 +1,130 @@
+{
+  "vhosts": [{ "name": "/courseclash" }],
+  "users": [
+    {
+      "name": "courseclash",
+      "password": "courseclash123",
+      "tags": "administrator"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "courseclash",
+      "vhost": "/courseclash",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "duels.topic",
+      "vhost": "/courseclash",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "users.topic",
+      "vhost": "/courseclash",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "courses.topic",
+      "vhost": "/courseclash",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "duel.critical.events",
+      "vhost": "/courseclash",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 300000
+      }
+    },
+    {
+      "name": "user.notifications",
+      "vhost": "/courseclash",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "websocket.events",
+      "vhost": "/courseclash",
+      "durable": true,
+      "auto_delete": false,
+      "exclusive": false,
+      "arguments": {
+        "x-message-ttl": 60000
+      }
+    },
+    {
+      "name": "course.events",
+      "vhost": "/courseclash",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "duels.topic",
+      "vhost": "/courseclash",
+      "destination": "duel.critical.events",
+      "destination_type": "queue",
+      "routing_key": "duel.question.*",
+      "arguments": {}
+    },
+    {
+      "source": "duels.topic",
+      "vhost": "/courseclash",
+      "destination": "duel.critical.events",
+      "destination_type": "queue",
+      "routing_key": "duel.game.*",
+      "arguments": {}
+    },
+    {
+      "source": "duels.topic",
+      "vhost": "/courseclash",
+      "destination": "websocket.events",
+      "destination_type": "queue",
+      "routing_key": "duel.websocket.*",
+      "arguments": {}
+    },
+    {
+      "source": "users.topic",
+      "vhost": "/courseclash",
+      "destination": "user.notifications",
+      "destination_type": "queue",
+      "routing_key": "user.notification.*",
+      "arguments": {}
+    },
+    {
+      "source": "courses.topic",
+      "vhost": "/courseclash",
+      "destination": "course.events",
+      "destination_type": "queue",
+      "routing_key": "course.*",
+      "arguments": {}
+    },
+    {
+      "source": "courses.topic",
+      "vhost": "/courseclash",
+      "destination": "user.notifications",
+      "destination_type": "queue",
+      "routing_key": "course.task.graded",
+      "arguments": {}
+    }
+  ]
+}

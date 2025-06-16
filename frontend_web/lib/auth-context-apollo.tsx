@@ -307,10 +307,28 @@ export function AuthProviderApollo({ children }: { children: ReactNode }) {
 
   // Handler de logout
   const handleLogout = useCallback(async () => {
-    const result = await logout();
+    console.log('🚪 Starting logout process...');
+
+    // Immediately update authentication state to prevent race conditions
     setIsAuthenticated(false);
-    return result;
-  }, [logout]);
+
+    try {
+      const result = await logout();
+      console.log('✅ Logout mutation completed');
+
+      // Force refetch to clear user data from cache
+      await fetchCurrentUser().catch(() => {
+        // Expected to fail after logout, that's fine
+        console.log('🔄 User fetch after logout failed as expected');
+      });
+
+      return result;
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      // Keep authentication state as false even if logout fails
+      return false;
+    }
+  }, [logout, fetchCurrentUser]);
 
   // Handler de reset password
   const handleResetPassword = useCallback(

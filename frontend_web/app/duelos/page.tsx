@@ -47,12 +47,15 @@ export default function Duelos() {
     foundUser,
     searchUser,
     searchLoading,
+    categories,
+    categoriesLoading,
+    selectedCategory,
+    setSelectedCategory,
     requestDuel,
     acceptDuel,
     requestLoading,
     acceptLoading,
     duelResponse,
-
     clearAll,
   } = useDuelOperations();
 
@@ -97,7 +100,7 @@ export default function Duelos() {
       }
 
       const userId = getUserId(user)!;
-      const response = await requestDuel(userId, foundUser.id);
+      const response = await requestDuel(userId, foundUser.id, selectedCategory);
 
       // Connect to duel WebSocket
       if (response.duelId) {
@@ -123,6 +126,7 @@ export default function Duelos() {
   }, [
     user,
     foundUser,
+    selectedCategory,
     requestDuel,
     connectToDuel,
     duelConnecting,
@@ -272,6 +276,10 @@ export default function Duelos() {
               foundUser={foundUser}
               searchLoading={searchLoading}
               requestLoading={requestLoading || duelConnecting || preparingDuel}
+              categories={categories}
+              categoriesLoading={categoriesLoading}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
             />
 
             <PendingChallenges
