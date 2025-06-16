@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useLazyQuery, useQuery, gql } from '@apollo/client';
+import { useCallback } from 'react';
 
 // Queries
 const GET_USER_BY_EMAIL_QUERY = gql`
@@ -162,18 +163,26 @@ export function useAcceptDuel() {
 
 // Hook para obtener información del jugador por ID
 export function useGetPlayer(playerId: string | undefined) {
-  const { data, loading, error } = useQuery(GET_PLAYER_QUERY, {
+  const { data, loading, error, refetch } = useQuery(GET_PLAYER_QUERY, {
     variables: { playerId },
     skip: !playerId, // No ejecutar si no hay playerId
     errorPolicy: 'all',
-    fetchPolicy: 'cache-first',
+    fetchPolicy: 'cache-and-network', // Siempre verificar actualizaciones del servidor
+    notifyOnNetworkStatusChange: true, // Notificar cambios de estado de red
   });
+
+  const refetchPlayer = useCallback(async () => {
+    if (playerId) {
+      await refetch({ playerId });
+    }
+  }, [playerId, refetch]);
 
   return {
     player: data?.getPlayer || null,
     loading,
     error: error?.message || null,
     hasPlayer: !!data?.getPlayer,
+    refetchPlayer, // Función para refetch manual
   };
 }
 
