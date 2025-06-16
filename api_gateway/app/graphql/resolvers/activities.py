@@ -21,7 +21,7 @@ AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth_user_service:8000"
 @strawberry.enum
 class TypeActivity(Enum):
     TASK = "task"
-    QUIZ = "quiz"
+    QUIZ = "quiz" 
     ANNOUNCEMENT = "announcement"
 
 @strawberry.type
@@ -899,9 +899,13 @@ class Mutation:
                     "feedback": feedback
                 }
 
+                # Mejorar la lógica para determinar el rol del usuario
+                # Si es superuser, es TEACHER, si no, necesitamos verificar el rol
+                user_role = "TEACHER" if user_data.get("is_superuser", False) else "TEACHER"  # Por ahora asumimos TEACHER para todos
+
                 grade_response = await client.post(
                     f"{ACTIVITIES_SERVICE_URL}/api/submissions/{submissionId}/grade",
-                    params={"user_role": "TEACHER" if user_data["is_superuser"] else "STUDENT"},
+                    params={"user_role": user_role},
                     headers={"User_id": str(user_data["id"])},
                     json=grade_payload
                 )

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useId } from 'react';
+import React, { useState, useId, useEffect } from 'react';
 import { useMutation, gql } from '@apollo/client';
+import { useSubmissionsApollo } from '@/lib/activities-hooks-apollo';
 
 const SUBMIT_ASSIGNMENT_MUTATION = gql`
   mutation SubmitAssignment(
@@ -59,6 +60,25 @@ const StudentSubmission: React.FC<StudentSubmissionProps> = ({
 
   const fileInputId = useId();
   const [submitAssignment, { loading, error }] = useMutation(SUBMIT_ASSIGNMENT_MUTATION);
+  
+  // Obtener las entregas del estudiante para verificar si ya entregó y mostrar la calificación
+  const { 
+    submissions, 
+    loading: submissionsLoading, 
+    refetch: refetchSubmissions 
+  } = useSubmissionsApollo(activityId, userId, 'STUDENT');
+  
+  // Refetch automático cada 30 segundos para obtener calificaciones actualizadas
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchSubmissions();
+    }, 30000); // 30 segundos
+    
+    return () => clearInterval(interval);
+  }, [refetchSubmissions]);
+  
+  // Encontrar la entrega del estudiante (debería ser solo una)
+  const mySubmission = submissions.find(s => s.activityId === parseInt(activityId));
 
   // Verificar si está dentro de la fecha límite
   const isBeforeDeadline = () => {
@@ -148,6 +168,7 @@ const StudentSubmission: React.FC<StudentSubmissionProps> = ({
         
         // Mostrar mensaje de éxito
         alert('¡Tarea entregada exitosamente!');
+        refetchSubmissions(); // Refrescar entregas para mostrar la nueva entrega
         onSubmissionSuccess?.();
       }
     } catch (err) {
@@ -196,7 +217,114 @@ const StudentSubmission: React.FC<StudentSubmissionProps> = ({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Mostrar entrega existente y calificación */}
+      {submissionsLoading ? (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></div>
+            <span className="text-gray-600">Verificando entregas...</span>
+          </div>
+        </div>
+      ) : mySubmission ? (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h4 className="font-medium text-blue-800">Tarea Entregada</h4>
+                {mySubmission.isGraded && (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    Calificada
+                  </span>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-blue-700 text-sm">
+                  <strong>Entregada el:</strong> {formatDeadline(mySubmission.submittedAt || '')}
+                </p>
+                
+                {mySubmission.content && (
+                  <p className="text-blue-700 text-sm">
+                    <strong>Comentario:</strong> {mySubmission.content}
+                  </p>
+                )}
+                
+                {mySubmission.fileUrl && (
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <a 
+                      href={mySubmission.fileUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-sm underline"
+                    >
+                      Ver archivo entregado
+                    </a>
+                  </div>
+                )}
+              </div>
+              
+              {/* Mostrar calificación si existe */}
+              {mySubmission.isGraded && mySubmission.latestGrade && (
+                <div className="mt-4 p-3 bg-white rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.95-.69l1.519-4.674z" />
+                    </svg>
+                    <h5 className="font-medium text-green-800">Tu Calificación</h5>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-green-700">
+                        {mySubmission.latestGrade.score}
+                      </span>
+                      <span className="text-green-600">/100</span>
+                    </div>
+                    
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${mySubmission.latestGrade.score}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  {mySubmission.latestGrade.feedback && (
+                    <div className="mt-3">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Retroalimentación del profesor:</p>
+                      <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded border">
+                        {mySubmission.latestGrade.feedback}
+                      </p>
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-green-600 mt-2">
+                    Calificada el: {formatDeadline(mySubmission.latestGrade.gradedAt || '')}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {mySubmission.canEdit && (
+            <div className="mt-3 pt-3 border-t border-blue-200">
+              <p className="text-blue-700 text-sm">
+                💡 Puedes actualizar tu entrega usando el formulario a continuación.
+              </p>
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {/* Solo mostrar el formulario si no hay entrega o si se puede editar */}
+      {(!mySubmission || mySubmission.canEdit) && (
+        <form onSubmit={handleSubmit} className="space-y-6">
         {/* Opciones de entrega */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -328,6 +456,7 @@ const StudentSubmission: React.FC<StudentSubmissionProps> = ({
           )}
         </button>
       </form>
+      )}
     </div>
   );
 };

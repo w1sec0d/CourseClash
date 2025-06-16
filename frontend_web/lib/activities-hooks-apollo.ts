@@ -249,7 +249,7 @@ export function useCreateActivityApollo() {
       const { data } = await createActivityMutation({
         variables: {
           ...activityData,
-          activityType: activityData.activityType.toLowerCase() as 'task' | 'quiz' | 'announcement',
+          activityType: activityData.activityType,
         },
       });
 
