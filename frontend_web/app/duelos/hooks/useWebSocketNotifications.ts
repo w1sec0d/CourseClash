@@ -5,6 +5,7 @@ interface PendingChallenge {
   requesterId: string;
   requesterName: string;
   timestamp: string;
+  category?: string;
 }
 
 interface WebSocketMessage {
@@ -12,6 +13,7 @@ interface WebSocketMessage {
   duelId?: string;
   requesterId?: string;
   requesterName?: string;
+  category?: string;
 }
 
 interface UseWebSocketNotificationsReturn {
@@ -140,6 +142,7 @@ export const useWebSocketNotifications = (
                   duelId: data.duelId as string,
                   requesterId: data.requesterId as string,
                   requesterName: data.requesterName as string,
+                  category: data.category as string,
                   timestamp: new Date().toISOString(),
                 },
               ]);
