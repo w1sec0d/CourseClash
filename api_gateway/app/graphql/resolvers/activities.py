@@ -352,7 +352,7 @@ class Query:
                 error_msg = "; ".join([f"{'.'.join(map(str, err.get('loc', [])))}: {err.get('msg')}" for err in errors])
             except Exception:
                 error_msg = str(e)
-            return SubmissionsErrorList(message=str(error_msg), code="SERVICE_ERROR")
+            return SubmissionsErrorList(message=str(error_msg), code="500")
             #return SubmissionsErrorList(message="Error interno en el servidor", code="500")
 
         
@@ -467,7 +467,7 @@ class Mutation:
                 return ActivitySuccess(activity = created_activity)
         except Exception as e: 
             print("❌ Error al crear la actividad:", str(e))
-            return ActivityError(message="Error al registrar la actividad", code="ACT002")
+            return ActivityError(message="Error al registrar la actividad", code="500")
         
     @strawberry.mutation
     async def createSubmissions(
@@ -572,7 +572,7 @@ class Mutation:
 
         except Exception as e: 
             print("❌ Error al crear la submision:", str(e))
-            return SubmissionsError(message="Error al registrar la Submision", code="ACT002")
+            return SubmissionsError(message="Error al registrar la Submision", code="500")
     
 
     @strawberry.mutation
@@ -678,7 +678,7 @@ class Mutation:
 
         except Exception as e: 
             print("❌ Problemas en el servidor:", str(e))
-            return SubmissionsError(message = "Error en el servidor", code = "501")
+            return SubmissionsError(message = "Error en el servidor", code = "500")
         
     @strawberry.mutation
     async def gradeSubmission(
@@ -785,7 +785,7 @@ class Mutation:
                 return GradeSuccess(grades=grade)
         except Exception as e:
             print("❌ Problemas en el servidor:", str(e))
-            return GradeError(message="Error en el servidor", code="501")
+            return GradeError(message="Error en el servidor", code="500")
     
     @strawberry.mutation
     async def createComment(
