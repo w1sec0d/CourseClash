@@ -58,7 +58,7 @@ class Query:
                 if response.status_code != 200:
                     return []
 
-                courses_data = response.json()
+                courses_data = response.json()['courses']
                 return [Course(**course) for course in courses_data]
         except Exception as e:
             print(f"Error getting courses: {str(e)}")
