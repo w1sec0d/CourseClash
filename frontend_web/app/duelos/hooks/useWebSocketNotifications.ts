@@ -93,8 +93,8 @@ export const useWebSocketNotifications = (
 
       isConnectingRef.current = true;
       connectionAttemptsRef.current++;
-      // Updated to use WebSocket Manager on port 8003
-      const wsUrl = `ws://localhost:8003/ws/notifications/${userId}`;
+      // Updated to use WebSocket Manager on port 8004
+      const wsUrl = `ws://localhost:8004/ws/notifications/${userId}`;
       console.log(
         `🔗 Conectando WebSocket notificaciones via WebSocket Manager (intento ${connectionAttemptsRef.current}): ${wsUrl}`
       );

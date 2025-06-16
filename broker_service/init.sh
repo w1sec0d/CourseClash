@@ -110,8 +110,8 @@ verify_services() {
     fi
     
     # WebSocket Manager
-    if curl -s http://localhost:8003/health >/dev/null 2>&1; then
-        log_success "WebSocket Manager: http://localhost:8003"
+    if curl -s http://localhost:8004/health >/dev/null 2>&1; then
+        log_success "WebSocket Manager: http://localhost:8004"
     else
         log_warning "WebSocket Manager no disponible"
     fi
@@ -143,7 +143,7 @@ show_info() {
     echo "  • RabbitMQ Management: http://localhost:15672 (courseclash/courseclash123)"
     echo "  • Duel Service: http://localhost:8002"
     echo "  • Swagger API: http://localhost:8002/swagger"
-    echo "  • WebSocket Manager: http://localhost:8003"
+    echo "  • WebSocket Manager: http://localhost:8004"
     echo ""
     echo "🔧 Comandos útiles:"
     echo "  • Ver logs: docker-compose logs -f cc_broker cc_duels_ms cc_websocket_manager"

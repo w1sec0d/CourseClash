@@ -38,8 +38,8 @@ export const useDuelWebSocket = (): UseDuelWebSocketReturn => {
             return null;
           });
 
-          // Updated to use WebSocket Manager on port 8003
-          const wsUrl = `ws://localhost:8003/ws/duels/${duelId}/${userId}`;
+          // Updated to use WebSocket Manager on port 8004
+          const wsUrl = `ws://localhost:8004/ws/duels/${duelId}/${userId}`;
           console.log(
             `[${userId}] Connecting to WebSocket Manager URL: ${wsUrl}`
           );
