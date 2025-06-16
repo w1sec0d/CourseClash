@@ -611,7 +611,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         # Cifrado de contraseña
         password_hash = hash_password(user.password)
 
-        is_superuser = 1 if user.role.upper() in ("TEACHER", "ADMIN") else 0
+        is_superuser = 1 if user.role and user.role.upper() in ("TEACHER", "ADMIN") else 0
 
         query = text(
             """
