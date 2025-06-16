@@ -115,7 +115,6 @@ services:
     #   - cc_duels_ms
     networks:
       - courseclash-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 
   # Frontend
   cc_fe_web:
@@ -262,7 +261,7 @@ services:
     build:
       context: ./websocket_manager
     ports:
-      - '8003:8003'
+      - '8004:8004'
     environment:
       - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
       - AUTH_SERVICE_URL=http://cc_auth_ms:8000

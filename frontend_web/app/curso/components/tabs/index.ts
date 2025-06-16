@@ -5,3 +5,4 @@ export { default as DuelosTab } from '../duelos/components/DuelosTab';
 export { default as RankingTab } from '../ranking/components/RankingTab';
 export { default as EstadisticasTab } from '../estadisticas/components/EstadisticasTab';
 export { default as LogrosTab } from '../logros/components/LogrosTab';
+export { default as EnhancedActivitiesTab } from '../activities/components/BasicActivitiesTab';

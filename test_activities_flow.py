@@ -16,6 +16,11 @@ BASE_URL = "http://localhost:8003"
 JWT_SECRET = "your_jwt_secret_key12"
 ALGORITHM = "HS256"
 
+# NOTA: Las rutas correctas son:
+# - /api/activities/ (no /api/v1/activities/)
+# - /api/submissions/ (no /api/v1/submissions/)
+# - /api/files/ (no /api/v1/files/)
+
 def generate_jwt_token(user_id, role, email):
     """Generar un token JWT válido para las pruebas"""
     payload = {
@@ -134,7 +139,7 @@ def test_complete_flow():
         "file_url": None
     }
     
-    result = make_request("POST", "/api/v1/activities/", teacher_token, activity_data)
+    result = make_request("POST", "/api/activities/", teacher_token, activity_data)
     if result:
         activity_id = result.get("id")
         print(f"   📝 Actividad creada con ID: {activity_id}")
@@ -152,7 +157,7 @@ def test_complete_flow():
     try:
         with open(test_file, 'rb') as f:
             files = {'file': ('assignment.txt', f, 'text/plain')}
-            result = make_request("POST", "/api/v1/files/upload", teacher_token, files=files)
+            result = make_request("POST", "/api/files/upload", teacher_token, files=files)
             
         if result and result.get("upload_success"):
             file_url = result.get("file_url")
@@ -160,7 +165,7 @@ def test_complete_flow():
             
             # Actualizar actividad con el archivo
             update_data = {"file_url": file_url}
-            result = make_request("PUT", f"/api/v1/activities/{activity_id}", teacher_token, update_data)
+            result = make_request("PUT", f"/api/activities/{activity_id}", teacher_token, update_data)
             if result:
                 print(f"   🔄 Actividad actualizada con archivo")
         else:
@@ -174,7 +179,7 @@ def test_complete_flow():
     print("="*60)
     
     # 3. Ver actividades como estudiante
-    result = make_request("GET", "/api/v1/activities/", student_token)
+    result = make_request("GET", "/api/activities/list/1", student_token)  # Ruta corregida
     if result:
         activities = result.get("activities", [])
         print(f"   📚 Actividades visibles: {len(activities)}")
@@ -182,7 +187,7 @@ def test_complete_flow():
             print(f"      - {act.get('title')} (ID: {act.get('id')})")
     
     # Ver actividad específica
-    result = make_request("GET", f"/api/v1/activities/{activity_id}", student_token)
+    result = make_request("GET", f"/api/activities/{activity_id}", student_token)
     if result:
         print(f"   👀 Detalles de actividad obtenidos")
         print(f"      Título: {result.get('title')}")
@@ -200,7 +205,7 @@ def test_complete_flow():
     try:
         with open(student_file, 'rb') as f:
             files = {'file': ('mi_solucion.txt', f, 'text/plain')}
-            result = make_request("POST", "/api/v1/files/upload", student_token, files=files)
+            result = make_request("POST", "/api/files/upload", student_token, files=files)
             
         if result and result.get("upload_success"):
             student_file_url = result.get("file_url")
@@ -219,7 +224,7 @@ def test_complete_flow():
         "additional_files": []
     }
     
-    result = make_request("POST", "/api/v1/submissions/", student_token, submission_data)
+            result = make_request("POST", "/api/submissions/", student_token, submission_data)
     if result:
         submission_id = result.get("id")
         print(f"   📤 Entrega creada con ID: {submission_id}")
