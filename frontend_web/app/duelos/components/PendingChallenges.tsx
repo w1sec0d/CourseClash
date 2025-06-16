@@ -1,3 +1,5 @@
+import { ChallengerInfo } from '@/components/ChallengerInfo';
+
 interface PendingChallenge {
   duelId: string;
   requesterId: string;
@@ -117,10 +119,10 @@ export default function PendingChallenges({
                 </div>
 
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 min-w-[80px]">Retador:</span>
-                    <span className="ml-2 text-gray-800">{challenge.requesterName}</span>
-                  </div>
+                  <ChallengerInfo 
+                    requesterId={challenge.requesterId}
+                    requesterName={challenge.requesterName}
+                  />
                   
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 min-w-[80px]">Categoría:</span>
