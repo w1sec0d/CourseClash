@@ -5,6 +5,8 @@ db.duels.drop();
 
 // Limpiar la colección de contadores existente
 db.counters.drop();
+// Crear el índice único para el contador de duelos
+db.counters.createIndex({ _id: 1 });
 
 // Inicializar el contador de duelos
 db.counters.insertOne({
@@ -12,10 +14,9 @@ db.counters.insertOne({
   seq: 0,
 });
 
-// Crear algunos duelos de ejemplo con el nuevo formato
+// Crear algunos duelos de ejemplo con el nuevo formato (sin IDs hardcodeados)
 db.duels.insertMany([
   {
-    _id: 1,
     challenger_id: "user_001",
     opponent_id: "user_002",
     status: "completed",
@@ -24,7 +25,6 @@ db.duels.insertMany([
     completed_at: new Date(),
   },
   {
-    _id: 2,
     challenger_id: "user_003",
     opponent_id: "user_004",
     status: "pending",
@@ -510,8 +510,8 @@ print("✅ Preguntas categorizadas creadas:", db.questions.countDocuments());
 print("✅ Perfiles de jugadores creados:", db.players.countDocuments());
 print("");
 print("📚 Preguntas por categoría:");
-db.questions.distinct("category").forEach(function(category) {
-  var count = db.questions.countDocuments({category: category});
+db.questions.distinct("category").forEach(function (category) {
+  var count = db.questions.countDocuments({ category: category });
   print("  - " + category + ": " + count + " preguntas");
 });
 print("");

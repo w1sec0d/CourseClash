@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface PendingChallenge {
   duelId: string;
@@ -16,7 +16,7 @@ interface WebSocketMessage {
 
 interface UseWebSocketNotificationsReturn {
   pendingChallenges: PendingChallenge[];
-  addChallenge: (challenge: Omit<PendingChallenge, "timestamp">) => void;
+  addChallenge: (challenge: Omit<PendingChallenge, 'timestamp'>) => void;
   removeChallenge: (duelId: string) => void;
   connectionError: string | null;
   isConnected: boolean;
@@ -39,8 +39,8 @@ export const useWebSocketNotifications = (
   const isConnectingRef = useRef(false);
 
   const addChallenge = useCallback(
-    (challenge: Omit<PendingChallenge, "timestamp">) => {
-      console.log("Adding challenge:", challenge);
+    (challenge: Omit<PendingChallenge, 'timestamp'>) => {
+      console.log('Adding challenge:', challenge);
       setPendingChallenges((prev) => [
         ...prev,
         {
@@ -53,7 +53,7 @@ export const useWebSocketNotifications = (
   );
 
   const removeChallenge = useCallback((duelId: string) => {
-    console.log("Removing challenge:", duelId);
+    console.log('Removing challenge:', duelId);
     setPendingChallenges((prev) =>
       prev.filter((challenge) => challenge.duelId !== duelId)
     );
@@ -74,7 +74,7 @@ export const useWebSocketNotifications = (
       }
 
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.close(1000, "No user ID");
+        wsRef.current.close(1000, 'No user ID');
       }
 
       wsRef.current = null;
@@ -93,9 +93,10 @@ export const useWebSocketNotifications = (
 
       isConnectingRef.current = true;
       connectionAttemptsRef.current++;
-      const wsUrl = `ws://localhost:8002/ws/notifications/${userId}`;
+      // Updated to use WebSocket Manager on port 8003
+      const wsUrl = `ws://localhost:8003/ws/notifications/${userId}`;
       console.log(
-        `🔗 Conectando WebSocket notificaciones (intento ${connectionAttemptsRef.current}): ${wsUrl}`
+        `🔗 Conectando WebSocket notificaciones via WebSocket Manager (intento ${connectionAttemptsRef.current}): ${wsUrl}`
       );
 
       try {
@@ -103,7 +104,9 @@ export const useWebSocketNotifications = (
         wsRef.current = ws;
 
         ws.onopen = () => {
-          console.log("✅ WebSocket notificaciones conectado exitosamente");
+          console.log(
+            '✅ WebSocket notificaciones conectado exitosamente via WebSocket Manager'
+          );
           setConnectionError(null);
           setIsConnected(true);
           connectionAttemptsRef.current = 0; // Reset counter on successful connection
@@ -112,25 +115,25 @@ export const useWebSocketNotifications = (
           // Configurar heartbeat para mantener la conexión viva
           heartbeatIntervalRef.current = setInterval(() => {
             if (ws.readyState === WebSocket.OPEN) {
-              ws.send(JSON.stringify({ type: "heartbeat" }));
+              ws.send(JSON.stringify({ type: 'ping' })); // Changed from heartbeat to ping for compatibility
             }
           }, 30000);
         };
 
         ws.onmessage = (event) => {
           try {
-            console.log("📩 Mensaje WebSocket recibido:", event.data);
+            console.log('📩 Mensaje WebSocket recibido:', event.data);
             const data: WebSocketMessage = JSON.parse(event.data);
 
-            if (data.type === "welcome") {
-              console.log("👋 Mensaje de bienvenida recibido");
+            if (data.type === 'welcome') {
+              console.log('👋 Mensaje de bienvenida recibido');
             } else if (
-              data.type === "duel_request" &&
+              data.type === 'duel_request' &&
               data.duelId &&
               data.requesterId &&
               data.requesterName
             ) {
-              console.log("⚔️ Solicitud de duelo recibida:", data);
+              console.log('⚔️ Solicitud de duelo recibida:', data);
               setPendingChallenges((prev) => [
                 ...prev,
                 {
@@ -140,24 +143,25 @@ export const useWebSocketNotifications = (
                   timestamp: new Date().toISOString(),
                 },
               ]);
-            } else if (data.type === "heartbeat") {
-              // Ignorar heartbeat responses silenciosamente
+            } else if (data.type === 'pong') {
+              // Respuesta al ping - mantener conexión viva
+              console.log('🏓 Pong recibido del WebSocket Manager');
             } else {
-              console.log("❓ Tipo de mensaje desconocido:", data.type);
+              console.log('❓ Tipo de mensaje desconocido:', data.type);
             }
           } catch (error) {
-            console.error("❌ Error parsing WebSocket message:", error);
+            console.error('❌ Error parsing WebSocket message:', error);
           }
         };
 
         ws.onerror = (error) => {
-          console.error("❌ Error WebSocket notificaciones:", error);
+          console.error('❌ Error WebSocket notificaciones:', error);
           setIsConnected(false);
           isConnectingRef.current = false;
 
           if (connectionAttemptsRef.current > 2) {
             setConnectionError(
-              "Error de conexión con el servidor. Reintentando..."
+              'Error de conexión con el servidor. Reintentando...'
             );
           }
         };
@@ -190,17 +194,17 @@ export const useWebSocketNotifications = (
               connectWebSocket();
             }, 5000);
           } else if (connectionAttemptsRef.current >= 5) {
-            console.error("❌ Máximo de reintentos alcanzado");
+            console.error('❌ Máximo de reintentos alcanzado');
             setConnectionError(
-              "No se pudo establecer conexión con el servidor de notificaciones."
+              'No se pudo establecer conexión con el servidor de notificaciones.'
             );
           }
         };
       } catch (error) {
-        console.error("❌ Error creando WebSocket:", error);
+        console.error('❌ Error creando WebSocket:', error);
         setIsConnected(false);
         isConnectingRef.current = false;
-        setConnectionError("Error al crear conexión WebSocket");
+        setConnectionError('Error al crear conexión WebSocket');
       }
     };
 
@@ -208,7 +212,7 @@ export const useWebSocketNotifications = (
     const connectTimer = setTimeout(connectWebSocket, 200);
 
     return () => {
-      console.log("🧹 Limpiando conexión WebSocket");
+      console.log('🧹 Limpiando conexión WebSocket');
       clearTimeout(connectTimer);
 
       if (reconnectTimeoutRef.current) {
@@ -222,7 +226,7 @@ export const useWebSocketNotifications = (
       }
 
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.close(1000, "Component cleanup");
+        wsRef.current.close(1000, 'Component cleanup');
       }
 
       wsRef.current = null;

@@ -173,11 +173,9 @@ class ExtendedLoggingMiddleware(BaseHTTPMiddleware):
         request_id = f"{int(start_time * 1000)}-{hash(request.url.path) % 10000}"
 
         # Obtener y registrar información de la petición entrante
-        request_body = (
-            await self._get_request_body(request)
-            if request.method not in ["GET", "HEAD"]
-            else {"body": "[NO BODY]", "content_type": "none"}
-        )
+        # NOTA: Temporalmente deshabilitado para evitar consumir el cuerpo de la petición
+        # que causa problemas con Strawberry GraphQL
+        request_body = {"body": "[DISABLED FOR GRAPHQL]", "content_type": "none"}
         request_headers = self._get_headers(dict(request.headers))
 
         # Log de la petición
@@ -200,9 +198,6 @@ class ExtendedLoggingMiddleware(BaseHTTPMiddleware):
 
         # Procesar la petición
         try:
-            # Crear una copia de la petición para no interferir con el procesamiento
-            request._body = await request.body()
-
             # Llamar al siguiente middleware/endpoint
             response = await call_next(request)
             process_time = (time.time() - start_time) * 1000  # en milisegundos
