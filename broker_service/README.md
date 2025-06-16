@@ -30,7 +30,7 @@ O si se quiere solo iniciar el rabbitmq y servicios asociados:
 | 📊 **RabbitMQ Management** | http://localhost:15672        | `courseclash` / `courseclash123` |
 | 🥊 **Duel Service**        | http://localhost:8002         | -                                |
 | 📚 **Swagger API**         | http://localhost:8002/swagger | -                                |
-| 🔌 **WebSocket Manager**   | http://localhost:8003         | -                                |
+| 🔌 **WebSocket Manager**   | http://localhost:8004         | -                                |
 
 ## ✨ Qué se Automatiza
 

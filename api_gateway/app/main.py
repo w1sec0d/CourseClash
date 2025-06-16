@@ -14,11 +14,7 @@ Estructura:
 """
 
 import os
-from fastapi import FastAPI, Request, Depends, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from strawberry.fastapi import GraphQLRouter
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Configuración de logging
 from app.core.logger import logger, setup_logger
@@ -26,6 +22,10 @@ from app.core.middleware import setup_middlewares
 
 # Importar esquema de GraphQL
 from app.graphql.schema import schema
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from strawberry.fastapi import GraphQLRouter
 
 # Configurar el logger
 logger = setup_logger("courseclash.api")
@@ -121,6 +121,8 @@ app.add_middleware(
         "http://127.0.0.1:8002",
         "http://localhost:8003",
         "http://127.0.0.1:8003",
+        "http://localhost:8004",
+        "http://127.0.0.1:8004",
         "http://cc_fe:3000",
         "http://localhost:8080",
         "http://127.0.0.1:8080",

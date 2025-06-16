@@ -88,5 +88,5 @@ else
     echo "📊 Servicios disponibles:"
     echo "  • RabbitMQ Management: http://localhost:15672"
     echo "  • Duel Service: http://localhost:8002"
-    echo "  • WebSocket Manager: http://localhost:8003"
+    echo "  • WebSocket Manager: http://localhost:8004"
 fi 
