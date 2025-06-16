@@ -12,10 +12,9 @@ db.counters.insertOne({
   seq: 0,
 });
 
-// Crear algunos duelos de ejemplo con el nuevo formato
+// Crear algunos duelos de ejemplo con el nuevo formato (sin IDs hardcodeados)
 db.duels.insertMany([
   {
-    _id: 1,
     challenger_id: "user_001",
     opponent_id: "user_002",
     status: "completed",
@@ -24,7 +23,6 @@ db.duels.insertMany([
     completed_at: new Date(),
   },
   {
-    _id: 2,
     challenger_id: "user_003",
     opponent_id: "user_004",
     status: "pending",
