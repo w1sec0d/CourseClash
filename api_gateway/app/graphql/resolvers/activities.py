@@ -12,11 +12,8 @@ from enum import Enum
 import httpx
 import os
 
-#Variable de entorno para ms de actividades
+# Variables de entorno para microservicios
 ACTIVITIES_SERVICE_URL = os.getenv("ACTIVITIES_SERVICE_URL", "http://cc_activities_ms:8003")
-
-#Variable de entorno para ms de autenticacion
-# Environment variables
 AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth_user_service:8000")
 
 
@@ -946,6 +943,112 @@ class Mutation:
         except Exception as e:
             print("❌ Problemas en el servidor:", str(e))
             return GradeError(message="Error en el servidor", code="500")
+    
+    @strawberry.mutation
+    async def submitAssignment(
+        self,
+        info,
+        activityId: str,
+        studentId: str,
+        fileUrl: str,
+        comments: Optional[str] = None
+    ) -> SubmissionResult:
+        """
+        Permite a un estudiante entregar una tarea.
+        
+        Parameters:
+            activityId: ID de la actividad
+            studentId: ID del estudiante
+            fileUrl: URL del archivo entregado
+            comments: Comentarios opcionales del estudiante
+            
+        Returns:
+            SubmissionResult: Resultado de la entrega
+        """
+        try:
+            request = info.context["request"]
+            
+            # Obtener el token de autenticación (mismo patrón que auth.py)
+            auth_header = request.headers.get("authorization")
+            token = None
+
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header.split(" ")[1]
+            else:
+                # Si no hay header Authorization, intentar obtener desde cookies
+                token = request.cookies.get("auth_token")
+
+            if not token:
+                return SubmissionsError(message="No autenticado", code="UNAUTHORIZED")
+            
+            # Verificar el usuario actual consultando el servicio de auth
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    auth_response = await client.get(
+                        f"{AUTH_SERVICE_URL}/auth/me",
+                        headers={"Authorization": f"Bearer {token}"},
+                    )
+
+                    if auth_response.status_code != 200:
+                        return SubmissionsError(message="Token inválido", code="UNAUTHORIZED")
+
+                    user_data = auth_response.json()
+                    user_id = str(user_data.get("id"))
+                    user_role = "ADMIN" if user_data.get("is_superuser") else "STUDENT"
+            except Exception:
+                return SubmissionsError(message="Error al verificar autenticación", code="AUTH_ERROR")
+            
+            # Verificar que el usuario sea estudiante o sea el mismo usuario
+            if user_role != "STUDENT" and user_id != studentId:
+                return SubmissionsError(message="No autorizado para entregar esta tarea", code="FORBIDDEN")
+            
+            # Realizar la entrega
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                payload = {
+                    "activity_id": int(activityId),
+                    "content": comments,
+                    "file_url": fileUrl
+                }
+                
+                response = await client.post(
+                    f"{ACTIVITIES_SERVICE_URL}/api/submissions/",
+                    json=payload,
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "User_id": str(user_id)
+                    }
+                )
+                
+                if response.status_code not in [200, 201]:
+                    error_data = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+                    return SubmissionsError(
+                        message=error_data.get("message", "Error al crear la entrega"),
+                        code=f"HTTP_{response.status_code}"
+                    )
+                    
+                data = response.json()
+                
+                # Mapear la respuesta a nuestro esquema
+                submission = Submissions(
+                    id=data["id"],
+                    activityId=data["activity_id"],
+                    submittedAt=datetime.fromisoformat(data["submitted_at"]) if data.get("submitted_at") else None,
+                    content=data.get("content"),
+                    fileUrl=data.get("file_url"),
+                    additionalFiles=data.get("additional_files", []),
+                    isGraded=data.get("is_graded", False),
+                    canEdit=data.get("can_edit", True),
+                    latestGrade=None  # Se puede expandir más tarde
+                )
+                
+                return SubmissionsSuccess(submission=submission)
+                
+        except httpx.TimeoutException:
+            return SubmissionsError(message="Timeout al contactar el servicio de actividades", code="TIMEOUT")
+        except httpx.RequestError as e:
+            return SubmissionsError(message=f"Error de conexión: {str(e)}", code="CONNECTION_ERROR")
+        except Exception as e:
+            return SubmissionsError(message=f"Error interno: {str(e)}", code="INTERNAL_ERROR")
     
     @strawberry.mutation
     async def createComment(

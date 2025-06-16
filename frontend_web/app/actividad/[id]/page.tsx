@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useActivityApollo } from '@/lib/activities-hooks-apollo';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
 import EditActivityModal from './components/EditActivityModal';
+import StudentSubmission from './components/StudentSubmission';
 import Link from 'next/link';
 
 export default function ActivityDetail() {
@@ -19,6 +20,9 @@ export default function ActivityDetail() {
   
   // Verificar si el usuario es profesor o admin
   const isTeacherOrAdmin = user?.role === 'TEACHER' || user?.role === 'ADMIN';
+  
+  // Verificar si el usuario es estudiante
+  const isStudent = user?.role === 'STUDENT';
 
   if (loading) {
     return (
@@ -225,6 +229,19 @@ export default function ActivityDetail() {
                 <p className="text-gray-500 italic">No hay comentarios aún.</p>
               )}
             </div>
+
+            {/* Entrega de tarea - Solo para estudiantes y solo para tareas */}
+            {isStudent && user && activity.activityType === 'TASK' && (
+              <StudentSubmission
+                activityId={activity.id.toString()}
+                userId={user.id.toString()}
+                dueDate={activity.dueDate}
+                onSubmissionSuccess={() => {
+                  // Opcional: recargar actividad o mostrar mensaje
+                  console.log('Tarea entregada exitosamente');
+                }}
+              />
+            )}
           </div>
 
           {/* Sidebar */}
