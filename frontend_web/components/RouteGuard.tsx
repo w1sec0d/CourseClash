@@ -8,6 +8,7 @@ import LoadingSpinner from './LoadingSpinner';
 // Lista de rutas protegidas que requieren autenticación
 const protectedRoutes = [
   '/dashboard',
+  '/cursos',
   '/duelos',
   '/courses',
   '/profile',
@@ -51,9 +52,9 @@ export default function RouteGuard({
     // Si el usuario está autenticado y trata de acceder a rutas de auth
     if (isAuthenticated && isAuthOnlyRoute) {
       console.log(
-        '🔄 Redirecting authenticated user from auth route to dashboard'
+        '🔄 Redirecting authenticated user from auth route to cursos'
       );
-      router.push('/dashboard');
+      router.push('/cursos');
       return;
     }
 

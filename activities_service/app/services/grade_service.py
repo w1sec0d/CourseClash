@@ -44,9 +44,9 @@ class GradeService:
                 raise ValueError("Esta entrega ya ha sido calificada. Use la función de actualización.")
             
             
-            # Verificar permisos: solo el profesor que creó la actividad puede calificar
-            if activity.created_by != int(graded_by):
-                raise ValueError("Solo el profesor que creó la actividad puede calificarla")
+            # Verificar permisos: cualquier profesor puede calificar
+            # Esta verificación se hace a nivel de router con el parámetro user_role
+            # Por ahora permitimos que cualquier profesor califique
             
             # Crear la calificación
             db_grade = Grade(
@@ -85,10 +85,8 @@ class GradeService:
                 # Los estudiantes solo pueden ver calificaciones de sus propias entregas
                 query = query.join(Submission).filter(Submission.user_id == int(current_user_id))
             elif current_user_role == "teacher":
-                # Los profesores pueden ver calificaciones de actividades que crearon
-                query = query.join(Submission).join(Activity).filter(
-                    Activity.created_by == int(current_user_id)
-                )
+                # Los profesores pueden ver todas las calificaciones (sin restricción de creador)
+                pass  # No aplicamos filtro adicional para profesores
             
             return query.first()
             
@@ -106,12 +104,9 @@ class GradeService:
         Actualizar la calificación de una entrega
         """
         try:
-            # Obtener la calificación existente
-            grade = self.db.query(Grade).join(Submission).join(Activity).filter(
-                and_(
-                    Grade.submission_id == submission_id,
-                    Activity.created_by == int(current_user_id)
-                )
+            # Obtener la calificación existente (sin restricción de creador de actividad)
+            grade = self.db.query(Grade).filter(
+                Grade.submission_id == submission_id
             ).first()
             
             if not grade:

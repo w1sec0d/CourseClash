@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 // Lista de rutas protegidas que requieren autenticación
 const protectedRoutes = [
   '/dashboard',
+  '/cursos',
   '/duelos',
   '/courses',
   '/profile',
@@ -31,7 +32,7 @@ export function middleware(request: NextRequest) {
   );
   // Si el usuario está autenticado y trata de acceder a rutas de auth
   if (isAuthenticated && isAuthOnlyRoute) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/cursos', request.url));
   }
 
   // Si el usuario no está autenticado y trata de acceder a rutas protegidas

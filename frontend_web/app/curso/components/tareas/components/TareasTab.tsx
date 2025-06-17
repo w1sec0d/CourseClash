@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  CalendarDaysIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  AcademicCapIcon 
+} from '@heroicons/react/24/outline';
 
 interface Tarea {
   id: number;
@@ -48,11 +54,26 @@ const TareasTab: React.FC<TareasTabProps> = ({ tareas = [] }) => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pendiente':
-        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Pendiente</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+            <ClockIcon className="w-3 h-3" />
+            Pendiente
+          </span>
+        );
       case 'entregada':
-        return <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Entregada</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+            <CheckCircleIcon className="w-3 h-3" />
+            Entregada
+          </span>
+        );
       case 'calificada':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Calificada</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+            <CheckCircleIcon className="w-3 h-3" />
+            Calificada
+          </span>
+        );
       default:
         return null;
     }
@@ -135,16 +156,12 @@ const TareasTab: React.FC<TareasTabProps> = ({ tareas = [] }) => {
                 <p className="text-sm text-gray-600 mt-1">{tarea.description}</p>
                 <div className="mt-3 flex items-center space-x-4">
                   <div className="flex items-center">
-                    <svg className="w-4 h-4 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
+                    <CalendarDaysIcon className="w-4 h-4 text-gray-500 mr-1" />
                     <span className="text-sm text-gray-500">Entrega: {tarea.dueDate}</span>
                   </div>
                   {tarea.status === 'calificada' && (
                     <div className="flex items-center">
-                      <svg className="w-4 h-4 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
+                      <AcademicCapIcon className="w-4 h-4 text-gray-500 mr-1" />
                       <span className="text-sm text-gray-500">Calificación: {tarea.score}/{tarea.maxScore}</span>
                     </div>
                   )}

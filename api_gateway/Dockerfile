@@ -26,5 +26,5 @@ COPY . .
 # Exponer el puerto
 EXPOSE 8080
 
-# Usar gunicorn para producción
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8080", "app.main:app"]
+# Usar uvicorn para desarrollo (permite reload automático)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
