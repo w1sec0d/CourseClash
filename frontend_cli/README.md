@@ -1,397 +1,272 @@
-frontend-cli
-=================
+# 🎮 CourseClash CLI
 
-Cliente CLI para el sistema CourseClash
+> **Cliente de línea de comandos para el sistema CourseClash**
 
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![Version](https://img.shields.io/npm/v/frontend-cli.svg)](https://npmjs.org/package/frontend-cli)
-[![Downloads/week](https://img.shields.io/npm/dw/frontend-cli.svg)](https://npmjs.org/package/frontend-cli)
+## 📋 Descripción
 
+CourseClash CLI es una interfaz de línea de comandos que permite a los usuarios interactuar con el sistema CourseClash de forma rápida y eficiente. Proporciona acceso a funcionalidades como autenticación, visualización de estadísticas de duelos y gestión del perfil de usuario.
 
-<!-- toc -->
-* [Usage](#usage)
-* [Commands](#commands)
-<!-- tocstop -->
-# Usage
-<!-- usage -->
-```sh-session
-$ npm install -g frontend-cli
-$ frontend-cli COMMAND
-running command...
-$ frontend-cli (--version)
-frontend-cli/0.0.0 linux-x64 node-v20.19.2
-$ frontend-cli --help [COMMAND]
-USAGE
-  $ frontend-cli COMMAND
-...
-```
-<!-- usagestop -->
-# Commands
-<!-- commands -->
-* [`frontend-cli hello PERSON`](#frontend-cli-hello-person)
-* [`frontend-cli hello world`](#frontend-cli-hello-world)
-* [`frontend-cli help [COMMAND]`](#frontend-cli-help-command)
-* [`frontend-cli plugins`](#frontend-cli-plugins)
-* [`frontend-cli plugins add PLUGIN`](#frontend-cli-plugins-add-plugin)
-* [`frontend-cli plugins:inspect PLUGIN...`](#frontend-cli-pluginsinspect-plugin)
-* [`frontend-cli plugins install PLUGIN`](#frontend-cli-plugins-install-plugin)
-* [`frontend-cli plugins link PATH`](#frontend-cli-plugins-link-path)
-* [`frontend-cli plugins remove [PLUGIN]`](#frontend-cli-plugins-remove-plugin)
-* [`frontend-cli plugins reset`](#frontend-cli-plugins-reset)
-* [`frontend-cli plugins uninstall [PLUGIN]`](#frontend-cli-plugins-uninstall-plugin)
-* [`frontend-cli plugins unlink [PLUGIN]`](#frontend-cli-plugins-unlink-plugin)
-* [`frontend-cli plugins update`](#frontend-cli-plugins-update)
+## ✨ Características
 
-## `frontend-cli hello PERSON`
+- 🔐 **Autenticación persistente** con JWT
+- 📊 **Visualización de estadísticas** de duelos (ELO, ranking)
+- 👤 **Gestión de perfil** de usuario
+- ⚙️ **Configuración** del API
+- 🎯 **Menú interactivo** fácil de usar
+- 💾 **Sesiones persistentes** con renovación automática
 
-Say hello
+## 🚀 Requisitos
 
-```
-USAGE
-  $ frontend-cli hello PERSON -f <value>
+- **Node.js** >= 18.0.0
+- **npm** >= 8.0.0
+- Acceso al API Gateway de CourseClash
 
-ARGUMENTS
-  PERSON  Person to say hello to
+## 📦 Instalación y Desarrollo
 
-FLAGS
-  -f, --from=<value>  (required) Who is saying hello
+### 1. Clonar el repositorio
 
-DESCRIPTION
-  Say hello
-
-EXAMPLES
-  $ frontend-cli hello friend --from oclif
-  hello friend from oclif! (./src/commands/hello/index.ts)
+```bash
+git clone https://github.com/w1sec0d/CourseClash.git
+cd CourseClash/frontend_cli
 ```
 
-_See code: [src/commands/hello/index.ts](https://github.com/w1sec0d/CourseClash/blob/v0.0.0/src/commands/hello/index.ts)_
+### 2. Instalar dependencias
 
-## `frontend-cli hello world`
-
-Say hello world
-
-```
-USAGE
-  $ frontend-cli hello world
-
-DESCRIPTION
-  Say hello world
-
-EXAMPLES
-  $ frontend-cli hello world
-  hello world! (./src/commands/hello/world.ts)
+```bash
+npm install
 ```
 
-_See code: [src/commands/hello/world.ts](https://github.com/w1sec0d/CourseClash/blob/v0.0.0/src/commands/hello/world.ts)_
+### 3. Construir el proyecto
 
-## `frontend-cli help [COMMAND]`
-
-Display help for frontend-cli.
-
-```
-USAGE
-  $ frontend-cli help [COMMAND...] [-n]
-
-ARGUMENTS
-  COMMAND...  Command to show help for.
-
-FLAGS
-  -n, --nested-commands  Include all nested commands in the output.
-
-DESCRIPTION
-  Display help for frontend-cli.
+```bash
+npm run build
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v6.2.28/src/commands/help.ts)_
+### 4. Ejecutar el CLI
 
-## `frontend-cli plugins`
+```bash
+# Después de construir
+./bin/run.js [comando]
 
-List installed plugins.
-
-```
-USAGE
-  $ frontend-cli plugins [--json] [--core]
-
-FLAGS
-  --core  Show core plugins.
-
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  List installed plugins.
-
-EXAMPLES
-  $ frontend-cli plugins
+# O usar el comando npm directamente
+npx frontend-cli [comando]
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v5.4.39/src/commands/plugins/index.ts)_
+## 🎯 Comandos Disponibles
 
-## `frontend-cli plugins add PLUGIN`
+### 🔐 Login
 
-Installs a plugin into frontend-cli.
+Iniciar sesión en el sistema CourseClash:
 
-```
-USAGE
-  $ frontend-cli plugins add PLUGIN... [--json] [-f] [-h] [-s | -v]
-
-ARGUMENTS
-  PLUGIN...  Plugin to install.
-
-FLAGS
-  -f, --force    Force npm to fetch remote resources even if a local copy exists on disk.
-  -h, --help     Show CLI help.
-  -s, --silent   Silences npm output.
-  -v, --verbose  Show verbose npm output.
-
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  Installs a plugin into frontend-cli.
-
-  Uses npm to install plugins.
-
-  Installation of a user-installed plugin will override a core plugin.
-
-  Use the FRONTEND_CLI_NPM_LOG_LEVEL environment variable to set the npm loglevel.
-  Use the FRONTEND_CLI_NPM_REGISTRY environment variable to set the npm registry.
-
-ALIASES
-  $ frontend-cli plugins add
-
-EXAMPLES
-  Install a plugin from npm registry.
-
-    $ frontend-cli plugins add myplugin
-
-  Install a plugin from a github url.
-
-    $ frontend-cli plugins add https://github.com/someuser/someplugin
-
-  Install a plugin from a github slug.
-
-    $ frontend-cli plugins add someuser/someplugin
+```bash
+./bin/run.js login -e tu@email.com
+./bin/run.js login --email=tu@email.com --api=http://localhost:8080
 ```
 
-## `frontend-cli plugins:inspect PLUGIN...`
+**Opciones:**
 
-Displays installation properties of a plugin.
+- `-e, --email` - Email del usuario (requerido)
+- `--api` - URL del API Gateway (opcional, default: http://localhost:8080)
 
-```
-USAGE
-  $ frontend-cli plugins inspect PLUGIN...
+### 🎮 Menú Principal
 
-ARGUMENTS
-  PLUGIN...  [default: .] Plugin to inspect.
+Acceder al menú interactivo (requiere autenticación):
 
-FLAGS
-  -h, --help     Show CLI help.
-  -v, --verbose
-
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  Displays installation properties of a plugin.
-
-EXAMPLES
-  $ frontend-cli plugins inspect myplugin
+```bash
+./bin/run.js menu
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v5.4.39/src/commands/plugins/inspect.ts)_
+**Funcionalidades del menú:**
 
-## `frontend-cli plugins install PLUGIN`
+- 📊 Ver Estadísticas de Duelos
+- 👤 Ver Mi Perfil
+- ⚙️ Configuración
+- 🚪 Cerrar Sesión
+- ❌ Salir
 
-Installs a plugin into frontend-cli.
+### 🚪 Logout
 
-```
-USAGE
-  $ frontend-cli plugins install PLUGIN... [--json] [-f] [-h] [-s | -v]
+Cerrar sesión y limpiar credenciales:
 
-ARGUMENTS
-  PLUGIN...  Plugin to install.
-
-FLAGS
-  -f, --force    Force npm to fetch remote resources even if a local copy exists on disk.
-  -h, --help     Show CLI help.
-  -s, --silent   Silences npm output.
-  -v, --verbose  Show verbose npm output.
-
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  Installs a plugin into frontend-cli.
-
-  Uses npm to install plugins.
-
-  Installation of a user-installed plugin will override a core plugin.
-
-  Use the FRONTEND_CLI_NPM_LOG_LEVEL environment variable to set the npm loglevel.
-  Use the FRONTEND_CLI_NPM_REGISTRY environment variable to set the npm registry.
-
-ALIASES
-  $ frontend-cli plugins add
-
-EXAMPLES
-  Install a plugin from npm registry.
-
-    $ frontend-cli plugins install myplugin
-
-  Install a plugin from a github url.
-
-    $ frontend-cli plugins install https://github.com/someuser/someplugin
-
-  Install a plugin from a github slug.
-
-    $ frontend-cli plugins install someuser/someplugin
+```bash
+./bin/run.js logout
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v5.4.39/src/commands/plugins/install.ts)_
+### ❓ Ayuda
 
-## `frontend-cli plugins link PATH`
+Ver ayuda general o de comandos específicos:
 
-Links a plugin into the CLI for development.
-
-```
-USAGE
-  $ frontend-cli plugins link PATH [-h] [--install] [-v]
-
-ARGUMENTS
-  PATH  [default: .] path to plugin
-
-FLAGS
-  -h, --help          Show CLI help.
-  -v, --verbose
-      --[no-]install  Install dependencies after linking the plugin.
-
-DESCRIPTION
-  Links a plugin into the CLI for development.
-
-  Installation of a linked plugin will override a user-installed or core plugin.
-
-  e.g. If you have a user-installed or core plugin that has a 'hello' command, installing a linked plugin with a 'hello'
-  command will override the user-installed or core plugin implementation. This is useful for development work.
-
-
-EXAMPLES
-  $ frontend-cli plugins link myplugin
+```bash
+./bin/run.js --help
+./bin/run.js login --help
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v5.4.39/src/commands/plugins/link.ts)_
+## 🔧 Scripts de Desarrollo
 
-## `frontend-cli plugins remove [PLUGIN]`
+```bash
+# Construir el proyecto
+npm run build
 
-Removes a plugin from the CLI.
+# Ejecutar tests
+npm run test
 
-```
-USAGE
-  $ frontend-cli plugins remove [PLUGIN...] [-h] [-v]
+# Linting
+npm run lint
 
-ARGUMENTS
-  PLUGIN...  plugin to uninstall
-
-FLAGS
-  -h, --help     Show CLI help.
-  -v, --verbose
-
-DESCRIPTION
-  Removes a plugin from the CLI.
-
-ALIASES
-  $ frontend-cli plugins unlink
-  $ frontend-cli plugins remove
-
-EXAMPLES
-  $ frontend-cli plugins remove myplugin
+# Limpiar y reconstruir
+npm run build
 ```
 
-## `frontend-cli plugins reset`
-
-Remove all user-installed and linked plugins.
+## 📁 Estructura del Proyecto
 
 ```
-USAGE
-  $ frontend-cli plugins reset [--hard] [--reinstall]
-
-FLAGS
-  --hard       Delete node_modules and package manager related files in addition to uninstalling plugins.
-  --reinstall  Reinstall all plugins after uninstalling.
+frontend_cli/
+├── src/
+│   ├── commands/          # Comandos del CLI
+│   │   ├── login/         # Comando de login
+│   │   ├── logout/        # Comando de logout
+│   │   ├── menu/          # Comando de menú interactivo
+│   │   └── hello/         # Comando de ejemplo
+│   └── lib/
+│       ├── config.ts      # Gestión de configuración
+│       ├── duel-service.ts # Servicio para estadísticas
+│       └── menu.ts        # Lógica del menú interactivo
+├── bin/
+│   └── run.js            # Script ejecutable principal
+├── dist/                 # Archivos compilados
+├── test/                 # Tests
+└── package.json          # Configuración del proyecto
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v5.4.39/src/commands/plugins/reset.ts)_
+## 🔑 Configuración
 
-## `frontend-cli plugins uninstall [PLUGIN]`
+El CLI guarda la configuración en `~/.courseclash/config.json`:
 
-Removes a plugin from the CLI.
-
-```
-USAGE
-  $ frontend-cli plugins uninstall [PLUGIN...] [-h] [-v]
-
-ARGUMENTS
-  PLUGIN...  plugin to uninstall
-
-FLAGS
-  -h, --help     Show CLI help.
-  -v, --verbose
-
-DESCRIPTION
-  Removes a plugin from the CLI.
-
-ALIASES
-  $ frontend-cli plugins unlink
-  $ frontend-cli plugins remove
-
-EXAMPLES
-  $ frontend-cli plugins uninstall myplugin
+```json
+{
+  "apiUrl": "http://localhost:8080",
+  "token": "jwt-token",
+  "refreshToken": "refresh-token",
+  "expiresAt": "2024-01-01T12:00:00Z",
+  "user": {
+    "id": "user-id",
+    "username": "username",
+    "email": "user@email.com",
+    "fullName": "Nombre Completo",
+    "role": "STUDENT"
+  }
+}
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v5.4.39/src/commands/plugins/uninstall.ts)_
+## 🎮 Flujo de Uso Típico
 
-## `frontend-cli plugins unlink [PLUGIN]`
+### Primera vez
 
-Removes a plugin from the CLI.
+```bash
+# 1. Construir el proyecto
+npm run build
 
-```
-USAGE
-  $ frontend-cli plugins unlink [PLUGIN...] [-h] [-v]
+# 2. Iniciar sesión
+./bin/run.js login -e tu@email.com
 
-ARGUMENTS
-  PLUGIN...  plugin to uninstall
-
-FLAGS
-  -h, --help     Show CLI help.
-  -v, --verbose
-
-DESCRIPTION
-  Removes a plugin from the CLI.
-
-ALIASES
-  $ frontend-cli plugins unlink
-  $ frontend-cli plugins remove
-
-EXAMPLES
-  $ frontend-cli plugins unlink myplugin
+# 3. Acceder al menú (automático después del login)
+# O manualmente:
+./bin/run.js menu
 ```
 
-## `frontend-cli plugins update`
+### Uso regular
 
-Update installed plugins.
+```bash
+# Acceso directo al menú (si ya estás autenticado)
+./bin/run.js menu
 
-```
-USAGE
-  $ frontend-cli plugins update [-h] [-v]
-
-FLAGS
-  -h, --help     Show CLI help.
-  -v, --verbose
-
-DESCRIPTION
-  Update installed plugins.
+# Ver estadísticas desde el menú interactivo
+# Seleccionar: "📊 Ver Estadísticas de Duelos"
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v5.4.39/src/commands/plugins/update.ts)_
-<!-- commandsstop -->
+## 📊 Funcionalidades Principales
+
+### Estadísticas de Duelos
+
+- **ELO actual** del jugador
+- **Ranking** en el sistema
+- **ID del jugador** único
+
+### Gestión de Perfil
+
+- Información personal completa
+- Username, email, nombre
+- Rol en el sistema
+- Avatar (si está disponible)
+
+### Configuración del Sistema
+
+- URL del API configurada
+- Estado del token de autenticación
+- Fecha de expiración de la sesión
+
+## 🛠️ Tecnologías Utilizadas
+
+- **[TypeScript](https://www.typescriptlang.org/)** - Lenguaje principal
+- **[oclif](https://oclif.io/)** - Framework para CLI
+- **[Inquirer](https://github.com/SBoudrias/Inquirer.js)** - Prompts interactivos
+- **[GraphQL](https://graphql.org/)** - Cliente para API queries
+- **[Axios](https://axios-http.com/)** - Cliente HTTP
+
+## 🧪 Testing
+
+```bash
+# Ejecutar todos los tests
+npm run test
+
+# Ejecutar tests con watch
+npm run test -- --watch
+
+# Tests con cobertura
+npm run test -- --coverage
+```
+
+## 🤝 Desarrollo
+
+### Agregar un nuevo comando
+
+1. Crear directorio en `src/commands/`
+2. Implementar el comando extendiendo `Command`
+3. Reconstruir con `npm run build`
+4. Probar con `./bin/run.js [nuevo-comando]`
+
+### Ejemplo de comando básico
+
+```typescript
+import {Command} from '@oclif/core'
+
+export default class MiComando extends Command {
+  static description = 'Descripción del comando'
+
+  async run(): Promise<void> {
+    this.log('¡Hola desde mi comando!')
+  }
+}
+```
+
+## 📝 Licencia
+
+Este proyecto está licenciado bajo la [Licencia MIT](LICENSE).
+
+## 🐛 Reporte de Bugs
+
+Si encuentras algún problema, por favor crea un issue en: [GitHub Issues](https://github.com/w1sec0d/CourseClash/issues)
+
+## 📞 Soporte
+
+- **Autor**: Carlos Ramírez
+- **Proyecto**: [CourseClash](https://github.com/w1sec0d/CourseClash)
+- **Issues**: [GitHub Issues](https://github.com/w1sec0d/CourseClash/issues)
+
+---
+
+**¡Disfruta usando CourseClash CLI!** 🎉

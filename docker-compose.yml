@@ -131,6 +131,8 @@ services:
       - NEXT_PUBLIC_API_URL=http://cc_ag:8080
       - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
       - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
     depends_on:
       - cc_ag
     networks:
@@ -138,12 +140,8 @@ services:
     healthcheck:
       test:
         [
-          'CMD',
-          'wget',
-          '--no-verbose',
-          '--tries=1',
-          '--spider',
-          'http://0.0.0.0:3000',
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider http://127.0.0.1:3000 || exit 1',
         ]
       interval: 30s
       timeout: 10s
