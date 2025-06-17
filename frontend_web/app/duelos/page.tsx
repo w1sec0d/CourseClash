@@ -1,340 +1,48 @@
-'use client';
+import {
+  getDuelCategoriesSSR,
+  getPlayerDataSSR,
+  getUserFromTokenSSR,
+} from '@/lib/apollo-ssr';
+import DuelosInteractiveSection from './components/DuelosInteractiveSection';
 
-import { useState, useCallback, useEffect } from 'react';
-import { TrophyIcon } from '@heroicons/react/24/outline';
-import { useAuthApollo } from '@/lib/auth-context-apollo';
-import QuizScreen from './components/quizScreen';
+// Server Component principal - se ejecuta en el servidor
+export default async function DuelosSSRPage() {
+  console.log('🚀 Starting SSR data loading for duelos...');
 
-// Hooks
-import { useWebSocketNotifications } from './hooks/useWebSocketNotifications';
-import { useDuelWebSocket } from './hooks/useDuelWebSocket';
-import { useDuelOperations } from './hooks/useDuelOperations';
+  // Obtener datos del usuario desde token GraphQL
+  const { userId, userName } = await getUserFromTokenSSR();
+  console.log(`👤 User from token: ${userName} (ID: ${userId})`);
 
-// Components
-import DuelLanding from './components/DuelLanding';
-import OpponentSearch from './components/OpponentSearch';
-import PendingChallenges from './components/PendingChallenges';
-import DuelInfo from './components/DuelInfo';
-import { PlayerEloDisplay } from '@/components/PlayerEloDisplay';
-
-// Utils
-import { getUserId, validateUserSession } from './utils/userUtils';
-
-export default function Duelos() {
-  const { user } = useAuthApollo();
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [preparingDuel, setPreparingDuel] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [forceRefreshElo, setForceRefreshElo] = useState(0); // Estado para forzar refresh
-
-  // Custom hooks
-  const {
-    pendingChallenges,
-    removeChallenge,
-    connectionError: notificationError,
-    isConnected: notificationConnected,
-  } = useWebSocketNotifications(user?.id);
-
-  const {
-    wsConnection,
-    connectToDuel,
-    disconnect: disconnectDuel,
-    connectionError: duelConnectionError,
-    isConnecting: duelConnecting,
-  } = useDuelWebSocket();
-
-  const {
-    opponentEmail,
-    setOpponentEmail,
-    foundUser,
-    searchUser,
-    searchLoading,
-    categories,
-    categoriesLoading,
-    selectedCategory,
-    setSelectedCategory,
-    requestDuel,
-    acceptDuel,
-    requestLoading,
-    acceptLoading,
-    duelResponse,
-    clearAll,
-  } = useDuelOperations();
-
-  // Combine all errors
-  const combinedError = error || notificationError || duelConnectionError;
-
-  // Detectar cuando la página gana el foco para refrescar el ELO
-  useEffect(() => {
-    const handleFocus = () => {
-      // Forzar refresh del ELO cuando se vuelve a la página
-      setForceRefreshElo(prev => prev + 1);
-    };
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        // La página volvió a ser visible
-        setForceRefreshElo(prev => prev + 1);
-      }
-    };
-
-    const handlePopState = () => {
-      // Se detectó navegación hacia atrás/adelante
-      setForceRefreshElo(prev => prev + 1);
-    };
-
-    // Agregar listeners
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('popstate', handlePopState);
-
-    // Refresh inicial cuando se monta el componente
-    setForceRefreshElo(prev => prev + 1);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, []);
-
-  // Handle opponent search
-  const handleSearchOpponent = useCallback(async () => {
-    try {
-      setError(null);
-      await searchUser();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Error al buscar el usuario'
-      );
-    }
-  }, [searchUser]);
-
-  // Handle duel request
-  const handleRequestDuel = useCallback(async () => {
-    if (duelConnecting || preparingDuel) {
-      console.log('Already processing duel, skipping request');
-      return;
-    }
-
-    try {
-      setError(null);
-      setPreparingDuel(true);
-
-      // Validate user session
-      const validation = validateUserSession(user);
-      if (!validation.isValid) {
-        setError(validation.errorMessage!);
-        setPreparingDuel(false);
-        return;
-      }
-
-      if (!foundUser) {
-        setError('Debes buscar y seleccionar un oponente primero');
-        setPreparingDuel(false);
-        return;
-      }
-
-      const userId = getUserId(user)!;
-      const response = await requestDuel(userId, foundUser.id, selectedCategory);
-
-      // Connect to duel WebSocket
-      if (response.duelId) {
-        console.log(
-          `[REQUESTER ${userId}] Connecting to duel: ${response.duelId}`
-        );
-        await connectToDuel(response.duelId, userId);
-        console.log(`[REQUESTER ${userId}] Connected, preparing quiz screen`);
-
-        // Small delay to ensure everything is ready
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setShowQuiz(true);
-        setPreparingDuel(false);
-        console.log(`[REQUESTER ${userId}] Quiz screen shown`);
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Error al solicitar el duelo'
-      );
-      setPreparingDuel(false);
-    }
-  }, [
-    user,
-    foundUser,
-    selectedCategory,
-    requestDuel,
-    connectToDuel,
-    duelConnecting,
-    preparingDuel,
+  // Cargar datos en paralelo
+  const [categories, playerData] = await Promise.all([
+    getDuelCategoriesSSR(),
+    getPlayerDataSSR(userId || undefined),
   ]);
 
-  // Handle challenge accept
-  const handleChallengeAccept = useCallback(
-    async (duelId: string) => {
-      if (duelConnecting || preparingDuel) {
-        console.log('Already processing duel, skipping accept');
-        return;
-      }
-
-      try {
-        setError(null);
-        setPreparingDuel(true);
-
-        // Validate user session
-        const validation = validateUserSession(user);
-        if (!validation.isValid) {
-          setError(validation.errorMessage!);
-          setPreparingDuel(false);
-          return;
-        }
-
-        const userId = getUserId(user)!;
-        console.log(`[ACCEPTOR ${userId}] Accepting duel: ${duelId}`);
-        await acceptDuel(duelId);
-
-        // Small delay to ensure backend has processed the acceptance
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Connect to duel WebSocket
-        console.log(`[ACCEPTOR ${userId}] Connecting to duel: ${duelId}`);
-        await connectToDuel(duelId, userId);
-        console.log(`[ACCEPTOR ${userId}] Connected, preparing quiz screen`);
-
-        // Additional delay for acceptor to ensure synchronization
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setShowQuiz(true);
-        setPreparingDuel(false);
-        console.log(`[ACCEPTOR ${userId}] Quiz screen shown`);
-
-        // Remove from pending challenges
-        removeChallenge(duelId);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Error al aceptar el duelo'
-        );
-        setPreparingDuel(false);
-      }
-    },
-    [
-      user,
-      acceptDuel,
-      connectToDuel,
-      removeChallenge,
-      duelConnecting,
-      preparingDuel,
-    ]
+  console.log(`📊 SSR Data Summary:`);
+  console.log(`   Categories: ${categories.length}`);
+  console.log(
+    `   Player Data: ${
+      playerData ? `ELO ${playerData.elo}, Rank ${playerData.rank}` : 'No data'
+    }`
   );
-
-  // Handle challenge reject
-  const handleChallengeReject = useCallback(
-    (duelId: string) => {
-      removeChallenge(duelId);
-    },
-    [removeChallenge]
-  );
-
-  // Handle quiz exit
-  const handleQuizExit = useCallback(() => {
-    setShowQuiz(false);
-    setPreparingDuel(false);
-    disconnectDuel();
-    clearAll();
-    // Forzar refresh del ELO después de completar un duelo
-    setForceRefreshElo(prev => prev + 1);
-  }, [disconnectDuel, clearAll]);
-
-  if (preparingDuel) {
-    return (
-      <div className='container mx-auto p-4'>
-        <div className='min-h-screen flex items-center justify-center'>
-          <div className='text-center'>
-            <div className='animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4'></div>
-            <h2 className='text-xl font-semibold text-gray-700'>
-              Preparando el duelo...
-            </h2>
-            <p className='text-gray-500 mt-2'>Sincronizando con el servidor</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (showQuiz) {
-    return (
-      <div className='container mx-auto p-4'>
-        <QuizScreen
-          wsConnection={wsConnection}
-          playerId={getUserId(user) || ''}
-          opponentId={foundUser?.id || 'user_002'}
-          onExit={handleQuizExit}
-        />
-      </div>
-    );
-  }
+  console.log(`   User ID: ${userId || 'Not available'}`);
 
   return (
     <div className='container mx-auto p-4'>
       <div className='mx-auto px-4 py-8 container'>
-        <div className='text-center mb-6'>
-          <p className='text-3xl font-bold text-emerald-700 flex items-center justify-center gap-2'>
-            <TrophyIcon className='w-8 h-8' />
-            Duelos Académicos
-          </p>
-
-          {/* Indicador de conexión WebSocket */}
-          <div className='mt-2 flex items-center justify-center gap-2'>
-            <div
-              className={`w-2 h-2 rounded-full ${
-                notificationConnected ? 'bg-green-500' : 'bg-red-500'
-              }`}
-            ></div>
-            <span
-              className={`text-sm ${
-                notificationConnected ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {notificationConnected
-                ? 'Conectado a notificaciones'
-                : 'Desconectado de notificaciones'}
-            </span>
-          </div>
-
-          {/* ELO del jugador */}
-          <PlayerEloDisplay className="mt-2" refreshTrigger={forceRefreshElo} />
-        </div>
-
-        <div className='lg:flex-row flex flex-col gap-8'>
-          <DuelLanding />
-
-          <div className='lg:w-1/2 space-y-6'>
-            <OpponentSearch
-              opponentEmail={opponentEmail}
-              setOpponentEmail={setOpponentEmail}
-              onSearch={handleSearchOpponent}
-              onRequestDuel={handleRequestDuel}
-              foundUser={foundUser}
-              searchLoading={searchLoading}
-              requestLoading={requestLoading || duelConnecting || preparingDuel}
-              categories={categories}
-              categoriesLoading={categoriesLoading}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-            />
-
-            <PendingChallenges
-              challenges={pendingChallenges}
-              onAccept={handleChallengeAccept}
-              onReject={handleChallengeReject}
-              acceptLoading={acceptLoading || duelConnecting || preparingDuel}
-            />
-
-            <DuelInfo duelResponse={duelResponse} error={combinedError} />
-          </div>
-        </div>
+        <DuelosInteractiveSection
+          initialCategories={categories}
+          initialPlayerData={playerData}
+        />
       </div>
     </div>
   );
 }
+
+// Metadatos de la página
+export const metadata = {
+  title: 'Duelos Académicos SSR - Course Clash',
+  description:
+    'Desafía a otros estudiantes en duelos de conocimiento con carga optimizada del servidor.',
+};
