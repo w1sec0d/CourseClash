@@ -129,6 +129,8 @@ services:
       - NODE_ENV=production
       - API_URL=http://cc_ag:8080
       - NEXT_PUBLIC_API_URL=http://cc_ag:8080
+      - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
+      - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
     depends_on:
       - cc_ag
     networks:
