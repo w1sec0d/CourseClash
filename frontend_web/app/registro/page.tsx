@@ -70,7 +70,7 @@ export default function Register() {
       console.log('✅ Registration successful with Apollo:', result);
 
       // Redirect to cursos after successful registration
-      router.push('/cursos');
+      window.location.href = '/cursos';
 
     } catch (error) {
       console.error('Registration error:', error);
