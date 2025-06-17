@@ -1,7 +1,6 @@
 import React from 'react';
 import TabNavigation from '@/components/TabNavigation';
 import CourseStats from './CourseStats';
-import CourseMetrics from './CourseMetrics';
 import Image from 'next/image';
 
 type TabId = string;
@@ -49,9 +48,6 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
   ranking,
   progress,
   semester,
-  shields,
-  totalShields,
-  coins,
   activeTab,
   onTabChange,
   tabs,
@@ -82,11 +78,6 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
               ranking={ranking}
               progress={progress}
               semester={semester}
-            />
-            <CourseMetrics
-              shields={shields}
-              totalShields={totalShields}
-              coins={coins}
             />
           </div>
         </div>

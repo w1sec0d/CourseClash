@@ -2,67 +2,18 @@
 
 import React from 'react';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
-import { usePathname } from 'next/navigation';
-import Sidebar from './Sidebar';
-import SidebarOverlay from './SidebarOverlay';
-import clsx from 'clsx';
-
 import Footer from './Footer';
 
 // Componente para manejar el sidebar condicionalmente
 export function ConditionalSidebar() {
-  const { isAuthenticated } = useAuthApollo();
-  const pathname = usePathname();
-
-  // Verificar si la ruta actual debe mostrar el sidebar
-  const showSidebar =
-    isAuthenticated &&
-    (pathname?.startsWith('/curso') ||
-      pathname?.startsWith('/cursos') ||
-      pathname?.startsWith('/dashboard') ||
-      pathname?.startsWith('/perfil'));
-
-  if (!showSidebar) {
-    return null;
-  }
-
-  return (
-    <>
-      <aside className='hidden lg:block w-64 fixed top-16 left-0 h-[calc(100vh-4rem)] z-40'>
-        <Sidebar isOpen={true} onClose={() => {}} />
-      </aside>
-      <SidebarOverlay />
-    </>
-  );
+  // Sidebar deshabilitado - toda la información del perfil está ahora en la navbar
+  return null;
 }
 
 // Componente para manejar el padding condicional
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthApollo();
-  const pathname = usePathname();
-
-  // Lista de rutas que NO deben mostrar el sidebar
-  const routesWithoutSidebar = [
-    '/',
-    '/login',
-    '/registro',
-    '/login-apollo',
-    '/ejemplo-ssr',
-    '/reset-password',
-    '/duelos',
-    '/duelos-ssr',
-  ];
-
-  const shouldShowSidebar =
-    isAuthenticated && !routesWithoutSidebar.includes(pathname || '');
-
   return (
-    <div
-      className={clsx(
-        'flex min-h-screen flex-col',
-        shouldShowSidebar ? 'lg:pl-64' : ''
-      )}
-    >
+    <div className='flex min-h-screen flex-col'>
       <ConditionalSidebar />
       <main className='w-full'>{children}</main>
       <Footer />
