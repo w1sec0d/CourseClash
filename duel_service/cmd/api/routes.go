@@ -1,6 +1,9 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -52,17 +55,17 @@ func requestDuelHandler(c *gin.Context) {
 	
 	message := "Duelo solicitado exitosamente"
 	
-	// Obtener información del solicitante para la notificación
-	playerRepo := repositories.NewPlayerRepository()
-	requesterData, err := playerRepo.GetPlayerByID(request.RequesterID)
-	
+	// Obtener el nombre real del solicitante desde el servicio de auth
 	var requesterName string
+	
+	// Intentar obtener el nombre desde el servicio de auth
+	userName, err := getUsernameFromAuthService(request.RequesterID)
 	if err != nil {
-		// Si no podemos obtener los datos del solicitante, usamos su ID como nombre
+		log.Printf("Error obteniendo nombre del usuario %s desde auth service: %v", request.RequesterID, err)
+		// Fallback: usar el ID como nombre si no podemos obtener el nombre real
 		requesterName = request.RequesterID
 	} else {
-		// Si podemos obtener los datos, usamos su nombre o información relevante
-		requesterName = requesterData.PlayerID // Aquí podrías usar otro campo como el nombre completo
+		requesterName = userName
 	}
 	
 	// Enviar notificación al oponente si está conectado
@@ -71,6 +74,7 @@ func requestDuelHandler(c *gin.Context) {
 		"duelId": duelID,
 		"requesterId": request.RequesterID,
 		"requesterName": requesterName,
+		"category": request.Category,
 		"timestamp": time.Now().Format(time.RFC3339),
 	}
 	
@@ -253,4 +257,68 @@ func RegisterRoutes(r *gin.Engine) {
 	r.GET("/api/duels/categories", getCategoriesHandler)
 	r.GET("/ws/notifications/:user_id", wsNotificationHandler)
 	r.GET("/api/players/:player_id", getPlayerHandler)
+}
+
+// getUsernameFromAuthService obtiene el nombre real del usuario desde el servicio de auth
+func getUsernameFromAuthService(userID string) (string, error) {
+	// URL del servicio de auth
+	authURL := "http://cc_auth_ms:8000/users/user/" + userID
+	
+	// Crear el cliente HTTP
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	
+	// Hacer la petición GET
+	resp, err := client.Get(authURL)
+	if err != nil {
+		return "", fmt.Errorf("error haciendo petición a auth service: %v", err)
+	}
+	defer resp.Body.Close()
+	
+	// Verificar el status code
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("auth service respondió con status %d", resp.StatusCode)
+	}
+	
+	// Leer la respuesta
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error leyendo respuesta: %v", err)
+	}
+	
+	// Log para debug - ver qué responde el auth service
+	log.Printf("🔍 [DEBUG] Auth service response for user %s: %s", userID, string(body))
+	
+	// Parsear la respuesta JSON
+	var userResponse struct {
+		ID               int    `json:"id"`
+		Username         string `json:"username"`
+		Email            string `json:"email"`
+		HashedPassword   string `json:"hashed_password"`
+		FullName         string `json:"full_name"`         // Usar snake_case como en la BD
+		IsActive         int    `json:"is_active"`         // MySQL devuelve 0/1 en lugar de true/false
+		IsSuperuser      int    `json:"is_superuser"`      // MySQL devuelve 0/1 en lugar de true/false
+		CreatedAt        string `json:"created_at"`
+		AvatarURL        *string `json:"avatar_url"`       // Puede ser null
+		Bio              *string `json:"bio"`              // Puede ser null
+		ExperiencePoints int    `json:"experience_points"`
+	}
+	
+	err = json.Unmarshal(body, &userResponse)
+	if err != nil {
+		return "", fmt.Errorf("error parseando JSON: %v", err)
+	}
+	
+	// Log para debug - ver qué datos se parsearon
+	log.Printf("🔍 [DEBUG] Parsed user data for ID %s: Username='%s', FullName='%s'", userID, userResponse.Username, userResponse.FullName)
+	
+	// Retornar el nombre completo si está disponible, sino el username
+	if userResponse.FullName != "" {
+		log.Printf("✅ [DEBUG] Returning full name: '%s'", userResponse.FullName)
+		return userResponse.FullName, nil
+	}
+	
+	log.Printf("✅ [DEBUG] Returning username: '%s'", userResponse.Username)
+	return userResponse.Username, nil
 }

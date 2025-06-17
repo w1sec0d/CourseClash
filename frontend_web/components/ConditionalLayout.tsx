@@ -50,6 +50,7 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     '/ejemplo-ssr',
     '/reset-password',
     '/duelos',
+    '/duelos-ssr',
   ];
 
   const shouldShowSidebar =

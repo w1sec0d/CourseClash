@@ -41,13 +41,13 @@ services:
   #     - courseclash-network
   #   command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
- # Servicio de actividades
+  # Servicio de actividades
   cc_activities_ms:
     container_name: cc_activities_ms
     build:
       context: ./activities_service
     ports:
-      - "8003:8003"
+      - '8003:8003'
     environment:
       - DATABASE_URL=mysql+pymysql://root:password@cc_activities_db:3306/activities_db
       - JWT_SECRET=your_jwt_secret_key12
@@ -59,7 +59,6 @@ services:
     networks:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
-
 
   # Servicio de Duelos
   cc_duels_ms:
@@ -106,6 +105,7 @@ services:
       - COURSE_SERVICE_URL=http://cc_courses_ms:8001
       - DUEL_SERVICE_URL=http://cc_duels_ms:8002
       - ACTIVITIES_SERVICE_URL=http://cc_activities_ms:8003
+      - WEBSOCKET_SERVICE_URL=http://cc_websocket_manager:8004
       - JWT_SECRET=your_jwt_secret_key
     volumes:
       - ./api_gateway:/app
@@ -128,6 +128,10 @@ services:
       - NODE_ENV=production
       - API_URL=http://cc_ag:8080
       - NEXT_PUBLIC_API_URL=http://cc_ag:8080
+      - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
+      - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
     depends_on:
       - cc_ag
     networks:
@@ -135,12 +139,8 @@ services:
     healthcheck:
       test:
         [
-          'CMD',
-          'wget',
-          '--no-verbose',
-          '--tries=1',
-          '--spider',
-          'http://0.0.0.0:3000',
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider http://127.0.0.1:3000 || exit 1',
         ]
       interval: 30s
       timeout: 10s
@@ -179,12 +179,11 @@ services:
   #     - courseclash-network
   #   command: --default-authentication-plugin=mysql_native_password
 
-
   cc_activities_db:
     container_name: cc_activities_db
     image: mysql:8.0
     ports:
-      - "3308:3306"
+      - '3308:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=activities_db
@@ -195,11 +194,10 @@ services:
       - courseclash-network
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-uroot", "-ppassword"]
+      test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
       interval: 10s
       timeout: 5s
       retries: 5
-
 
   # Base de datos Mongo (para Duelos)
   cc_duels_db:
@@ -266,6 +264,7 @@ services:
       - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
       - AUTH_SERVICE_URL=http://cc_auth_ms:8000
       - DUEL_SERVICE_URL=http://cc_duels_ms:8002
+      - REDIS_URL=redis://:courseclash123@cc_redis_cache:6379/0
     volumes:
       - ./websocket_manager:/app
     depends_on:
@@ -275,7 +274,27 @@ services:
         condition: service_completed_successfully
     networks:
       - courseclash-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload
+
+  # Redis Cache Database
+  cc_redis_cache:
+    container_name: cc_redis_cache
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    environment:
+      - REDIS_PASSWORD=courseclash123
+    command: redis-server --requirepass courseclash123 --appendonly yes --save 60 1
+    volumes:
+      - redis_data:/data
+    networks:
+      - courseclash-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   auth_mysql_data:
@@ -283,6 +302,7 @@ volumes:
   activities_mysql_data:
   mongo_data:
   rabbitmq_data:
+  redis_data:
 
 networks:
   courseclash-network:

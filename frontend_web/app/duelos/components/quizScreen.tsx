@@ -1,8 +1,8 @@
-'use client';
-import { useState, useEffect, useRef } from 'react';
-import { Question } from './Question';
-import { DuelHeader } from './DuelHeader';
-import { DuelResults } from './DuelResults';
+"use client";
+import { useState, useEffect, useRef } from "react";
+import { Question } from "./Question";
+import { DuelHeader } from "./DuelHeader";
+import { DuelResults } from "./DuelResults";
 // import { PowerUps } from './PowerUps';
 // import { StreakAlert } from './StreakAlert';
 
@@ -78,7 +78,7 @@ export default function QuizScreen({
     setIsInitializing(false); // Mark as initialized once we have a connection
 
     const handleMessage = (event: MessageEvent) => {
-      console.log('➡️📦recibiendo mensaje');
+      console.log("➡️📦recibiendo mensaje");
       console.log(`[${playerId}] Timestamp: ${Date.now()}`);
       try {
         console.log(`[${playerId}] Raw WebSocket message:`, event.data);
@@ -90,7 +90,7 @@ export default function QuizScreen({
 
           if (event.data.includes("Esperando al oponente")) {
             setIsWaiting(true);
-            console.log('isWaiting de esperando al oponente', isWaiting);
+            console.log("isWaiting de esperando al oponente", isWaiting);
             setError(null);
           } else if (
             event.data === "¡Oponente conectado! El duelo comenzará pronto." ||
@@ -100,7 +100,7 @@ export default function QuizScreen({
               `[${playerId}] Both players connected, waiting for first question...`
             );
             setIsWaiting(true);
-            console.log('isWaiting de elseIf', isWaiting);
+            console.log("isWaiting de elseIf", isWaiting);
             setError(null);
           }
           return;
@@ -114,7 +114,7 @@ export default function QuizScreen({
         if (data.type === "question") {
           console.log(`[${playerId}] Received question, starting quiz!`);
           setIsWaiting(false);
-          console.log('isWaiting falso', isWaiting);
+          console.log("isWaiting falso", isWaiting);
           setCurrentQuestion(data.data);
           setTimeRemaining(data.data.duration || 30); // Set timer with duration from question
           setHasAnswered(false); // Reset answer state for new question
@@ -187,7 +187,7 @@ export default function QuizScreen({
 
       // Ping necesario para activar el servidor (debe ser ignorado por la lógica del juego)
       if (wsConnection.readyState === WebSocket.OPEN) {
-        wsConnection.send(JSON.stringify({ type: 'ping', playerId }));
+        wsConnection.send(JSON.stringify({ type: "ping", playerId }));
       }
     }, 500);
 
@@ -203,10 +203,10 @@ export default function QuizScreen({
       }
 
       if (wsConnection) {
-        wsConnection.removeEventListener('message', handleMessage);
-        wsConnection.removeEventListener('open', handleOpen);
-        wsConnection.removeEventListener('close', handleClose);
-        wsConnection.removeEventListener('error', handleError);
+        wsConnection.removeEventListener("message", handleMessage);
+        wsConnection.removeEventListener("open", handleOpen);
+        wsConnection.removeEventListener("close", handleClose);
+        wsConnection.removeEventListener("error", handleError);
       }
     };
   }, [wsConnection, playerId, isWaiting, totalQuestions]); // Added missing dependencies
@@ -240,9 +240,9 @@ export default function QuizScreen({
             try {
               wsConnection.send(
                 JSON.stringify({
-                  type: 'answer',
+                  type: "answer",
                   questionId: currentQuestion.id,
-                  answer: 'incorrecto',
+                  answer: "incorrecto",
                 })
               );
               setPlayerProgress((prev) => prev + 1);
@@ -299,7 +299,7 @@ export default function QuizScreen({
       console.log(`[${playerId}] User answer sent successfully`);
     } catch (err) {
       console.error(`[${playerId}] Error sending answer:`, err);
-      setError('Error al enviar la respuesta');
+      setError("Error al enviar la respuesta");
       hasSubmittedRef.current = false; // Reset flag on error to allow retry
     }
   };
@@ -376,7 +376,6 @@ export default function QuizScreen({
 
           <DuelHeader
             title="Duelo de Preguntas"
-            opponent={opponentId}
             playerProgress={playerProgress}
             opponentProgress={opponentProgress}
             totalQuestions={totalQuestions}
