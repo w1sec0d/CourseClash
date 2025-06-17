@@ -13,26 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import ActivityStatsCard from './ActivityStatsCard';
 import QuickFilters from './QuickFilters';
-
-interface ActivityComment {
-  id: number;
-  userId: number;
-  content: string;
-  createdAt: string;
-}
-
-interface Activity {
-  id: number;
-  courseId: number;
-  title: string;
-  description?: string;
-  activityType: 'TASK' | 'QUIZ' | 'ANNOUNCEMENT';
-  dueDate?: string;
-  fileUrl?: string;
-  createdAt: string;
-  createdBy: number;
-  comments?: ActivityComment[];
-}
+import { Activity } from '@/lib/activities-hooks-apollo';
 
 interface EnhancedActivitiesTabProps {
   activities: Activity[];

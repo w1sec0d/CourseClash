@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CourseHeader from './components/CourseHeader';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AnunciosTab, MaterialesTab, TareasTab, DuelosTab, RankingTab, EstadisticasTab, LogrosTab, EnhancedActivitiesTab } from './components/tabs';
 import { useCourseApollo } from '@/lib/course-hooks-apollo';
 import { useActivitiesApollo } from '@/lib/activities-hooks-apollo';
@@ -67,37 +68,7 @@ export default function Curso() {
     };
   }, [isSidebarOpen]);
 
-  // Sample data for the post feed (mantener como backup)
-  const [posts] = useState([
-    {
-      id: 1,
-      author: {
-        name: 'Prof. Ana García',
-        role: 'Docente',
-        avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-      },
-      timeAgo: '2h',
-      content:
-        '¡Hola a todos! Les recuerdo que la tarea 1 debe ser entregada el próximo lunes. No olviden revisar los materiales de estudio en la sección de archivos.',
-      likes: 12,
-      comments: 5,
-      isLiked: false,
-    },
-    {
-      id: 2,
-      author: {
-        name: 'Carlos Mendoza',
-        role: 'Estudiante',
-        avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-      },
-      timeAgo: '5h',
-      content:
-        '¿Alguien podría ayudarme con el ejercicio 3 de la guía de trabajo? No entiendo bien cómo plantear la solución.',
-      likes: 8,
-      comments: 3,
-      isLiked: true,
-    },
-  ]);
+
 
   type TabId = 'Anuncios' | 'Materiales' | 'Tareas' | 'Duelos' | 'Ranking' | 'Estadísticas' | 'Logros' | 'TodasActividades';
   const [activeTab, setActiveTab] = useState<TabId>('TodasActividades');
@@ -134,7 +105,6 @@ export default function Curso() {
   };
 
   // Filtrar actividades por tipo
-  const announcements = activities.filter(activity => activity.activityType === 'ANNOUNCEMENT');
   const tasks = activities.filter(activity => activity.activityType === 'TASK');
 
   // Calcular progreso basado en tareas completadas (simulado)
@@ -162,10 +132,10 @@ export default function Curso() {
                 { id: 'Anuncios', label: 'Anuncios' },
                 { id: 'Materiales', label: 'Materiales' },
                 { id: 'Tareas', label: 'Tareas' },
-                { id: 'Duelos', label: 'Duelos' },
-                { id: 'Ranking', label: 'Ranking' },
-                { id: 'Estadísticas', label: 'Estadísticas' },
-                { id: 'Logros', label: 'Logros' }
+                // { id: 'Duelos', label: 'Duelos' },
+                // { id: 'Ranking', label: 'Ranking' },
+                // { id: 'Estadísticas', label: 'Estadísticas' },
+                // { id: 'Logros', label: 'Logros' }
               ]}
               tabColor="indigo"
               textColor="gray-50"
@@ -197,19 +167,7 @@ export default function Curso() {
               )}
               {activeTab === 'Anuncios' && (
                 <AnunciosTab 
-                  posts={announcements.length > 0 ? announcements.map(announcement => ({
-                    id: announcement.id,
-                    author: {
-                      name: 'Prof. Sistema',
-                      role: 'Docente',
-                      avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-                    },
-                    timeAgo: new Date(announcement.createdAt).toLocaleDateString(),
-                    content: announcement.description || announcement.title,
-                    likes: 0,
-                    comments: announcement.comments?.length || 0,
-                    isLiked: false,
-                  })) : posts} 
+                  courseId={courseId}
                 />
               )}
               {activeTab === 'Materiales' && <MaterialesTab materials={[]} />}
@@ -225,10 +183,10 @@ export default function Curso() {
                   }))} 
                 />
               )}
-              {activeTab === 'Duelos' && <DuelosTab duelos={[]} />}
-              {activeTab === 'Ranking' && <RankingTab usuarios={[]} />}
-              {activeTab === 'Estadísticas' && <EstadisticasTab />}
-              {activeTab === 'Logros' && <LogrosTab />}
+              {/* {activeTab === 'Duelos' && <DuelosTab duelos={[]} />} */}
+              {/* {activeTab === 'Ranking' && <RankingTab usuarios={[]} />} */}
+              {/* {activeTab === 'Estadísticas' && <EstadisticasTab />} */}
+              {/* {activeTab === 'Logros' && <LogrosTab />} */}
             </div>
 
             {/* Mostrar información de debugging en desarrollo */}
@@ -238,7 +196,6 @@ export default function Curso() {
                 <p><strong>Course ID:</strong> {courseId}</p>
                 <p><strong>Course:</strong> {course?.title || 'Not found'}</p>
                 <p><strong>Activities:</strong> {activities.length}</p>
-                <p><strong>Announcements:</strong> {announcements.length}</p>
                 <p><strong>Tasks:</strong> {tasks.length}</p>
                 <p><strong>User:</strong> {user?.username || 'Not logged in'}</p>
                 {activitiesError && <p className="text-red-600"><strong>Activities Error:</strong> {activitiesError}</p>}

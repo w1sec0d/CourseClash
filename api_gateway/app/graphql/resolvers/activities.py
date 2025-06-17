@@ -1112,7 +1112,7 @@ class Mutation:
                     "content": content
                 }
                 comment_response = await client.post(
-                    f"{ACTIVITIES_SERVICE_URL}/api/activities/{activity_id}/comments",
+                    f"{ACTIVITIES_SERVICE_URL}/api/activities/{activityId}/comments",
                     json = comment_payload,
                     headers={"User_id": str(user_data["id"])}
                 )

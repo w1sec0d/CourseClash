@@ -177,7 +177,7 @@ export default function Login() {
 
       // Wait for auth state to be fully synchronized
       // Use window.location.href for hard navigation to ensure middleware sees the updated cookie
-      window.location.href = '/dashboard';
+      window.location.href = '/cursos';
     } catch (error) {
       // Set form error to display to the user
       if (error instanceof AuthError) {

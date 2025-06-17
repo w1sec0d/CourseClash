@@ -2,11 +2,14 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useActivityApollo } from '@/lib/activities-hooks-apollo';
+import { useActivityApollo, useCreateCommentApollo } from '@/lib/activities-hooks-apollo';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
 import EditActivityModal from './components/EditActivityModal';
 import StudentSubmission from './components/StudentSubmission';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
+
 
 export default function ActivityDetail() {
   const params = useParams();
@@ -15,8 +18,10 @@ export default function ActivityDetail() {
   
   const { user } = useAuthApollo();
   const { activity, loading, error, refetch } = useActivityApollo(activityId);
+  const { createComment, loading: commentLoading } = useCreateCommentApollo();
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [newComment, setNewComment] = useState('');
   
   // Verificar si el usuario es profesor o admin
   const isTeacherOrAdmin = user?.role === 'TEACHER' || user?.role === 'ADMIN';
@@ -101,6 +106,24 @@ export default function ActivityDetail() {
   const isOverdue = (dueDate?: string) => {
     if (!dueDate) return false;
     return new Date(dueDate) < new Date();
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !user) return;
+
+    try {
+      await createComment({
+        activityId: activityId,
+        content: newComment.trim()
+      });
+      setNewComment('');
+      // Refrescar la actividad para mostrar el nuevo comentario
+      refetch();
+    } catch (error) {
+      console.error('Error al crear comentario:', error);
+      // Aquí podrías mostrar un toast o mensaje de error
+    }
   };
 
   return (
@@ -217,10 +240,69 @@ export default function ActivityDetail() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
                 Comentarios ({activity.comments?.length || 0})
               </h2>
+              
+              {/* Formulario para nuevo comentario */}
+              {user && (
+                <div className="mb-6">
+                  <form onSubmit={handleSubmitComment} className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-indigo-600">
+                          U{user.id}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <textarea
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          placeholder="Escribe un comentario..."
+                          className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          rows={3}
+                          disabled={commentLoading}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <motion.button
+                        type="submit"
+                        disabled={!newComment.trim() || commentLoading}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${
+                          !newComment.trim() || commentLoading
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                        }`}
+                      >
+                        {commentLoading ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Enviando...
+                          </>
+                        ) : (
+                          <>
+                            <PaperAirplaneIcon className="w-4 h-4" />
+                            Comentar
+                          </>
+                        )}
+                      </motion.button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* Lista de comentarios existentes */}
               {activity.comments && activity.comments.length > 0 ? (
                 <div className="space-y-4">
-                  {activity.comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3 p-4 bg-gray-50 rounded-lg">
+                  {activity.comments
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .map((comment) => (
+                    <motion.div 
+                      key={comment.id} 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100"
+                    >
                       <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
                         <span className="text-sm font-medium text-indigo-600">
                           U{comment.userId}
@@ -233,13 +315,20 @@ export default function ActivityDetail() {
                             {formatDate(comment.createdAt)}
                           </span>
                         </div>
-                        <p className="text-gray-700">{comment.content}</p>
+                        <p className="text-gray-700 leading-relaxed">{comment.content}</p>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 italic">No hay comentarios aún.</p>
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-500 italic">No hay comentarios aún. ¡Sé el primero en comentar!</p>
+                </div>
               )}
             </div>
 

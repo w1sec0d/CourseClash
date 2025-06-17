@@ -7,26 +7,7 @@ import {
   CalendarDaysIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
-
-interface ActivityComment {
-  id: number;
-  userId: number;
-  content: string;
-  createdAt: string;
-}
-
-interface Activity {
-  id: number;
-  courseId: number;
-  title: string;
-  description?: string;
-  activityType: 'TASK' | 'QUIZ' | 'ANNOUNCEMENT';
-  dueDate?: string;
-  fileUrl?: string;
-  createdAt: string;
-  createdBy: number;
-  comments?: ActivityComment[];
-}
+import { Activity } from '@/lib/activities-hooks-apollo';
 
 interface ActivityStatsCardProps {
   activities: Activity[];

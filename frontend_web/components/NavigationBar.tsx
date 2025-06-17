@@ -94,7 +94,7 @@ export const NavigationBar: React.FC = () => {
                     <TrophyIcon className='h-5 w-5' />
                     Duelos
                   </Link>
-                  <Link href='/dashboard' className={linkClasses('/dashboard')}>
+                  <Link href='/cursos' className={linkClasses('/cursos')}>
                     <AcademicCapIcon className='h-5 w-5' />
                     Mis Cursos
                   </Link>
@@ -172,7 +172,7 @@ export const NavigationBar: React.FC = () => {
                   <TrophyIcon className='h-5 w-5' />
                   Duelos
                 </Link>
-                <Link href='/dashboard' className={linkClasses('/dashboard')}>
+                <Link href='/cursos' className={linkClasses('/cursos')}>
                   <AcademicCapIcon className='h-5 w-5' />
                   Mis Cursos
                 </Link>
@@ -263,7 +263,7 @@ export const NavigationBar: React.FC = () => {
               <TrophyIcon className='h-5 w-5' />
               Duelos
             </Link>
-            <Link href='/dashboard' className={linkClasses('/dashboard')}>
+            <Link href='/cursos' className={linkClasses('/cursos')}>
               <AcademicCapIcon className='h-5 w-5' />
               Mis Cursos
             </Link>

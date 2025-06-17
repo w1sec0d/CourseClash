@@ -149,6 +149,24 @@ const GRADE_SUBMISSION_MUTATION = gql`
   }
 `;
 
+const CREATE_COMMENT_MUTATION = gql`
+  mutation CreateComment($activityId: String!, $content: String!) {
+    createComment(activityId: $activityId, content: $content) {
+      __typename
+      ... on CommentSuccess {
+        id
+        activityId
+        content
+        createdAt
+      }
+      ... on CommentError {
+        message
+        code
+      }
+    }
+  }
+`;
+
 // Tipos de datos
 export interface ActivityComment {
   id: number;
@@ -329,4 +347,105 @@ export function useGradeSubmissionApollo() {
     loading,
     error: error?.message || null,
   };
-} 
+}
+
+// Hook para crear comentarios
+export function useCreateCommentApollo() {
+  const [createCommentMutation, { loading, error }] = useMutation(CREATE_COMMENT_MUTATION);
+
+  const createComment = async (commentData: {
+    activityId: string;
+    content: string;
+  }) => {
+    try {
+      const { data } = await createCommentMutation({
+        variables: commentData,
+      });
+
+      const result = data?.createComment;
+      if (result?.__typename === 'CommentError') {
+        throw new Error(result.message);
+      }
+
+      return result || null;
+    } catch (err) {
+      console.error('Error creating comment:', err);
+      throw err;
+    }
+  };
+
+  return {
+    createComment,
+    loading,
+    error: error?.message || null,
+  };
+}
+
+// Hook para crear anuncios (using the activity system with ANNOUNCEMENT type)
+export function useCreateAnnouncementApollo() {
+  const [createActivityMutation, { loading, error }] = useMutation(CREATE_ACTIVITY_MUTATION);
+
+  const createAnnouncement = async (announcementData: {
+    courseId: number;
+    title: string;
+    content: string;
+    fileUrl?: string;
+  }) => {
+    try {
+      const { data } = await createActivityMutation({
+        variables: {
+          courseId: announcementData.courseId,
+          title: announcementData.title,
+          activityType: 'ANNOUNCEMENT',
+          description: announcementData.content,
+          fileUrl: announcementData.fileUrl,
+        },
+      });
+
+      const result = data?.createActivity;
+      if (result?.__typename === 'ActivityError') {
+        throw new Error(result.message);
+      }
+
+      return result?.activity || null;
+    } catch (err) {
+      console.error('Error creating announcement:', err);
+      throw err;
+    }
+  };
+
+  return {
+    createAnnouncement,
+    loading,
+    error: error?.message || null,
+  };
+}
+
+// Hook para obtener solo anuncios de un curso
+export function useAnnouncementsApollo(courseId: string) {
+  const { data, loading, error, refetch } = useQuery(GET_ACTIVITIES_QUERY, {
+    variables: { idCourse: courseId },
+    errorPolicy: 'all',
+    fetchPolicy: 'cache-and-network',
+    skip: !courseId,
+  });
+
+  const activitiesData = data?.activities;
+  const allActivities = activitiesData?.__typename === 'ActivitiesSuccess' 
+    ? activitiesData.activities 
+    : [];
+  
+  // Filtrar solo anuncios
+  const announcements = allActivities.filter((activity: Activity) => activity.activityType === 'ANNOUNCEMENT');
+  
+  const errorMessage = activitiesData?.__typename === 'ActivitiesError' 
+    ? activitiesData.message 
+    : error?.message;
+
+  return {
+    announcements: announcements as Activity[],
+    loading,
+    error: errorMessage || null,
+    refetch,
+  };
+}

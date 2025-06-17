@@ -18,6 +18,7 @@ export function ConditionalSidebar() {
   const showSidebar =
     isAuthenticated &&
     (pathname?.startsWith('/curso') ||
+      pathname?.startsWith('/cursos') ||
       pathname?.startsWith('/dashboard') ||
       pathname?.startsWith('/perfil'));
 
