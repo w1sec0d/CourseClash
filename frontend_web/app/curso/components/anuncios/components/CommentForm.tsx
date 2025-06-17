@@ -52,15 +52,15 @@ const CommentForm: React.FC<CommentFormProps> = ({
   return (
     <div className='flex-1'>
       <form onSubmit={handleSubmit}>
-        <textarea
+      <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          rows={rows}
-          placeholder={placeholder}
-          className='w-full rounded-lg text-sm border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none'
+        rows={rows}
+        placeholder={placeholder}
+        className='w-full rounded-lg text-sm border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none'
           disabled={loading}
-        />
-        <div className='justify-end mt-2 flex'>
+      />
+      <div className='justify-end mt-2 flex'>
           <motion.button
             type='submit'
             disabled={!comment.trim() || loading}
@@ -80,11 +80,11 @@ const CommentForm: React.FC<CommentFormProps> = ({
             ) : (
               <>
                 <PaperAirplaneIcon className="w-3 h-3" />
-                {buttonText}
+          {buttonText}
               </>
             )}
           </motion.button>
-        </div>
+      </div>
       </form>
     </div>
   );

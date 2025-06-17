@@ -60,44 +60,44 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
       className='bg-white rounded-lg mb-6 border border-gray-200 p-4 shadow-sm'
     >
       <form onSubmit={handleSubmit}>
-        <div className='items-start flex space-x-3'>
+      <div className='items-start flex space-x-3'>
           <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
             <span className="text-sm font-medium text-indigo-600">
               U{user.id}
             </span>
           </div>
-          <div className='flex-1'>
-            <textarea
+        <div className='flex-1'>
+          <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={3}
-              placeholder={placeholder}
-              className='w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none'
+            rows={3}
+            placeholder={placeholder}
+            className='w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none'
               disabled={loading}
             />
-            <div className='justify-between mt-3 flex'>
-              <div className='flex space-x-2'>
-                <button
-                  type='button'
-                  className='p-2 hover:text-emerald-600 rounded hover:bg-emerald-50 transition text-gray-500'
+          <div className='justify-between mt-3 flex'>
+            <div className='flex space-x-2'>
+              <button
+                type='button'
+                className='p-2 hover:text-emerald-600 rounded hover:bg-emerald-50 transition text-gray-500'
                   disabled={loading}
-                >
+              >
                   <PaperClipIcon className='h-5 w-5' />
-                </button>
-                <button
-                  type='button'
-                  className='p-2 hover:text-emerald-600 rounded hover:bg-emerald-50 transition text-gray-500'
+              </button>
+              <button
+                type='button'
+                className='p-2 hover:text-emerald-600 rounded hover:bg-emerald-50 transition text-gray-500'
                   disabled={loading}
-                >
+              >
                   <PhotoIcon className='h-5 w-5' />
-                </button>
-                <button
-                  type='button'
-                  className='p-2 hover:text-emerald-600 rounded hover:bg-emerald-50 transition text-gray-500'
+              </button>
+              <button
+                type='button'
+                className='p-2 hover:text-emerald-600 rounded hover:bg-emerald-50 transition text-gray-500'
                   disabled={loading}
-                >
+              >
                   <PlayIcon className='h-5 w-5' />
-                </button>
+              </button>
               </div>
               <motion.button
                 type='submit'

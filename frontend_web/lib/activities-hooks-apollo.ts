@@ -314,7 +314,7 @@ export function useSubmissionsApollo(activityId: string, userId: string, userRol
     error: errorMessage || null,
     refetch,
   };
-}
+} 
 
 // Hook para calificar una submission
 export function useGradeSubmissionApollo() {

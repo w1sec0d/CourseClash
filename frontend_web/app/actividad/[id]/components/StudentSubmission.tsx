@@ -324,7 +324,7 @@ const StudentSubmission: React.FC<StudentSubmissionProps> = ({
 
       {/* Solo mostrar el formulario si no hay entrega o si se puede editar */}
       {(!mySubmission || mySubmission.canEdit) && (
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Opciones de entrega */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">

@@ -7,7 +7,7 @@ import Footer from './Footer';
 // Componente para manejar el sidebar condicionalmente
 export function ConditionalSidebar() {
   // Sidebar deshabilitado - toda la información del perfil está ahora en la navbar
-  return null;
+    return null;
 }
 
 // Componente para manejar el padding condicional

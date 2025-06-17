@@ -209,7 +209,7 @@ export default function QuizScreen({
         wsConnection.removeEventListener("error", handleError);
       }
     };
-  }, [wsConnection, playerId]); // Removed isWaiting to prevent re-creating listeners
+  }, [wsConnection, playerId, isWaiting, totalQuestions]); // Added missing dependencies
 
   // Timer effect - improved to prevent duplicate submissions
   useEffect(() => {
@@ -270,7 +270,7 @@ export default function QuizScreen({
         timerRef.current = null;
       }
     };
-  }, [currentQuestion?.id, hasAnswered]); // Removed timeRemaining from dependencies to prevent re-creation
+  }, [currentQuestion, playerId, timeRemaining, wsConnection, hasAnswered]); // Added missing dependencies
 
   const handleAnswerSelect = (selectedOption: string) => {
     if (
