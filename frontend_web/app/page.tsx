@@ -138,8 +138,8 @@ export default function Page() {
             </p>
           </div>
           {/* Grid de características */}
-          <div className='mt-16 md:grid-cols-2 lg:grid-cols-3 grid grid-cols-1 gap-8'>
-            <FeatureCard
+          <div className='mt-16 flex flex-col md:flex-row gap-8'>
+            {/* <FeatureCard
               icon={
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
@@ -160,7 +160,7 @@ export default function Page() {
               description='Colecciona insignias y medallas por completar tareas, obtener buenas calificaciones y participar activamente en el curso.'
               color='emerald'
               tags={['Motivación', 'Reconocimiento']}
-            />
+            /> */}
             <FeatureCard
               icon={
                 <svg
@@ -183,7 +183,7 @@ export default function Page() {
               color='purple'
               tags={['Competitivo', 'Aprendizaje activo']}
             />
-            <FeatureCard
+            {/* <FeatureCard
               icon={
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
@@ -204,7 +204,7 @@ export default function Page() {
               description='Gana monedas virtuales por tus logros académicos y cámbialas por ventajas como exenciones de exámenes o recursos adicionales.'
               color='blue'
               tags={['Recompensas', 'Incentivos']}
-            />
+            /> */}
             <FeatureCard
               icon={
                 <svg
@@ -227,7 +227,7 @@ export default function Page() {
               color='amber'
               tags={['Progresión', 'Status']}
             />
-            <FeatureCard
+            {/* <FeatureCard
               icon={
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
@@ -248,8 +248,8 @@ export default function Page() {
               description='Personaliza tu avatar, banner y tarjeta de estudiante para mostrar tus logros y expresar tu personalidad.'
               color='red'
               tags={['Identidad', 'Expresión']}
-            />
-            <FeatureCard
+            /> */}
+            {/* <FeatureCard
               icon={
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
@@ -270,7 +270,7 @@ export default function Page() {
               description='Completa misiones diarioas y desafíos semanales para obtener recompensas exclusivas.'
               color='stone'
               tags={['Constancia', 'Objetivos']}
-            />
+            /> */}
           </div>
         </div>
       </section>
