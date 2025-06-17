@@ -1,47 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMutation, gql } from '@apollo/client';
-import { Activity } from '@/lib/activities-hooks-apollo';
-
-const UPDATE_ACTIVITY_MUTATION = gql`
-  mutation UpdateActivity(
-    $id: String!
-    $title: String
-    $description: String
-    $activityType: TypeActivity
-    $dueDate: DateTime
-    $fileUrl: String
-  ) {
-    updateActivity(
-      id: $id
-      title: $title
-      description: $description
-      activityType: $activityType
-      dueDate: $dueDate
-      fileUrl: $fileUrl
-    ) {
-      __typename
-      ... on ActivitySuccess {
-        activity {
-          id
-          courseId
-          title
-          description
-          activityType
-          dueDate
-          fileUrl
-          createdAt
-          createdBy
-        }
-      }
-      ... on ActivityError {
-        message
-        code
-      }
-    }
-  }
-`;
+import { Activity, useUpdateActivityApollo } from '@/lib/activities-hooks-apollo';
 
 interface EditActivityModalProps {
   isOpen: boolean;
@@ -64,7 +24,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
     fileUrl: ''
   });
 
-  const [updateActivityMutation, { loading, error }] = useMutation(UPDATE_ACTIVITY_MUTATION);
+  const { updateActivity, loading, error } = useUpdateActivityApollo();
 
   // Inicializar formulario con datos de la actividad
   useEffect(() => {
@@ -83,21 +43,14 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
     e.preventDefault();
     
     try {
-      const { data } = await updateActivityMutation({
-        variables: {
-          id: activity.id.toString(),
-          title: formData.title,
-          description: formData.description || null,
-          activityType: formData.activityType, // Send uppercase enum values to match GraphQL schema
-          dueDate: formData.dueDate || null,
-          fileUrl: formData.fileUrl || null
-        },
+      await updateActivity({
+        id: activity.id.toString(),
+        title: formData.title,
+        description: formData.description || undefined,
+        activityType: formData.activityType,
+        dueDate: formData.dueDate || undefined,
+        fileUrl: formData.fileUrl || undefined
       });
-
-      const result = data?.updateActivity;
-      if (result?.__typename === 'ActivityError') {
-        throw new Error(result.message);
-      }
       
       // Notificar que se actualizó la actividad
       onActivityUpdated?.();
@@ -219,7 +172,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
           {/* Error */}
           {error && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm">{error.message}</p>
+              <p className="text-red-800 text-sm">{error}</p>
             </div>
           )}
 
