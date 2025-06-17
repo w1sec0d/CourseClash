@@ -11,9 +11,8 @@ import {
   ArrowRightStartOnRectangleIcon,
   UserPlusIcon,
   AcademicCapIcon,
-  UserIcon,
+  // UserIcon,
   ChevronDownIcon,
-  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import { usePathname } from 'next/navigation';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
@@ -188,7 +187,7 @@ export const NavigationBar: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className='md:block hidden'>
             <div className='ml-4 items-center md:ml-6 flex space-x-3'>
               {!isAuthenticated ? (
@@ -216,12 +215,6 @@ export const NavigationBar: React.FC = () => {
                 </>
               ) : (
                 <div className='flex items-center space-x-4'>
-                  {/* Monedas */}
-                  <div className='flex items-center bg-emerald-600 rounded-full px-3 py-1'>
-                    <CurrencyDollarIcon className='h-4 w-4 mr-1 text-yellow-300' />
-                    <span className='text-white text-sm font-medium'>500</span>
-                  </div>
-
                   {/* Perfil del usuario */}
                   <div className='relative'>
                     <button
@@ -230,9 +223,11 @@ export const NavigationBar: React.FC = () => {
                     >
                       {/* Avatar */}
                       <div className='w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-semibold text-sm'>
-                        {user?.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                        {user?.username
+                          ? user.username.charAt(0).toUpperCase()
+                          : 'U'}
                       </div>
-                      
+
                       {/* Información del usuario */}
                       <div className='text-left hidden lg:block'>
                         <div className='text-white text-sm font-medium'>
@@ -242,25 +237,25 @@ export const NavigationBar: React.FC = () => {
                           {user?.role || 'Estudiante'}
                         </div>
                       </div>
-                      
-                      <ChevronDownIcon 
+
+                      <ChevronDownIcon
                         className={`h-4 w-4 text-white transition-transform duration-200 ${
                           profileMenuOpen ? 'rotate-180' : ''
-                        }`} 
+                        }`}
                       />
                     </button>
 
                     {/* Menú desplegable del perfil */}
                     {profileMenuOpen && (
                       <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50'>
-                        <Link
+                        {/* <Link
                           href='/perfil'
                           onClick={() => setProfileMenuOpen(false)}
                           className='px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 flex items-center'
                         >
                           <UserIcon className='h-4 w-4 mr-2 text-emerald-600' />
                           Mi Perfil
-                        </Link>
+                        </Link> */}
                         <Link
                           href='/cursos'
                           onClick={() => setProfileMenuOpen(false)}
@@ -284,7 +279,7 @@ export const NavigationBar: React.FC = () => {
               )}
             </div>
           </div>
-          
+
           <div className='md:hidden -mr-2 flex'>
             <button
               type='button'
@@ -312,7 +307,7 @@ export const NavigationBar: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Menú móvil */}
       {mobileMenuOpen && (
         <div className='md:hidden bg-emerald-700'>
@@ -337,7 +332,7 @@ export const NavigationBar: React.FC = () => {
               Mis Cursos
             </Link>
           </div>
-          
+
           <div className='pt-4 pb-3 border-t border-emerald-600'>
             {!isAuthenticated ? (
               <>
@@ -372,32 +367,30 @@ export const NavigationBar: React.FC = () => {
                 <div className='px-5 mb-3'>
                   <div className='flex items-center space-x-3'>
                     <div className='w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-semibold'>
-                      {user?.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                      {user?.username
+                        ? user.username.charAt(0).toUpperCase()
+                        : 'U'}
                     </div>
                     <div>
-                      <div className='text-white font-medium'>{user?.username || 'Usuario'}</div>
-                      <div className='text-emerald-200 text-sm'>{user?.role || 'Estudiante'}</div>
-                    </div>
-                  </div>
-                  
-                  {/* Métricas en móvil */}
-                  <div className='flex items-center justify-start mt-3'>
-                    <div className='flex items-center bg-emerald-600 rounded-full px-2 py-1'>
-                      <CurrencyDollarIcon className='h-4 w-4 mr-1 text-yellow-300' />
-                      <span className='text-white text-sm'>500</span>
+                      <div className='text-white font-medium'>
+                        {user?.username || 'Usuario'}
+                      </div>
+                      <div className='text-emerald-200 text-sm'>
+                        {user?.role || 'Estudiante'}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Enlaces de perfil en móvil */}
                 <div className='px-5 space-y-1'>
-                  <Link
+                  {/* <Link
                     href='/perfil'
                     className='text-white hover:bg-emerald-600 px-3 py-2 rounded-md text-sm font-medium flex items-center'
                   >
                     <UserIcon className='h-4 w-4 mr-2' />
                     Mi Perfil
-                  </Link>
+                  </Link> */}
                   <button
                     onClick={handleLogout}
                     className='w-full text-left text-red-200 hover:bg-emerald-600 px-3 py-2 rounded-md text-sm font-medium flex items-center'
