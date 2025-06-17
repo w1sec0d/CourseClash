@@ -95,6 +95,45 @@ const CREATE_ACTIVITY_MUTATION = gql`
   }
 `;
 
+const UPDATE_ACTIVITY_MUTATION = gql`
+  mutation UpdateActivity(
+    $id: String!
+    $title: String
+    $description: String
+    $activityType: TypeActivity
+    $dueDate: DateTime
+    $fileUrl: String
+  ) {
+    updateActivity(
+      id: $id
+      title: $title
+      description: $description
+      activityType: $activityType
+      dueDate: $dueDate
+      fileUrl: $fileUrl
+    ) {
+      __typename
+      ... on ActivitySuccess {
+        activity {
+          id
+          courseId
+          title
+          description
+          activityType
+          dueDate
+          fileUrl
+          createdAt
+          createdBy
+        }
+      }
+      ... on ActivityError {
+        message
+        code
+      }
+    }
+  }
+`;
+
 const GET_SUBMISSIONS_QUERY = gql`
   query GetSubmissions($activityId: String!, $userId: String!, $userRole: String!) {
     submissions(activityId: $activityId, userId: $userId, userRole: $userRole) {
@@ -290,6 +329,77 @@ export function useCreateActivityApollo() {
   };
 }
 
+// Hook para actualizar una actividad
+export function useUpdateActivityApollo() {
+  const [updateActivityMutation, { loading, error }] = useMutation(UPDATE_ACTIVITY_MUTATION, {
+    // Refrescar queries relacionadas después de la actualización
+    refetchQueries: [
+      'GetActivities', // Refrescar lista de actividades
+      'GetActivity'    // Refrescar actividad específica
+    ],
+    // Actualizar cache de forma optimista
+    update: (cache, { data }) => {
+      if (data?.updateActivity?.__typename === 'ActivitySuccess') {
+        const updatedActivity = data.updateActivity.activity;
+        
+        // Actualizar cache de la actividad específica
+        cache.writeQuery({
+          query: GET_ACTIVITY_QUERY,
+          variables: { id: updatedActivity.id.toString() },
+          data: { activity: updatedActivity }
+        });
+        
+        // Intentar actualizar la lista de actividades si existe en cache
+        try {
+          // Invalidar cache de actividades para forzar refetch
+          cache.evict({ 
+            fieldName: 'activities',
+            args: { idCourse: updatedActivity.courseId.toString() }
+          });
+          cache.gc(); // Garbage collect
+        } catch (cacheError) {
+          // Si no puede actualizar el cache de la lista, no es crítico
+          console.warn('No se pudo actualizar el cache de actividades:', cacheError);
+        }
+      }
+    }
+  });
+
+  const updateActivity = async (activityData: {
+    id: string;
+    title?: string;
+    description?: string;
+    activityType?: 'TASK' | 'QUIZ' | 'ANNOUNCEMENT';
+    dueDate?: string;
+    fileUrl?: string;
+  }) => {
+    try {
+      const { data } = await updateActivityMutation({
+        variables: {
+          ...activityData,
+          activityType: activityData.activityType,
+        },
+      });
+
+      const result = data?.updateActivity;
+      if (result?.__typename === 'ActivityError') {
+        throw new Error(result.message);
+      }
+
+      return result?.activity || null;
+    } catch (err) {
+      console.error('Error updating activity:', err);
+      throw err;
+    }
+  };
+
+  return {
+    updateActivity,
+    loading,
+    error: error?.message || null,
+  };
+}
+
 // Hook para obtener submissions
 export function useSubmissionsApollo(activityId: string, userId: string, userRole: string) {
   const { data, loading, error, refetch } = useQuery(GET_SUBMISSIONS_QUERY, {
@@ -314,7 +424,7 @@ export function useSubmissionsApollo(activityId: string, userId: string, userRol
     error: errorMessage || null,
     refetch,
   };
-}
+} 
 
 // Hook para calificar una submission
 export function useGradeSubmissionApollo() {

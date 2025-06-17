@@ -182,7 +182,7 @@ const Post: React.FC<PostProps> = ({
                       <p className="text-gray-700 text-sm leading-relaxed">{comment.content}</p>
                     </div>
                   </motion.div>
-                ))}
+            ))}
               </div>
             )}
             

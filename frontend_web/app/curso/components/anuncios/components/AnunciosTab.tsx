@@ -87,7 +87,7 @@ const AnunciosTab: React.FC<AnunciosTabProps> = ({ courseId }) => {
       >
         {announcements.length > 0 ? (
           announcements.map((announcement) => (
-            <Post
+          <Post
               key={announcement.id}
               id={announcement.id.toString()}
               author={`Usuario ${announcement.createdBy}`}

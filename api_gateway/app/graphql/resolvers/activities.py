@@ -21,7 +21,7 @@ AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth_user_service:8000"
 @strawberry.enum
 class TypeActivity(Enum):
     TASK = "task"
-    QUIZ = "quiz" 
+    QUIZ = "quiz"
     ANNOUNCEMENT = "announcement"
 
 @strawberry.type

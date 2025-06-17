@@ -249,7 +249,7 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
     <div className="space-y-6">
       {/* Header con controles */}
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-        <div>
+    <div>
           <h2 className="text-2xl font-bold text-gray-900">Tareas y Quizzes</h2>
           <p className="text-gray-600 mt-1">
             {filteredAndSortedActivities.length} de {tasksAndQuizzes.length} actividades
@@ -340,7 +340,7 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
             </span>
           </motion.button>
         ))}
-      </div>
+        </div>
 
       {/* Lista de actividades */}
       <motion.div 
@@ -375,15 +375,15 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
               const colors = getActivityColor(activity.activityType, isOverdue);
 
               return (
-                <motion.div
+            <motion.div 
                   key={activity.id}
-                  variants={itemVariants}
-                  whileHover="hover"
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
+              variants={itemVariants}
+              whileHover="hover"
+              transition={{ duration: 0.2, delay: index * 0.05 }}
                   className={`bg-white rounded-xl shadow-sm border-l-4 hover:shadow-md transition-all duration-200 ${colors.border}`}
-                >
+            >
                   <div className="p-6">
-                    <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-start gap-3">
                           <div className="flex-shrink-0 mt-1">
@@ -405,7 +405,7 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
                               }`}>
                                 {getTypeLabel(activity.activityType)}
                               </span>
-                            </div>
+                  </div>
                             {activity.description && (
                               <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                                 {activity.description}
@@ -416,31 +416,31 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
                                 <div className="flex items-center gap-1">
                                   <CalendarDaysIcon className="w-4 h-4" />
                                   <span>Entrega: {formatDate(activity.dueDate)}</span>
-                                </div>
-                              )}
+                    </div>
+                  )}
                               <div className="flex items-center gap-1">
                                 <ClockIcon className="w-4 h-4" />
                                 <span>Creada: {formatDate(activity.createdAt)}</span>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
+                </div>
+              </div>
                       
                       <div className="flex flex-col items-end gap-3 ml-4">
                         {getStatusBadge(status)}
-                        
+                
                         <div className="flex gap-2 flex-wrap">
                           {/* Botón Ver - para todos los usuarios */}
-                          <motion.button
+                  <motion.button 
                             onClick={() => handleViewActivity(activity)}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                             className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition flex items-center gap-2"
-                          >
+                  >
                             <EyeIcon className="w-4 h-4" />
                             Ver {getTypeLabel(activity.activityType)}
-                          </motion.button>
+                  </motion.button>
                           
                           {/* Botones específicos para profesores */}
                           {isTeacherOrAdmin ? (
@@ -448,17 +448,17 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
                               {/* Botón Ver Entregas - solo para tareas */}
                               {activity.activityType === 'TASK' && (
                                 <Link href={`/actividad/${activity.id}/entregas`}>
-                                  <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                                     className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center gap-2"
-                                  >
+                  >
                                     <UserGroupIcon className="w-4 h-4" />
                                     Ver Entregas
-                                  </motion.button>
+                  </motion.button>
                                 </Link>
-                              )}
-                              
+                )}
+                
                               {/* Botón Editar - para todas las actividades */}
                               <Link href={`/actividad/${activity.id}`}>
                                 <motion.button
@@ -474,25 +474,25 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
                           ) : (
                             /* Botones para estudiantes */
                             status === 'pending' && !isOverdue && (
-                              <motion.button
+                  <motion.button 
                                 onClick={() => handleViewActivity(activity)}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                                 className={`px-4 py-2 text-white rounded-lg text-sm font-medium transition ${
                                   activity.activityType === 'TASK' 
                                     ? 'bg-emerald-600 hover:bg-emerald-700'
                                     : 'bg-orange-600 hover:bg-orange-700'
                                 }`}
-                              >
+                  >
                                 {activity.activityType === 'TASK' ? 'Entregar' : 'Realizar'}
-                              </motion.button>
+                  </motion.button>
                             )
-                          )}
+                )}
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </motion.div>
+              </div>
+            </div>
+          </motion.div>
               );
             })
           )}

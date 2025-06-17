@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMutation, gql } from '@apollo/client';
 import { 
   XMarkIcon, 
   CalendarDaysIcon, 
@@ -15,6 +16,90 @@ import {
 import { Activity, useSubmissionsApollo } from '@/lib/activities-hooks-apollo';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
 
+// Mutation para crear submissions
+const CREATE_SUBMISSION_MUTATION = gql`
+  mutation CreateSubmissions(
+    $activityId: Int!
+    $content: String
+    $fileUrl: String
+    $additionalFiles: [String!]
+  ) {
+    createSubmissions(
+      activityId: $activityId
+      content: $content
+      fileUrl: $fileUrl
+      additionalFiles: $additionalFiles
+    ) {
+      __typename
+      ... on SubmissionsSuccess {
+        submission {
+          id
+          activityId
+          submittedAt
+          content
+          fileUrl
+          additionalFiles
+          isGraded
+          canEdit
+          latestGrade {
+            id
+            gradedBy
+            gradedAt
+            score
+            feedback
+          }
+        }
+      }
+      ... on SubmissionsError {
+        message
+        code
+      }
+    }
+  }
+`;
+
+// Mutation para actualizar submissions
+const UPDATE_SUBMISSION_MUTATION = gql`
+  mutation UpdateSubmission(
+    $submissionId: Int!
+    $content: String
+    $fileUrl: String
+    $additionalFiles: [String!]
+  ) {
+    updateSubmission(
+      submissionId: $submissionId
+      content: $content
+      fileUrl: $fileUrl
+      additionalFiles: $additionalFiles
+    ) {
+      __typename
+      ... on SubmissionsSuccess {
+        submission {
+          id
+          activityId
+          submittedAt
+          content
+          fileUrl
+          additionalFiles
+          isGraded
+          canEdit
+          latestGrade {
+            id
+            gradedBy
+            gradedAt
+            score
+            feedback
+          }
+        }
+      }
+      ... on SubmissionsError {
+        message
+        code
+      }
+    }
+  }
+`;
+
 interface TaskDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,6 +111,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ isOpen, onClose, task
   const [submissionContent, setSubmissionContent] = useState('');
   const [submissionFile, setSubmissionFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Mutations
+  const [createSubmission] = useMutation(CREATE_SUBMISSION_MUTATION);
+  const [updateSubmission] = useMutation(UPDATE_SUBMISSION_MUTATION);
 
   // Obtener submissions para esta actividad
   const { 
@@ -90,11 +180,48 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ isOpen, onClose, task
     if (!submissionContent.trim() && !submissionFile) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
+    
     try {
-      // Aquí iría la lógica para enviar la submission
-      // Por ahora simulamos un delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // TODO: Implementar subida de archivos si es necesario
+      let fileUrl = '';
+      if (submissionFile) {
+        // Aquí iría la lógica para subir el archivo
+        // Por ahora usamos una URL temporal
+        fileUrl = `temp-file-${submissionFile.name}`;
+      }
+
+      const variables = {
+        content: submissionContent.trim() || null,
+        fileUrl: fileUrl || null,
+        additionalFiles: []
+      };
+
+      let result;
+      if (hasSubmission && latestSubmission) {
+        // Actualizar submission existente
+        result = await updateSubmission({
+          variables: {
+            submissionId: latestSubmission.id,
+            ...variables
+          }
+        });
+      } else {
+        // Crear nueva submission
+        result = await createSubmission({
+          variables: {
+            activityId: task.id,
+            ...variables
+          }
+        });
+      }
+
+      const data = result.data?.createSubmissions || result.data?.updateSubmission;
       
+      if (data?.__typename === 'SubmissionsError') {
+        throw new Error(data.message || 'Error al enviar la tarea');
+      }
+
       // Limpiar formulario
       setSubmissionContent('');
       setSubmissionFile(null);
@@ -102,8 +229,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ isOpen, onClose, task
       // Refrescar submissions
       await refetchSubmissions();
       
+      // Opcional: cerrar modal después de enviar
+      // onClose();
+      
     } catch (error) {
       console.error('Error al enviar la actividad:', error);
+      setSubmitError(error instanceof Error ? error.message : 'Error al enviar la tarea');
     } finally {
       setIsSubmitting(false);
     }
@@ -248,6 +379,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ isOpen, onClose, task
                   {hasSubmission ? `Actualizar ${getActivityLabel().toLowerCase()}` : 
                    task.activityType === 'TASK' ? 'Entregar tarea' : 'Realizar quiz'}
                 </h3>
+                
+                {/* Error de envío */}
+                {submitError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-800">{submitError}</p>
+                  </div>
+                )}
+                
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
