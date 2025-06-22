@@ -21,7 +21,7 @@
     "graphql-tag": "^2.12.6",
     "graphql-yoga": "^5.13.4",
     "lucide-react": "^0.511.0",
-    "next": "15.3.2",
+    "next": "^15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.4",

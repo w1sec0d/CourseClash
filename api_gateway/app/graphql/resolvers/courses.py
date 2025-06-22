@@ -45,15 +45,15 @@ class Query:
         except Exception as e:
             print(f"Error getting course: {str(e)}")
             return None
-
+        
     @strawberry.field
-    async def getCourses(self) -> List[Course]:
+    async def getCoursesByUser(self,id:str) -> List[Course]:
         """
-        Obtiene todos los cursos disponibles.
+        Obtiene todos los cursos de un usuario.
         """
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(f"{COURSE_SERVICE_URL}/api/courses")
+                response = await client.get(f"{COURSE_SERVICE_URL}/api/courses/user/{id}")
 
                 if response.status_code != 200:
                     return []
@@ -79,25 +79,33 @@ class Mutation:
         Crea un nuevo curso.
         """
         try:
-            auth_header = info.context["request"].headers.get("authorization")
-            if not auth_header:
-                return None
-
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    f"{COURSE_SERVICE_URL}/courses",
-                    json={
+            # auth_header = info.context["request"].headers.get("authorization")
+            # if not auth_header:
+            #     return None
+            
+            json={
                         "title": title,
                         "description": description,
                         "creator_id": creator_id
-                    },
-                    headers={"Authorization": auth_header},
+                    }
+            
+            print(f"Creating course with data: {json}")
+
+            print(f"{COURSE_SERVICE_URL}/api/courses/");
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    f"{COURSE_SERVICE_URL}/api/courses/",
+                    json=json,
+                    # headers={"Authorization": auth_header},
                 )
+
+                print(f"Response status code: {response.json()['course']}")
 
                 if response.status_code != 201:
                     return None
 
-                course_data = response.json()
+                course_data = response.json()['course']
                 return Course(**course_data)
         except Exception as e:
             print(f"Error creating course: {str(e)}")

@@ -1,11 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import CourseHeader from './components/CourseHeader';
 import { AnunciosTab, MaterialesTab, TareasTab, DuelosTab, RankingTab, EstadisticasTab, LogrosTab } from './components/tabs';
+import { useGetCourseById } from '@/lib/courses-hooks-apollo';
 
 export default function Curso() {
+  const router = useRouter();
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { course, loading, error } = useGetCourseById('1');
 
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
@@ -122,12 +127,38 @@ export default function Curso() {
     };
   }, [isSidebarOpen]);
 
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+    if (error || !course) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error al cargar el curso</h2>
+          <p className="text-gray-600 mb-4">Curso no encontrado</p>
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+          >
+            Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div>
         <div className='mx-auto md:p-6 container p-4 relative'>
           <div className='mb-6'>
             <CourseHeader
-              title="Matemáticas Avanzadas"
+              title={course?.title || 'Nombre del Curso'}
               bannerImage="https://placehold.co/1200x300/gray/white?text=Matem%C3%A1ticas+Avanzadas"
               ranking="3º Lugar"
               progress={65}

@@ -29,6 +29,7 @@ RUN composer require laravel/octane spiral/roadrunner
 COPY .envDev .env
 RUN mkdir -p /app/storage/logs
 
+RUN composer update
 RUN php artisan octane:install --server="swoole"
 
 CMD php artisan octane:start --server="swoole" --host="0.0.0.0"

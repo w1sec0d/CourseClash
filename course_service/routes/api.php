@@ -22,7 +22,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::prefix('courses')->group(function () {
     Route::get('/','App\Http\Controllers\CourseController@index');
     Route::get('/{id}','App\Http\Controllers\CourseController@show');
+    Route::get('/user/{id}','App\Http\Controllers\CourseController@getCoursesByUserId');
     Route::post('/','App\Http\Controllers\CourseController@store');
+    Route::post('/adduser/','App\Http\Controllers\CourseController@addUserToCourse');
     Route::put('/{id}','App\Http\Controllers\CourseController@update');
     Route::delete('/{id}','App\Http\Controllers\CourseController@destroy');
 });

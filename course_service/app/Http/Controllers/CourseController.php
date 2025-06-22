@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Course;
+use App\Models\CourseParticipant;
 
 class CourseController extends Controller
 {
@@ -89,5 +90,32 @@ class CourseController extends Controller
             'status' => 200
         ];
         return response($data,$data['status']);
+    }
+
+    public function addUserToCourse(Request $request)
+    {
+        $courseParticipant = new CourseParticipant;
+        $courseParticipant->course_id = $request->input('course_id');
+        $courseParticipant->user_id = $request->input('user_id');
+        $courseParticipant->save();
+        $data = [
+            'message' => 'User added to course successfully',
+            'status' => 200
+        ];
+        return response($data, $data['status']);
+    }
+
+    public function getCoursesByUserId($id)
+    {
+        $userCourses = CourseParticipant::where('user_id', $id)->pluck('course_id');
+        if ($userCourses->isEmpty()) {
+            return response(['message' => 'No courses found for this user'], 404);
+        }
+        $courses = Course::whereIn('id', $userCourses)->where('is_active', '1')->get();
+        $data = [
+            'courses' => $courses,
+            'status' => 200
+        ];
+        return response($data, $data['status']);
     }
 }
