@@ -1,4 +1,123 @@
 services:
+  # Base de datos MySQL (para auth_user_service)
+  cc_authcourses_db:
+    container_name: cc_authcourses_db
+    image: mysql:8.0
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=authcourses_db
+    volumes:
+      - auth_mysql_data:/var/lib/mysql
+      - ./mysql_auth:/docker-entrypoint-initdb.d
+    networks:
+      - courseclash-network
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cc_activities_db:
+    container_name: cc_activities_db
+    image: mysql:8.0
+    ports:
+      - '3308:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=activities_db
+    volumes:
+      - activities_mysql_data:/var/lib/mysql
+      - ./mysql_activities:/docker-entrypoint-initdb.d
+    networks:
+      - courseclash-network
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de datos Mongo (para Duelos)
+  cc_duels_db:
+    image: mongo:latest
+    container_name: cc_duels_db
+    ports:
+      - '27018:27017'
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo_service/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - courseclash-network
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', 'db.runCommand("ping").ok']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ Message Broker
+  cc_broker:
+    container_name: cc_broker
+    image: rabbitmq:4-management
+    ports:
+      - '5672:5672' # AMQP port
+      - '15672:15672' # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=courseclash
+      - RABBITMQ_DEFAULT_PASS=courseclash123
+      - RABBITMQ_DEFAULT_VHOST=/courseclash
+      - RABBITMQ_MANAGEMENT_LOAD_DEFINITIONS=/etc/rabbitmq/definitions.json
+      - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./broker_service/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./broker_service/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    networks:
+      - courseclash-network
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Redis Cache Database
+  cc_redis_cache:
+    container_name: cc_redis_cache
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    environment:
+      - REDIS_PASSWORD=courseclash123
+    command: redis-server --requirepass courseclash123 --appendonly yes --save 60 1
+    volumes:
+      - redis_data:/data
+    networks:
+      - courseclash-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # RabbitMQ Initializer Service (runs once to setup broker)
+  cc_broker_init:
+    container_name: cc_broker_init
+    image: curlimages/curl:8.4.0
+    volumes:
+      - ./broker_service/definitions.json:/definitions.json:ro
+      - ./broker_service/init_rabbitmq_definitions.sh:/init_script.sh:ro
+    depends_on:
+      cc_broker:
+        condition: service_healthy
+    networks:
+      - courseclash-network
+    command: sh /init_script.sh
+    restart: 'no'
+
   # Servicio de Autenticación y Usuarios
   cc_auth_ms:
     container_name: cc_auth_ms
@@ -17,29 +136,12 @@ services:
       - MAIL_SERVER=smtp.gmail.com
     volumes:
       - ./auth_user_service:/app
-    # depends_on:
-    #   - cc_authcourses_db
+    depends_on:
+      cc_authcourses_db:
+        condition: service_healthy
     networks:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
-  # # Servicio de Cursos
-  # cc_courses_ms:
-  #   container_name: cc_courses_ms
-  #   build:
-  #     context: ./course_service
-  #   ports:
-  #     - "8001:8001"
-  #   environment:
-  #     - DATABASE_URL=mysql+pymysql://root:password@cc_courses_db:3306/courseClash
-  #     - JWT_SECRET=your_jwt_secret_key
-  #   volumes:
-  #     - ./course_service:/app
-  #   depends_on:
-  #     - cc_courses_db
-  #   networks:
-  #     - courseclash-network
-  #   command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
   # Servicio de actividades
   cc_activities_ms:
@@ -74,8 +176,10 @@ services:
       - MONGODB_URI=mongodb://cc_duels_db:27017/duels_db
       - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
     depends_on:
-      - cc_duels_db
-      - cc_broker_init
+      cc_duels_db:
+        condition: service_healthy
+      cc_broker_init:
+        condition: service_completed_successfully
     networks:
       - courseclash-network
     healthcheck:
@@ -93,6 +197,30 @@ services:
       retries: 3
       start_period: 10s
 
+  # WebSocket Manager Service
+  cc_websocket_manager:
+    container_name: cc_websocket_manager
+    image: python:3.11-slim
+    build:
+      context: ./websocket_manager
+    ports:
+      - '8004:8004'
+    environment:
+      - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
+      - AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - DUEL_SERVICE_URL=http://cc_duels_ms:8002
+      - REDIS_URL=redis://:courseclash123@cc_redis_cache:6379/0
+    volumes:
+      - ./websocket_manager:/app
+    depends_on:
+      cc_broker_init:
+        condition: service_completed_successfully
+      cc_redis_cache:
+        condition: service_healthy
+    networks:
+      - courseclash-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload
+
   # API Gateway
   cc_ag:
     container_name: cc_ag
@@ -109,10 +237,11 @@ services:
       - JWT_SECRET=your_jwt_secret_key
     volumes:
       - ./api_gateway:/app
-    # depends_on:
-    #   - cc_auth_ms
-    #   - cc_courses_ms
-    #   - cc_duels_ms
+    depends_on:
+      - cc_auth_ms
+      - cc_activities_ms
+      - cc_duels_ms
+      - cc_websocket_manager
     networks:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
@@ -147,155 +276,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-
-  # Base de datos MySQL (para auth_user_service)
-  cc_authcourses_db:
-    container_name: cc_authcourses_db
-    image: mysql:8.0
-    ports:
-      - '3306:3306'
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=authcourses_db
-    volumes:
-      - auth_mysql_data:/var/lib/mysql
-      - ./mysql_auth:/docker-entrypoint-initdb.d
-    networks:
-      - courseclash-network
-    command: --default-authentication-plugin=mysql_native_password
-
-  # Base de datos MySQL (para courses service)
-  # cc_courses_db:
-  #   container_name: cc_courses_db
-  #   image: mysql:8.0
-  #   ports:
-  #     - "3307:3306"
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD=password
-  #     - MYSQL_DATABASE=courseClash
-  #   volumes:
-  #     - courses_mysql_data:/var/lib/mysql
-  #     - ./mysql_courses:/docker-entrypoint-initdb.d
-  #   networks:
-  #     - courseclash-network
-  #   command: --default-authentication-plugin=mysql_native_password
-
-  cc_activities_db:
-    container_name: cc_activities_db
-    image: mysql:8.0
-    ports:
-      - '3308:3306'
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=activities_db
-    volumes:
-      - activities_mysql_data:/var/lib/mysql
-      - ./mysql_activities:/docker-entrypoint-initdb.d
-    networks:
-      - courseclash-network
-    command: --default-authentication-plugin=mysql_native_password
-    healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Base de datos Mongo (para Duelos)
-  cc_duels_db:
-    image: mongo:latest
-    container_name: cc_duels_db
-    ports:
-      - '27018:27017'
-    volumes:
-      - mongo_data:/data/db
-      - ./mongo_service/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
-    networks:
-      - courseclash-network
-
-  # RabbitMQ Message Broker
-  cc_broker:
-    container_name: cc_broker
-    image: rabbitmq:4-management
-    ports:
-      - '5672:5672' # AMQP port
-      - '15672:15672' # Management UI
-    environment:
-      - RABBITMQ_DEFAULT_USER=courseclash
-      - RABBITMQ_DEFAULT_PASS=courseclash123
-      - RABBITMQ_DEFAULT_VHOST=/courseclash
-      - RABBITMQ_MANAGEMENT_LOAD_DEFINITIONS=/etc/rabbitmq/definitions.json
-      - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-      - ./broker_service/definitions.json:/etc/rabbitmq/definitions.json:ro
-      - ./broker_service/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
-    networks:
-      - courseclash-network
-    healthcheck:
-      test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-
-  # RabbitMQ Initializer Service (runs once to setup broker)
-  cc_broker_init:
-    container_name: cc_broker_init
-    image: curlimages/curl:8.4.0
-    volumes:
-      - ./broker_service/definitions.json:/definitions.json:ro
-      - ./broker_service/init_rabbitmq_definitions.sh:/init_script.sh:ro
-    depends_on:
-      cc_broker:
-        condition: service_healthy
-    networks:
-      - courseclash-network
-    command: sh /init_script.sh
-    restart: 'no'
-
-  # WebSocket Manager Service
-  cc_websocket_manager:
-    container_name: cc_websocket_manager
-    image: python:3.11-slim
-    build:
-      context: ./websocket_manager
-    ports:
-      - '8004:8004'
-    environment:
-      - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
-      - AUTH_SERVICE_URL=http://cc_auth_ms:8000
-      - DUEL_SERVICE_URL=http://cc_duels_ms:8002
-      - REDIS_URL=redis://:courseclash123@cc_redis_cache:6379/0
-    volumes:
-      - ./websocket_manager:/app
-    depends_on:
-      cc_broker:
-        condition: service_healthy
-      cc_broker_init:
-        condition: service_completed_successfully
-    networks:
-      - courseclash-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload
-
-  # Redis Cache Database
-  cc_redis_cache:
-    container_name: cc_redis_cache
-    image: redis:7-alpine
-    ports:
-      - '6379:6379'
-    environment:
-      - REDIS_PASSWORD=courseclash123
-    command: redis-server --requirepass courseclash123 --appendonly yes --save 60 1
-    volumes:
-      - redis_data:/data
-    networks:
-      - courseclash-network
-    healthcheck:
-      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
 
 volumes:
   auth_mysql_data:
