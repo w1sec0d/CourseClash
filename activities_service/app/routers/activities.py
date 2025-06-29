@@ -45,7 +45,7 @@ async def create_activity(
             detail="Error interno del servidor"
         )
 
-#Ya
+#Actividades asociadas a un curso
 @router.get("/list/{course_id}", response_model=ActivityList)
 async def get_activities(
     course_id: int,
