@@ -8,42 +8,52 @@ Este proyecto implementa una arquitectura de microservicios con los siguientes c
 
 ### Servicios
 
-- **Servicio De AutenticacionYUsuarios (auth_user_service)**: Manejo de registro, login, perfiles de usuario y tokens de sesión. Implementado en Python con FastAPI.
+- **Servicio de Autenticación y Usuarios (auth_user_service)**: Manejo de registro, login, perfiles de usuario y tokens de sesión. Implementado en Python con FastAPI.
 
-- **ServicioDeCursos (course_service)**: Creación de cursos, inscripción de estudiantes, gestión de contenido del curso, calificaciones y actividades. Implementado en Python con FastAPI.
+- **Servicio de Actividades (activities_service)**: Gestión de actividades, tareas, quizzes y calificaciones. Implementado en Python con FastAPI.
 
-- **ServicioDeDuelos (duel_service)**: Manejo de la lógica de los duelos en tiempo real. Implementado en Go para maximizar la eficiencia en concurrencia.
+- **Servicio de Duelos (duel_service)**: Manejo de la lógica de los duelos en tiempo real y rankings. Implementado en Go para maximizar la eficiencia en concurrencia.
 
-- **API Gateway (api_gateway)**: Punto de entrada único para el frontend, gestiona la autenticación y el enrutamiento. Implementado en Python con soporte para GraphQL.
+- **WebSocket Manager (websocket_manager)**: Gestión de conexiones WebSocket para comunicación en tiempo real entre servicios. Implementado en Python con FastAPI.
+
+- **API Gateway (api_gateway)**: Punto de entrada único para el frontend, gestiona la autenticación y el enrutamiento hacia todos los microservicios.
+
+### Infraestructura
+
+- **Message Broker (broker_service)**: RabbitMQ para comunicación asíncrona entre servicios y manejo de eventos en tiempo real.
 
 ### Frontend
 
-- **Frontend Web App (frontend)**: Interfaz de usuario web implementada como una Single Page Application (SPA) con React y TypeScript.
+- **Frontend Web App (frontend_web)**: Interfaz de usuario web implementada con Next.js, React y TypeScript.
+
+- **Frontend CLI (frontend_cli)**: Interfaz de línea de comandos para administración y testing.
 
 ### Bases de Datos
 
-- **Base de Datos Relacional**: MySQL para almacenar datos estructurados de usuarios, perfiles, cursos, inscripciones y rangos.
+- **MySQL (Autenticación)**: Almacena datos de usuarios, perfiles y autenticación.
 
-- **Base de Datos NoSQL**: MongoDB para almacenar datos más complejos y flexibles.
+- **MySQL (Actividades)**: Almacena actividades, tareas, quizzes y calificaciones.
+
+- **MongoDB (Duelos)**: Almacena datos de duelos, rankings y estadísticas en tiempo real.
 
 ## Características Principales
 
 ### Funcionalidades Básicas
 
-- Módulo de autenticación
-- Creación y gestión de cursos
-- Asignación de participantes
-- Tablero de anuncios
-- Gestión de actividades (tareas, quices)
-- Calificación de actividades
+- Módulo de autenticación y gestión de usuarios
+- Gestión completa de actividades (tareas, quizzes)
+- Calificación automatizada de actividades
+- Comunicación en tiempo real vía WebSockets
+- Sistema de mensajería asíncrona
 
 ### Gamificación
 
-- Gestión de logros
-- Rankings y tablas de posiciones
+- Gestión de logros y achievements
+- Rankings y tablas de posiciones dinámicas
 - Personalización de perfiles de usuario
-- Rangos de clasificación y rangos meritorios
+- Sistema de rangos y clasificaciones
 - Duelos clasificatorios en tiempo real
+- Eventos y notificaciones en vivo
 
 ## Configuración del Entorno de Desarrollo
 
@@ -79,8 +89,14 @@ Este proyecto implementa una arquitectura de microservicios con los siguientes c
 /CourseClash
 ├── api_gateway/         # Servicio de API Gateway
 ├── auth_user_service/   # Servicio de Autenticación y Usuarios
-├── course_service/      # Servicio de Cursos
-├── duel_service/        # Servicio de Duelos
-├── frontend/            # Aplicación Frontend
+├── activities_service/  # Servicio de Actividades
+├── duel_service/        # Servicio de Duelos (Go)
+├── websocket_manager/   # Gestor de WebSockets
+├── broker_service/      # RabbitMQ Message Broker
+├── frontend_web/        # Aplicación Web Frontend (Next.js)
+├── frontend_cli/        # Interfaz CLI
+├── mongo_service/       # Configuración MongoDB
+├── mysql_auth/          # Scripts MySQL para autenticación
+├── mysql_activities/    # Scripts MySQL para actividades
 └── docker-compose.yml   # Configuración de Docker Compose
 ```
