@@ -16,9 +16,17 @@ class ActivityBase(BaseModel):
     due_date: Optional[datetime] = Field(None, description="Fecha límite de entrega")
     file_url: Optional[str] = Field(None, max_length=255, description="URL del archivo adjunto")
 
+    @validator('file_url')
+    def validate_file_url(cls, v):
+        if v and not v.startswith(('http://', 'https://', '/api/v1/files/', '/files/')):
+            raise ValueError('La URL del archivo debe ser válida')
+        return v
+
+class ActivityCreate(ActivityBase):
+    """Schema for creating a new activity"""
+    
     @validator('due_date')
     def validate_due_date(cls, v):
-
         # Convierte de aware a naive 
         if v:
             if v.tzinfo is not None: 
@@ -28,16 +36,6 @@ class ActivityBase(BaseModel):
             raise ValueError('La fecha límite debe ser futura')
             
         return v
-
-    @validator('file_url')
-    def validate_file_url(cls, v):
-        if v and not v.startswith(('http://', 'https://', '/api/v1/files/', '/files/')):
-            raise ValueError('La URL del archivo debe ser válida')
-        return v
-
-class ActivityCreate(ActivityBase):
-    """Schema for creating a new activity"""
-    pass
 
 class ActivityUpdate(BaseModel):
     """Schema for updating an existing activity"""
@@ -59,11 +57,23 @@ class ActivityUpdate(BaseModel):
             raise ValueError('La URL del archivo debe ser válida')
         return v
 
-class ActivityResponse(ActivityBase):
-    """Schema for activity response"""
+class ActivityResponse(BaseModel):
+    """Schema for activity response - NO validation for past dates since these are existing records"""
     id: int
+    course_id: int
+    title: str
+    description: Optional[str] = None
+    activity_type: ActivityType
+    due_date: Optional[datetime] = None
+    file_url: Optional[str] = None
     created_at: datetime
     created_by: int
+
+    @validator('file_url')
+    def validate_file_url(cls, v):
+        if v and not v.startswith(('http://', 'https://', '/api/v1/files/', '/files/')):
+            raise ValueError('La URL del archivo debe ser válida')
+        return v
 
     class Config:
         from_attributes = True
