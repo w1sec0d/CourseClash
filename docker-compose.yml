@@ -1,61 +1,67 @@
 services:
-  # Base de datos MySQL (para auth_user_service)
-  cc_authcourses_db:
-    container_name: cc_authcourses_db
-    image: mysql:8.0
-    ports:
-      - '3306:3306'
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=authcourses_db
-    volumes:
-      - auth_mysql_data:/var/lib/mysql
-      - ./mysql_auth:/docker-entrypoint-initdb.d
-    networks:
-      - courseclash-network
-    command: --default-authentication-plugin=mysql_native_password
-    healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # =========================================================================
+  # T1 PRESENTATION LAYER
+  # =========================================================================
 
-  cc_activities_db:
-    container_name: cc_activities_db
-    image: mysql:8.0
+  # Frontend Web Application
+  cc_fe_web:
+    container_name: cc_fe_web
+    build:
+      context: ./frontend_web
+      dockerfile: Dockerfile
     ports:
-      - '3308:3306'
+      - '3000:3000'
     environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=activities_db
-    volumes:
-      - activities_mysql_data:/var/lib/mysql
-      - ./mysql_activities:/docker-entrypoint-initdb.d
+      - NODE_ENV=production
+      - API_URL=http://cc_ag:8080
+      - NEXT_PUBLIC_API_URL=http://cc_ag:8080
+      - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
+      - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    depends_on:
+      - cc_ag
     networks:
       - courseclash-network
-    command: --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test:
+        [
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider http://127.0.0.1:3000 || exit 1',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
-  # Base de datos Mongo (para Duelos)
-  cc_duels_db:
-    image: mongo:latest
-    container_name: cc_duels_db
+  # =========================================================================
+  # T2 COMMUNICATION LAYER
+  # =========================================================================
+
+  # API Gateway
+  cc_ag:
+    container_name: cc_ag
+    build:
+      context: ./api_gateway
     ports:
-      - '27018:27017'
+      - '8080:8080'
+    environment:
+      - AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      # - COURSE_SERVICE_URL=http://cc_courses_ms:8001
+      - DUEL_SERVICE_URL=http://cc_duels_ms:8002
+      - ACTIVITIES_SERVICE_URL=http://cc_activities_ms:8003
+      - WEBSOCKET_SERVICE_URL=http://cc_websocket_manager:8004
+      - JWT_SECRET=your_jwt_secret_key
     volumes:
-      - mongo_data:/data/db
-      - ./mongo_service/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./api_gateway:/app
+    depends_on:
+      - cc_auth_ms
+      - cc_activities_ms
+      - cc_duels_ms
+      - cc_websocket_manager
     networks:
       - courseclash-network
-    healthcheck:
-      test: ['CMD', 'mongosh', '--eval', 'db.runCommand("ping").ok']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 
   # RabbitMQ Message Broker
   cc_broker:
@@ -83,26 +89,6 @@ services:
       retries: 5
       start_period: 30s
 
-  # Redis Cache Database
-  cc_redis_cache:
-    container_name: cc_redis_cache
-    image: redis:7-alpine
-    ports:
-      - '6379:6379'
-    environment:
-      - REDIS_PASSWORD=courseclash123
-    command: redis-server --requirepass courseclash123 --appendonly yes --save 60 1
-    volumes:
-      - redis_data:/data
-    networks:
-      - courseclash-network
-    healthcheck:
-      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
   # RabbitMQ Initializer Service (runs once to setup broker)
   cc_broker_init:
     container_name: cc_broker_init
@@ -118,7 +104,11 @@ services:
     command: sh /init_script.sh
     restart: 'no'
 
-  # Servicio de Autenticación y Usuarios
+  # =========================================================================
+  # T3 LOGIC LAYER (Business Logic Microservices)
+  # =========================================================================
+
+  # Authentication and User Service
   cc_auth_ms:
     container_name: cc_auth_ms
     build:
@@ -143,7 +133,7 @@ services:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # Servicio de actividades
+  # Activities Service
   cc_activities_ms:
     container_name: cc_activities_ms
     build:
@@ -162,7 +152,7 @@ services:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
 
-  # Servicio de Duelos
+  # Duels Service
   cc_duels_ms:
     build:
       context: ./duel_service
@@ -213,69 +203,132 @@ services:
     volumes:
       - ./websocket_manager:/app
     depends_on:
+      cc_broker:
+        condition: service_healthy
       cc_broker_init:
         condition: service_completed_successfully
-      cc_redis_cache:
-        condition: service_healthy
     networks:
       - courseclash-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload
 
-  # API Gateway
-  cc_ag:
-    container_name: cc_ag
-    build:
-      context: ./api_gateway
+  # # Courses Service (commented out)
+  # cc_courses_ms:
+  #   container_name: cc_courses_ms
+  #   build:
+  #     context: ./course_service
+  #   ports:
+  #     - "8001:8001"
+  #   environment:
+  #     - DATABASE_URL=mysql+pymysql://root:password@cc_courses_db:3306/courseClash
+  #     - JWT_SECRET=your_jwt_secret_key
+  #   volumes:
+  #     - ./course_service:/app
+  #   depends_on:
+  #     - cc_courses_db
+  #   networks:
+  #     - courseclash-network
+  #   command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+
+  # =========================================================================
+  # T4 DATA LAYER (Databases and Storage)
+  # =========================================================================
+
+  # MySQL Database (for Auth and Courses)
+  cc_authcourses_db:
+    container_name: cc_authcourses_db
+    image: mysql:8.0
     ports:
-      - '8080:8080'
+      - '3306:3306'
     environment:
-      - AUTH_SERVICE_URL=http://cc_auth_ms:8000
-      - COURSE_SERVICE_URL=http://cc_courses_ms:8001
-      - DUEL_SERVICE_URL=http://cc_duels_ms:8002
-      - ACTIVITIES_SERVICE_URL=http://cc_activities_ms:8003
-      - WEBSOCKET_SERVICE_URL=http://cc_websocket_manager:8004
-      - JWT_SECRET=your_jwt_secret_key
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=authcourses_db
     volumes:
-      - ./api_gateway:/app
-    depends_on:
-      - cc_auth_ms
-      - cc_activities_ms
-      - cc_duels_ms
-      - cc_websocket_manager
+      - auth_mysql_data:/var/lib/mysql
+      - ./mysql_auth:/docker-entrypoint-initdb.d
     networks:
       - courseclash-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # Frontend
-  cc_fe_web:
-    container_name: cc_fe_web
-    build:
-      context: ./frontend_web
-      dockerfile: Dockerfile
+  # MySQL Database (for Activities)
+  cc_activities_db:
+    container_name: cc_activities_db
+    image: mysql:8.0
     ports:
-      - '3000:3000'
+      - '3308:3306'
     environment:
-      - NODE_ENV=production
-      - API_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_API_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
-      - HOSTNAME=0.0.0.0
-      - PORT=3000
-    depends_on:
-      - cc_ag
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=activities_db
+    volumes:
+      - activities_mysql_data:/var/lib/mysql
+      - ./mysql_activities:/docker-entrypoint-initdb.d
+    networks:
+      - courseclash-network
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB Database (for Duels)
+  cc_duels_db:
+    image: mongo:latest
+    container_name: cc_duels_db
+    ports:
+      - '27018:27017'
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo_service/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
       - courseclash-network
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'wget --no-verbose --tries=1 --spider http://127.0.0.1:3000 || exit 1',
-        ]
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 40s
+
+  # Redis Cache Database
+  cc_redis_cache:
+    container_name: cc_redis_cache
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    environment:
+      - REDIS_PASSWORD=courseclash123
+    command: redis-server --requirepass courseclash123 --appendonly yes --save 60 1
+    volumes:
+      - redis_data:/data
+    networks:
+      - courseclash-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # # MySQL Database (for Courses service - commented out)
+  # cc_courses_db:
+  #   container_name: cc_courses_db
+  #   image: mysql:8.0
+  #   ports:
+  #     - "3307:3306"
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=password
+  #     - MYSQL_DATABASE=courseClash
+  #   volumes:
+  #     - courses_mysql_data:/var/lib/mysql
+  #     - ./mysql_courses:/docker-entrypoint-initdb.d
+  #   networks:
+  #     - courseclash-network
+  #   command: --default-authentication-plugin=mysql_native_password
 
 volumes:
   auth_mysql_data:
