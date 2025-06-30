@@ -215,9 +215,7 @@ services:
   cc_broker:
     container_name: cc_broker
     image: rabbitmq:4-management
-    ports:
-      - '5672:5672' # AMQP port
-      - '15672:15672' # Management UI
+
     environment:
       - RABBITMQ_DEFAULT_USER=courseclash
       - RABBITMQ_DEFAULT_PASS=courseclash123
@@ -281,8 +279,6 @@ services:
   cc_redis_cache:
     container_name: cc_redis_cache
     image: redis:7-alpine
-    # ports:
-    #   - '6379:6379'
     environment:
       - REDIS_PASSWORD=courseclash123
     command: redis-server --requirepass courseclash123 --appendonly yes --save 60 1
@@ -314,4 +310,3 @@ networks:
   private_network:
     driver: bridge
     internal: true
-
