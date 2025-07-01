@@ -51,8 +51,8 @@ ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 
-# Script para generar certificados si no existen (se ejecuta al iniciar)
-CMD ["sh", "-c", "mkdir -p /app/ssl && (test -f /app/ssl/server.key || openssl req -newkey rsa:2048 -x509 -nodes -keyout /app/ssl/server.key -new -out /app/ssl/server.crt -config /app/ssl/certdef.cnf -sha256 -days 365) && npm run dev"]
+# Clean cache and generate certificates, then start dev server using Docker-specific script
+CMD ["sh", "-c", "rm -rf .next 2>/dev/null; mkdir -p /app/ssl && npm run dev:docker"]
 
 # Production image (opcional, para build de producción)
 FROM base AS production

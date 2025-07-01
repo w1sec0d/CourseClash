@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "clean": "rm -rf .next node_modules/.cache 2>/dev/null || echo 'Cache cleanup completed'",
+    "clean:force": "sudo chown -R $USER:$USER .next 2>/dev/null && rm -rf .next node_modules/.cache || rm -rf .next node_modules/.cache 2>/dev/null || echo 'Some files require manual cleanup'",
     "generate:certs": "mkdir -p ssl && openssl req -newkey rsa:2048 -x509 -nodes -keyout ./ssl/server.key -new -out ./ssl/server.crt -config ./ssl/certdef.cnf -sha256 -days 365",
-    "dev": "test -f ssl/server.key || npm run generate:certs && next dev --experimental-https --experimental-https-key ./ssl/server.key --experimental-https-cert ./ssl/server.crt",
-    "dev:normal": "next dev --turbopack",
+    "dev": "npm run clean:force && (test -f ssl/server.key || npm run generate:certs) && next dev --experimental-https --experimental-https-key ./ssl/server.key --experimental-https-cert ./ssl/server.crt",
+    "dev:docker": "(test -f ssl/server.key || npm run generate:certs) && next dev --experimental-https --experimental-https-key ./ssl/server.key --experimental-https-cert ./ssl/server.crt",
+    "dev:http": "npm run clean:force && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
