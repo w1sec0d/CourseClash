@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "generate:certs": "mkdir -p ssl && openssl req -newkey rsa:2048 -x509 -nodes -keyout ./ssl/server.key -new -out ./ssl/server.crt -config ./ssl/certdef.cnf -sha256 -days 365",
+    "dev": "test -f ssl/server.key || npm run generate:certs && next dev --experimental-https --experimental-https-key ./ssl/server.key --experimental-https-cert ./ssl/server.crt",
+    "dev:normal": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

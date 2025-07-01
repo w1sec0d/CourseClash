@@ -1,0 +1,29 @@
+# Configuración de certificado SSL para desarrollo
+[req]
+default_bits = 2048          # Tamaño de clave RSA (estándar de seguridad actual)
+prompt = no                  # No hacer preguntas interactivas durante la generación
+default_md = sha256          # Función hash SHA-256 (más segura que SHA-1)
+x509_extensions = v3_req     # Habilitar extensiones X.509 v3 (versión moderna)
+distinguished_name = dn      # Referencia a la sección de identidad
+
+# Información de identidad del certificado
+[dn]
+C = CO                       # Country (País): Colombia
+ST = BOGOTA                  # State/Province (Estado/Provincia): Bogotá
+L = BOGOTA                   # Locality/City (Ciudad/Localidad): Bogotá
+O = UNAL                     # Organization (Organización): Universidad Nacional
+OU = UNAL-SWARCH             # Organizational Unit (Unidad): Software Architecture
+emailAddress = contactoseguridad@unal.edu.com  # Email de contacto técnico
+CN = localhost               # Common Name (Nombre común) - DOMINIO PRINCIPAL
+
+[v3_req]
+# Extensiones X.509 v3 - Configuraciones avanzadas
+# Permite funcionalidades modernas como Subject Alternative Names
+subjectAltName = @alt_names  # Referencia a nombres alternativos
+
+[alt_names]
+# Subject Alternative Names (SAN) - Nombres alternativos del servidor
+# Permite múltiples dominios/IPs en un solo certificado
+# IMPORTANTE: Los navegadores modernos requieren SAN para desarrollo local
+DNS.1 = *.localhost          # Wildcard para subdominios (app.localhost, api.localhost, etc.)
+DNS.2 = localhost            # Dominio principal exacto

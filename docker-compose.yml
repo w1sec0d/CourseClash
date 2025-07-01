@@ -9,10 +9,12 @@ services:
     build:
       context: ./frontend_web
       dockerfile: Dockerfile
+      target: development
     ports:
       - '3000:3000'
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
       - API_URL=http://cc_ag:8080
       - NEXT_PUBLIC_API_URL=http://cc_ag:8080
       - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
@@ -33,6 +35,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    volumes:
+      - ./frontend_web:/app
+      - /app/node_modules
+      - ./frontend_web/ssl:/app/ssl
+    command: ['npm', 'run', 'dev']
 
   # =========================================================================
   # T2 COMMUNICATION LAYER
