@@ -34,64 +34,64 @@ services:
       retries: 3
       start_period: 60s
 
-  cc_fe_web_2:
-    container_name: cc_fe_web_2
-    build:
-      context: ./frontend_web
-      dockerfile: Dockerfile
-    ports:
-      - '3001:3001'
-    environment:
-      - NODE_ENV=production
-      - API_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_API_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
-      - HOSTNAME=0.0.0.0
-      - PORT=3001
-    # depends_on:
-    #   - cc_ag
-    networks:
-      - public_network
-    healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'wget --no-verbose --tries=1 --spider http://127.0.0.1:3001 || exit 1',
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-  cc_fe_web_3:
-    container_name: cc_fe_web_3
-    build:
-      context: ./frontend_web
-      dockerfile: Dockerfile
-    ports:
-      - '3002:3002'
-    environment:
-      - NODE_ENV=production
-      - API_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_API_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
-      - HOSTNAME=0.0.0.0
-      - PORT=3002
-    # depends_on:
-    #   - cc_ag
-    networks:
-      - public_network
-    healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'wget --no-verbose --tries=1 --spider http://127.0.0.1:3002 || exit 1',
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+  # cc_fe_web_2:
+  #   container_name: cc_fe_web_2
+  #   build:
+  #     context: ./frontend_web
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - '3001:3001'
+  #   environment:
+  #     - NODE_ENV=production
+  #     - API_URL=http://cc_ag:8080
+  #     - NEXT_PUBLIC_API_URL=http://cc_ag:8080
+  #     - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
+  #     - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
+  #     - HOSTNAME=0.0.0.0
+  #     - PORT=3001
+  #   # depends_on:
+  #   #   - cc_ag
+  #   networks:
+  #     - public_network
+  #   healthcheck:
+  #     test:
+  #       [
+  #         'CMD-SHELL',
+  #         'wget --no-verbose --tries=1 --spider http://127.0.0.1:3001 || exit 1',
+  #       ]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 60s
+  # cc_fe_web_3:
+  #   container_name: cc_fe_web_3
+  #   build:
+  #     context: ./frontend_web
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - '3002:3002'
+  #   environment:
+  #     - NODE_ENV=production
+  #     - API_URL=http://cc_ag:8080
+  #     - NEXT_PUBLIC_API_URL=http://cc_ag:8080
+  #     - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
+  #     - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
+  #     - HOSTNAME=0.0.0.0
+  #     - PORT=3002
+  #   # depends_on:
+  #   #   - cc_ag
+  #   networks:
+  #     - public_network
+  #   healthcheck:
+  #     test:
+  #       [
+  #         'CMD-SHELL',
+  #         'wget --no-verbose --tries=1 --spider http://127.0.0.1:3002 || exit 1',
+  #       ]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 60s
   
 
   # =========================================================================
@@ -375,17 +375,17 @@ services:
   #   networks:
   #     - courseclash-network
   #   command: --default-authentication-plugin=mysql_native_password
-  fs_rp:
-    build: ./courseclash-ReverseProxy
-    ports:
-      - "80:80"
-    volumes:
-      - ./courseclash-ReverseProxy/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - cc_fe_web_2
-      - cc_fe_web_3
-      - cc_fe_web
-    restart: unless-stopped
+  # fs_rp:
+  #   build: ./courseclash-ReverseProxy
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./courseclash-ReverseProxy/nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - cc_fe_web_2
+  #     - cc_fe_web_3
+  #     - cc_fe_web
+  #   restart: unless-stopped
 
 volumes:
   auth_mysql_data:
