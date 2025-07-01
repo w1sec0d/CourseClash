@@ -26,4 +26,4 @@ subjectAltName = @alt_names  # Referencia a nombres alternativos
 # Permite múltiples dominios/IPs en un solo certificado
 # IMPORTANTE: Los navegadores modernos requieren SAN para desarrollo local
 DNS.1 = *.localhost          # Wildcard para subdominios (app.localhost, api.localhost, etc.)
-DNS.2 = localhost            # Dominio principal exacto
+DNS.2 = localhost            # Dominio principal exacto 
