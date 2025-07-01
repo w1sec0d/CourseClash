@@ -39,7 +39,6 @@ services:
       - ./frontend_web:/app
       - /app/node_modules
       - ./frontend_web/ssl:/app/ssl
-    command: ['npm', 'run', 'dev']
 
   # =========================================================================
   # T2 COMMUNICATION LAYER

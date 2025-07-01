@@ -13,7 +13,7 @@ ST = BOGOTA                  # State/Province (Estado/Provincia): Bogotá
 L = BOGOTA                   # Locality/City (Ciudad/Localidad): Bogotá
 O = UNAL                     # Organization (Organización): Universidad Nacional
 OU = UNAL-SWARCH             # Organizational Unit (Unidad): Software Architecture
-emailAddress = contactoseguridad@unal.edu.com  # Email de contacto técnico
+emailAddress = contactoseguridad@unal.edu.co  # Email de contacto técnico
 CN = localhost               # Common Name (Nombre común) - DOMINIO PRINCIPAL
 
 [v3_req]
