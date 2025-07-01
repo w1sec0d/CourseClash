@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "⏳ Esperando a que arranquen los servicios…"
-sleep 15
+echo "🚀 Iniciando test de segmentación de red"
+echo "============================================="
 
 # 1) Servicios públicos – deben responder en localhost
 PUBLIC_SERVICES=(
