@@ -114,6 +114,7 @@ services:
       - JWT_SECRET=your_jwt_secret_key
     volumes:
       - ./api_gateway:/app
+      - ./logs/uvicorn:/var/log/uvicorn
     depends_on:
       - cc_auth_ms
       - cc_duels_ms
@@ -121,7 +122,7 @@ services:
     networks:
       - private_network
       - public_network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload 
 
   # RabbitMQ Message Broker
   cc_broker:
@@ -348,6 +349,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+      
   fail2ban:
     image: crazymax/fail2ban:latest
     container_name: fail2ban
@@ -355,9 +357,9 @@ services:
     restart: unless-stopped
     network_mode: host
     volumes:
-      - /var/log:/var/log:ro
+      - ./logs/uvicorn:/var/log/uvicorn:ro
+      - ./fail2ban/filter.d:/data/filter.d:ro
       - ./fail2ban/jail.d:/data/jail.d:ro
-      - ./fail2ban/filter.d/drop_pub2priv.conf:/data/filter.d/drop_pub2priv.conf:ro
 
 
   # # MySQL Database (for Courses service - commented out)
