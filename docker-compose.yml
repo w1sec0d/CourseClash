@@ -8,6 +8,8 @@ services:
     build:
       context: ./frontend_web
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_CUSTOM_TEXT: "Servidor 1"
     ports:
       - '3000:3000'
     environment:
@@ -16,6 +18,7 @@ services:
       - NEXT_PUBLIC_API_URL=http://cc_ag:8080
       - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
       - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - NEXT_PUBLIC_CUSTOM_TEXT=Servidor 1
       - HOSTNAME=0.0.0.0
       - PORT=3000
     networks:
@@ -32,6 +35,8 @@ services:
     build:
       context: ./frontend_web
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_CUSTOM_TEXT: "Servidor 2"
     ports:
       - '3001:3001'
     environment:
@@ -40,6 +45,7 @@ services:
       - NEXT_PUBLIC_API_URL=http://cc_ag:8080
       - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
       - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - NEXT_PUBLIC_CUSTOM_TEXT=Servidor 2
       - HOSTNAME=0.0.0.0
       - PORT=3001
     networks:
@@ -56,6 +62,8 @@ services:
     build:
       context: ./frontend_web
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_CUSTOM_TEXT: "Servidor 3"
     ports:
       - '3002:3002'
     environment:
@@ -64,6 +72,7 @@ services:
       - NEXT_PUBLIC_API_URL=http://cc_ag:8080
       - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
       - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - NEXT_PUBLIC_CUSTOM_TEXT=Servidor 3
       - HOSTNAME=0.0.0.0
       - PORT=3002
     networks:
@@ -272,16 +281,16 @@ services:
   # =========================================================================
 
   cc_rp:
-    build: ./courseclash-ReverseProxy
+    build:
+      context: ./ReverseProxy
     ports:
       - "80:80"
     volumes:
-      - ./courseclash-ReverseProxy/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ReverseProxy/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - cc_fe_web
       - cc_fe_web_2
       - cc_fe_web_3
-    restart: unless-stopped
     networks:
       - public_network
 

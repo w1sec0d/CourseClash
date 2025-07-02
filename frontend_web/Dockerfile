@@ -7,7 +7,7 @@ WORKDIR /app
 # Install dependencies only when needed
 FROM base AS deps
 
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed
+# Check https://github.com/nodejs/docker-node/tree/... to understand why libc6-compat might be needed
 RUN apk add --no-cache libc6-compat
 
 # Copy package files
@@ -28,6 +28,10 @@ COPY . .
 
 # Disable Next.js telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build argument for custom server name
+ARG NEXT_PUBLIC_CUSTOM_TEXT
+ENV NEXT_PUBLIC_CUSTOM_TEXT=$NEXT_PUBLIC_CUSTOM_TEXT
 
 # Build the application
 RUN npm run build
@@ -51,6 +55,10 @@ RUN mkdir -p /app/.next/cache && chown -R nextjs:nodejs /app
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Set environment variable again in runtime (optional, for runtime inspection/logging)
+ARG NEXT_PUBLIC_CUSTOM_TEXT
+ENV NEXT_PUBLIC_CUSTOM_TEXT=$NEXT_PUBLIC_CUSTOM_TEXT
 
 # Use non-root user for better security
 USER nextjs
