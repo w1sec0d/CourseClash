@@ -4,12 +4,22 @@ import Button from '../components/Button';
 import FeatureCard from '../components/FeatureCard';
 
 export default function Page() {
+  // Get the server identifier from environment variable
+  const serverId = process.env.NEXT_PUBLIC_CUSTOM_TEXT || 'Unknown Server';
+
   return (
     <div>
       {/* Sección de inicio */}
       <section className='bg-emerald-50 relative overflow-hidden' id='inicio'>
         {/* Contenido principal de la sección */}
-        <div className='py-12 md:py-20 lg:py-24 mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl md:grid-cols-2 items-center grid grid-cols-1 gap-8'>
+        <div className='bg-emerald-700 text-white shadow-lg max-w-[300px] mx-auto mt-4 rounded-2xl'>
+          <div className='container mx-auto px-4 py-2'>
+            <p className='text-sm text-center'>
+              Has sido asignado a: <span className='font-bold'>{serverId}</span>
+            </p>
+          </div>
+        </div>
+        <div className='py-6 pb-12 md:pb-20 lg:pb-24 mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl md:grid-cols-2 items-center grid grid-cols-1 gap-8'>
           {/* Texto principal */}
           <div className='text-center md:text-left'>
             <p className='text-4xl md:text-5xl lg:text-6xl font-bold text-emerald-800 leading-tight'>
