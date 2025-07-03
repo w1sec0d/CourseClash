@@ -29,9 +29,12 @@ COPY . .
 # Disable Next.js telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build argument for custom server name
+# Build arguments for custom server info
 ARG NEXT_PUBLIC_CUSTOM_TEXT
 ENV NEXT_PUBLIC_CUSTOM_TEXT=$NEXT_PUBLIC_CUSTOM_TEXT
+
+ARG NEXT_PUBLIC_PORT
+ENV NEXT_PUBLIC_PORT=$NEXT_PUBLIC_PORT
 
 # Build the application
 RUN npm run build
@@ -56,9 +59,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Set environment variable again in runtime (optional, for runtime inspection/logging)
+# Set environment variables again in runtime (optional, for runtime inspection/logging)
 ARG NEXT_PUBLIC_CUSTOM_TEXT
 ENV NEXT_PUBLIC_CUSTOM_TEXT=$NEXT_PUBLIC_CUSTOM_TEXT
+
+ARG NEXT_PUBLIC_PORT
+ENV NEXT_PUBLIC_PORT=$NEXT_PUBLIC_PORT
 
 # Use non-root user for better security
 USER nextjs

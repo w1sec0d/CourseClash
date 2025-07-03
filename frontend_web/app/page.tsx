@@ -7,15 +7,23 @@ export default function Page() {
   // Get the server identifier from environment variable
   const serverId = process.env.NEXT_PUBLIC_CUSTOM_TEXT || 'Unknown Server';
 
+  // Get the port from environment variable (use NEXT_PUBLIC_PORT)
+  const serverPort = process.env.NEXT_PUBLIC_PORT || '3000';
+
+  console.log({ serverPort });
+
   return (
     <div>
       {/* Sección de inicio */}
       <section className='bg-emerald-50 relative overflow-hidden' id='inicio'>
         {/* Contenido principal de la sección */}
-        <div className='bg-emerald-700 text-white shadow-lg max-w-[300px] mx-auto mt-4 rounded-2xl'>
+        <div className='bg-emerald-700 text-white shadow-lg max-w-[400px] mx-auto mt-4 rounded-2xl'>
           <div className='container mx-auto px-4 py-2'>
             <p className='text-sm text-center'>
               Has sido asignado a: <span className='font-bold'>{serverId}</span>
+            </p>
+            <p className='text-xs text-center text-emerald-100'>
+              Puerto: <span className='font-bold'>{serverPort}</span>
             </p>
           </div>
         </div>

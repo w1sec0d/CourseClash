@@ -9,7 +9,8 @@ services:
       context: ./frontend_web
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_CUSTOM_TEXT: "Servidor 1"
+        NEXT_PUBLIC_CUSTOM_TEXT: 'Servidor 1'
+        NEXT_PUBLIC_PORT: '3000'
     ports:
       - '3000:3000'
     environment:
@@ -24,7 +25,11 @@ services:
     networks:
       - public_network
     healthcheck:
-      test: ['CMD-SHELL', 'wget --no-verbose --tries=1 --spider http://127.0.0.1:3000 || exit 1']
+      test:
+        [
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider http://127.0.0.1:3000 || exit 1',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -36,7 +41,8 @@ services:
       context: ./frontend_web
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_CUSTOM_TEXT: "Servidor 2"
+        NEXT_PUBLIC_CUSTOM_TEXT: 'Servidor 2'
+        NEXT_PUBLIC_PORT: '3001'
     ports:
       - '3001:3001'
     environment:
@@ -51,7 +57,11 @@ services:
     networks:
       - public_network
     healthcheck:
-      test: ['CMD-SHELL', 'wget --no-verbose --tries=1 --spider http://127.0.0.1:3001 || exit 1']
+      test:
+        [
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider http://127.0.0.1:3001 || exit 1',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -63,7 +73,8 @@ services:
       context: ./frontend_web
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_CUSTOM_TEXT: "Servidor 3"
+        NEXT_PUBLIC_CUSTOM_TEXT: 'Servidor 3'
+        NEXT_PUBLIC_PORT: '3002'
     ports:
       - '3002:3002'
     environment:
@@ -78,7 +89,11 @@ services:
     networks:
       - public_network
     healthcheck:
-      test: ['CMD-SHELL', 'wget --no-verbose --tries=1 --spider http://127.0.0.1:3002 || exit 1']
+      test:
+        [
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider http://127.0.0.1:3002 || exit 1',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -188,7 +203,15 @@ services:
     networks:
       - private_network
     healthcheck:
-      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:8002/swagger/index.html']
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:8002/swagger/index.html',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -284,7 +307,7 @@ services:
     build:
       context: ./ReverseProxy
     ports:
-      - "80:80"
+      - '80:80'
     volumes:
       - ./ReverseProxy/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
