@@ -1,8 +1,8 @@
-import { gql } from '@apollo/client';
-import { cookies } from 'next/headers';
-import { createSSRApolloClient } from './apollo-client';
-import { setContext } from '@apollo/client/link/context';
-import { ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
+import { gql } from "@apollo/client";
+import { cookies } from "next/headers";
+import { createSSRApolloClient } from "./apollo-client";
+import { setContext } from "@apollo/client/link/context";
+import { ApolloClient, InMemoryCache, HttpLink, from } from "@apollo/client";
 
 // Tipos para los datos
 export interface DuelCategory {
@@ -31,15 +31,15 @@ function createSSRApolloClientWithAuth() {
   const httpLink = new HttpLink({
     uri: process.env.NEXT_PUBLIC_API_GATEWAY_URL
       ? `${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/api/graphql`
-      : 'http://localhost:8080/api/graphql',
+      : "http://localhost/api/graphql",
     fetch,
   });
-  console.log('🔧 Using API URL:', process.env.NEXT_PUBLIC_API_GATEWAY_URL);
+  console.log("🔧 Using API URL:", process.env.NEXT_PUBLIC_API_GATEWAY_URL);
 
   const authLink = setContext(async (_, { headers }) => {
     try {
       const cookieStore = await cookies();
-      const authToken = cookieStore.get('auth_token'); // Usar el nombre correcto del token
+      const authToken = cookieStore.get("auth_token"); // Usar el nombre correcto del token
       const token = authToken?.value;
 
       return {
@@ -49,7 +49,7 @@ function createSSRApolloClientWithAuth() {
         },
       };
     } catch (error) {
-      console.log('Error setting auth context:', error);
+      console.log("Error setting auth context:", error);
       return { headers };
     }
   });
@@ -106,19 +106,19 @@ export async function getUserFromTokenSSR(): Promise<{
 }> {
   try {
     const cookieStore = await cookies();
-    const authToken = cookieStore.get('auth_token');
+    const authToken = cookieStore.get("auth_token");
 
     if (!authToken?.value) {
-      console.log('⚠️ No auth token found in cookies');
+      console.log("⚠️ No auth token found in cookies");
       return { userId: null, userName: null, userData: null };
     }
 
-    console.log('🔑 Auth token found, fetching user data...');
+    console.log("🔑 Auth token found, fetching user data...");
     const client = createSSRApolloClientWithAuth();
 
     const { data } = await client.query({
       query: ME_QUERY,
-      errorPolicy: 'all',
+      errorPolicy: "all",
     });
 
     const userData = data?.me;
@@ -134,52 +134,52 @@ export async function getUserFromTokenSSR(): Promise<{
         userData,
       };
     } else {
-      console.log('⚠️ No user data found (token might be expired)');
+      console.log("⚠️ No user data found (token might be expired)");
       return { userId: null, userName: null, userData: null };
     }
   } catch (error) {
-    console.log('❌ Error fetching user data via SSR:', error);
+    console.log("❌ Error fetching user data via SSR:", error);
     return { userId: null, userName: null, userData: null };
   }
 }
 
 export async function getDuelCategoriesSSR(): Promise<DuelCategory[]> {
   try {
-    console.log('🔍 Getting duel categories via SSR...');
+    console.log("🔍 Getting duel categories via SSR...");
     const client = createSSRApolloClient();
 
     const { data } = await client.query({
       query: GET_DUEL_CATEGORIES_QUERY,
-      errorPolicy: 'all',
+      errorPolicy: "all",
     });
 
     const categories = data?.getDuelCategories || [];
     console.log(`✅ SSR Categories loaded: ${categories.length}`);
     return categories;
   } catch (error) {
-    console.log('❌ SSR Categories failed, using fallback:', error);
+    console.log("❌ SSR Categories failed, using fallback:", error);
 
     // Datos mock como fallback solo si el GraphQL falla
     const mockCategories: DuelCategory[] = [
       {
-        name: 'matematica',
-        displayName: 'Matemática',
-        description: 'Desafíos de cálculo, álgebra y geometría',
+        name: "matematica",
+        displayName: "Matemática",
+        description: "Desafíos de cálculo, álgebra y geometría",
       },
       {
-        name: 'historia',
-        displayName: 'Historia',
-        description: 'Preguntas sobre eventos históricos',
+        name: "historia",
+        displayName: "Historia",
+        description: "Preguntas sobre eventos históricos",
       },
       {
-        name: 'geografia',
-        displayName: 'Geografía',
-        description: 'Conocimientos sobre países y continentes',
+        name: "geografia",
+        displayName: "Geografía",
+        description: "Conocimientos sobre países y continentes",
       },
       {
-        name: 'ciencias',
-        displayName: 'Ciencias',
-        description: 'Conceptos generales de ciencias naturales',
+        name: "ciencias",
+        displayName: "Ciencias",
+        description: "Conceptos generales de ciencias naturales",
       },
     ];
 
@@ -196,7 +196,7 @@ export async function getPlayerDataSSR(
       // Si no hay playerId, intentar obtenerlo del token
       const { userId } = await getUserFromTokenSSR();
       if (!userId) {
-        console.log('⚠️ No player ID available for SSR');
+        console.log("⚠️ No player ID available for SSR");
         return null; // No crear mock data si no hay ID real
       }
       playerId = userId;
@@ -208,7 +208,7 @@ export async function getPlayerDataSSR(
     const { data } = await client.query({
       query: GET_PLAYER_QUERY,
       variables: { playerId },
-      errorPolicy: 'all',
+      errorPolicy: "all",
     });
 
     const playerData = data?.getPlayer;
@@ -218,11 +218,11 @@ export async function getPlayerDataSSR(
       );
       return playerData;
     } else {
-      console.log('⚠️ No player data found in server');
+      console.log("⚠️ No player data found in server");
       return null; // El componente manejará esto como "sin ELO"
     }
   } catch (error) {
-    console.log('❌ SSR Player data failed:', error);
+    console.log("❌ SSR Player data failed:", error);
     return null; // El componente mostrará "Juega tu primer duelo"
   }
 }

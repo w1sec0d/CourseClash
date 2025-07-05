@@ -3,23 +3,23 @@ import {
   InMemoryCache,
   createHttpLink,
   from,
-} from '@apollo/client';
-import { setContext } from '@apollo/client/link/context';
-import { onError } from '@apollo/client/link/error';
-import { getAuthToken, clearAuthTokens } from '@/lib/cookie-utils';
+} from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
+import { onError } from "@apollo/client/link/error";
+import { getAuthToken, clearAuthTokens } from "@/lib/cookie-utils";
 
 // HTTP Link base
 const httpLink = createHttpLink({
   uri: process.env.NEXT_PUBLIC_API_GATEWAY_URL
     ? `${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/api/graphql`
-    : 'http://localhost:8080/api/graphql',
-  credentials: 'include',
+    : "http://localhost/api/graphql",
+  credentials: "include",
 });
 
 // Auth Link - Añade automáticamente el token a las peticiones desde cookies
 const authLink = setContext((_, { headers }) => {
   // Solo en el cliente
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const token = getAuthToken();
     return {
       headers: {
@@ -45,11 +45,11 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     console.error(`Network error: ${networkError}`);
 
     // Manejo específico de errores de autenticación
-    if ('statusCode' in networkError && networkError.statusCode === 401) {
+    if ("statusCode" in networkError && networkError.statusCode === 401) {
       // Token expirado o inválido
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         clearAuthTokens(); // Usar utilidad de cookies
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
     }
   }
@@ -64,17 +64,17 @@ const createApolloCache = () =>
           fullName: {
             // Transforma automáticamente entre camelCase y snake_case
             read(existing, { readField }) {
-              return existing || readField('full_name');
+              return existing || readField("full_name");
             },
           },
           createdAt: {
             read(existing, { readField }) {
-              return existing || readField('created_at');
+              return existing || readField("created_at");
             },
           },
           updatedAt: {
             read(existing, { readField }) {
-              return existing || readField('updated_at');
+              return existing || readField("updated_at");
             },
           },
         },
@@ -89,14 +89,14 @@ export const apolloClient = new ApolloClient({
   cache: createApolloCache(),
   defaultOptions: {
     watchQuery: {
-      errorPolicy: 'all',
+      errorPolicy: "all",
     },
     query: {
-      errorPolicy: 'all',
+      errorPolicy: "all",
     },
   },
   connectToDevTools: true,
-  ssrMode: typeof window === 'undefined',
+  ssrMode: typeof window === "undefined",
 });
 
 // Cliente Apollo para SSR (sin auth link para evitar errores de localStorage)
@@ -107,10 +107,10 @@ export const createSSRApolloClient = () => {
     ssrMode: true,
     defaultOptions: {
       watchQuery: {
-        errorPolicy: 'all',
+        errorPolicy: "all",
       },
       query: {
-        errorPolicy: 'all',
+        errorPolicy: "all",
       },
     },
   });
