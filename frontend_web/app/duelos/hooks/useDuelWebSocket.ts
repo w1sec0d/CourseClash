@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from 'react';
 
 interface UseDuelWebSocketReturn {
   wsConnection: WebSocket | null;
@@ -20,7 +20,7 @@ export const useDuelWebSocket = (): UseDuelWebSocketReturn => {
         try {
           if (isConnecting) {
             console.log(`[${userId}] Already connecting to duel, skipping...`);
-            reject(new Error("Connection already in progress"));
+            reject(new Error('Connection already in progress'));
             return;
           }
 
@@ -38,10 +38,10 @@ export const useDuelWebSocket = (): UseDuelWebSocketReturn => {
             return null;
           });
 
-          // Updated to use WebSocket Manager through nginx
-          const wsUrl = `ws://localhost/ws/duels/${duelId}/${userId}`;
+          // Updated to use WebSocket Manager through nginx (Canal Seguro)
+          const wsUrl = `wss://localhost/ws/duels/${duelId}/${userId}`;
           console.log(
-            `[${userId}] Connecting to WebSocket Manager URL: ${wsUrl}`
+            `[${userId}] Connecting to WebSocket Manager URL (WSS): ${wsUrl}`
           );
 
           const ws = new WebSocket(wsUrl);
@@ -59,9 +59,9 @@ export const useDuelWebSocket = (): UseDuelWebSocketReturn => {
 
           ws.onerror = (error) => {
             console.error(`[${userId}] Duel WebSocket error:`, error);
-            setConnectionError("Error en la conexión WebSocket");
+            setConnectionError('Error en la conexión WebSocket');
             setIsConnecting(false);
-            reject(new Error("WebSocket connection failed"));
+            reject(new Error('WebSocket connection failed'));
           };
 
           ws.onclose = (event) => {
@@ -72,12 +72,12 @@ export const useDuelWebSocket = (): UseDuelWebSocketReturn => {
             setIsConnecting(false);
 
             if (event.code !== 1000) {
-              setConnectionError("Conexión perdida con el duelo");
+              setConnectionError('Conexión perdida con el duelo');
             }
           };
         } catch (error) {
           console.error(`[${userId}] Error creating duel WebSocket:`, error);
-          setConnectionError("Error al crear conexión WebSocket");
+          setConnectionError('Error al crear conexión WebSocket');
           setIsConnecting(false);
           reject(error);
         }
@@ -87,10 +87,10 @@ export const useDuelWebSocket = (): UseDuelWebSocketReturn => {
   );
 
   const disconnect = useCallback(() => {
-    console.log("Disconnecting duel WebSocket...");
+    console.log('Disconnecting duel WebSocket...');
     setWsConnection((prevConnection) => {
       if (prevConnection) {
-        prevConnection.close(1000, "User requested disconnect");
+        prevConnection.close(1000, 'User requested disconnect');
       }
       return null;
     });

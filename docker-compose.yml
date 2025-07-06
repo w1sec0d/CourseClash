@@ -1,20 +1,33 @@
-version: '3.9'
 services:
   # =========================================================================
   # NGINX Reverse Proxy
   # =========================================================================
   cc_rp:
     container_name: cc_rp
-    image: nginx:alpine
+    build:
+      context: ./reverse_proxy_service
+      dockerfile: Dockerfile
     ports:
-      - '80:80'
-    volumes:
-      - ./reverse_proxy_service/nginx.conf:/etc/nginx/nginx.conf:ro
+      - '80:80' # HTTP (para redirects)
+      - '443:443' # HTTPS (Canal Seguro principal)
     depends_on:
       - cc_fe_web
       - cc_ag
     networks:
       - courseclash-network
+    environment:
+      - NGINX_SSL_ENABLED=true
+      - SSL_AUTO_GENERATE=true
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider --no-check-certificate https://127.0.0.1:443/health || exit 1',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
 
   # =========================================================================
   # T1 PRESENTATION LAYER
@@ -27,8 +40,8 @@ services:
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost/api
-      - NEXT_PUBLIC_API_GATEWAY_URL=http://localhost
+      - NEXT_PUBLIC_API_URL=https://localhost/api
+      - NEXT_PUBLIC_API_GATEWAY_URL=https://localhost
     depends_on:
       - cc_ag
     networks:
