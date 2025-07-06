@@ -45,7 +45,8 @@ services:
     depends_on:
       - cc_ag
     networks:
-      - courseclash-network
+      - public_network
+
     healthcheck:
       test:
         [
@@ -69,20 +70,22 @@ services:
       - '8080'
     environment:
       - AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - COURSE_SERVICE_URL=http://cc_courses_ms:8001
       - DUEL_SERVICE_URL=http://cc_duels_ms:8002
       - ACTIVITIES_SERVICE_URL=http://cc_activities_ms:8003
       - WEBSOCKET_SERVICE_URL=http://cc_websocket_manager:8004
       - JWT_SECRET=your_jwt_secret_key
     volumes:
       - ./api_gateway:/app
+      - ./logs/uvicorn:/var/log/uvicorn
     depends_on:
       - cc_auth_ms
-      - cc_activities_ms
       - cc_duels_ms
       - cc_websocket_manager
     networks:
-      - courseclash-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+      - private_network
+      - public_network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload 
 
   cc_broker:
     container_name: cc_broker
@@ -99,7 +102,8 @@ services:
       - ./broker_service/definitions.json:/etc/rabbitmq/definitions.json:ro
       - ./broker_service/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     networks:
-      - courseclash-network
+      - private_network
+
     healthcheck:
       test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
       interval: 30s
@@ -117,7 +121,8 @@ services:
       cc_broker:
         condition: service_healthy
     networks:
-      - courseclash-network
+      - private_network
+
     command: sh /init_script.sh
     restart: 'no'
 
@@ -146,7 +151,7 @@ services:
       cc_authcourses_db:
         condition: service_healthy
     networks:
-      - courseclash-network
+      - private_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   cc_activities_ms:
@@ -164,11 +169,12 @@ services:
       cc_activities_db:
         condition: service_healthy
     networks:
-      - courseclash-network
+      - private_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
 
   cc_duels_ms:
     container_name: cc_duels_ms
+    restart: unless-stopped
     build:
       context: ./duel_service
       dockerfile: Dockerfile
@@ -184,7 +190,7 @@ services:
       cc_broker_init:
         condition: service_completed_successfully
     networks:
-      - courseclash-network
+      - private_network
     healthcheck:
       test:
         [
@@ -219,7 +225,8 @@ services:
       cc_broker_init:
         condition: service_completed_successfully
     networks:
-      - courseclash-network
+      - private_network
+      - public_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload
 
   # =========================================================================
@@ -229,8 +236,8 @@ services:
   cc_authcourses_db:
     container_name: cc_authcourses_db
     image: mysql:8.0
-    ports:
-      - '3306:3306'
+    # ports:
+    #   - '3306:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=authcourses_db
@@ -238,7 +245,7 @@ services:
       - auth_mysql_data:/var/lib/mysql
       - ./mysql_auth:/docker-entrypoint-initdb.d
     networks:
-      - courseclash-network
+      - private_network
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
@@ -250,8 +257,8 @@ services:
   cc_activities_db:
     container_name: cc_activities_db
     image: mysql:8.0
-    ports:
-      - '3308:3306'
+    # ports:
+    #   - '3308:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=activities_db
@@ -259,7 +266,7 @@ services:
       - activities_mysql_data:/var/lib/mysql
       - ./mysql_activities:/docker-entrypoint-initdb.d
     networks:
-      - courseclash-network
+      - private_network
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
@@ -276,7 +283,7 @@ services:
       - mongo_data:/data/db
       - ./mongo_service/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
-      - courseclash-network
+      - private_network
     healthcheck:
       test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
       interval: 30s
@@ -287,21 +294,58 @@ services:
   cc_redis_cache:
     container_name: cc_redis_cache
     image: redis:7-alpine
-    ports:
-      - '6379:6379'
     environment:
       - REDIS_PASSWORD=courseclash123
     command: redis-server --requirepass courseclash123 --appendonly yes --save 60 1
     volumes:
       - redis_data:/data
     networks:
-      - courseclash-network
+      - private_network
     healthcheck:
       test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+      
+  fail2ban:
+    image: crazymax/fail2ban:latest
+    container_name: fail2ban
+    privileged: true
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./logs/uvicorn:/var/log/uvicorn:ro
+      - ./fail2ban/filter.d:/data/filter.d:ro
+      - ./fail2ban/jail.d:/data/jail.d:ro
+
+
+  # # MySQL Database (for Courses service - commented out)
+  # cc_courses_db:
+  #   container_name: cc_courses_db
+  #   image: mysql:8.0
+  #   ports:
+  #     - "3307:3306"
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=password
+  #     - MYSQL_DATABASE=courseClash
+  #   volumes:
+  #     - courses_mysql_data:/var/lib/mysql
+  #     - ./mysql_courses:/docker-entrypoint-initdb.d
+  #   networks:
+  #     - courseclash-network
+  #   command: --default-authentication-plugin=mysql_native_password
+  # fs_rp:
+  #   build: ./courseclash-ReverseProxy
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./courseclash-ReverseProxy/nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - cc_fe_web_2
+  #     - cc_fe_web_3
+  #     - cc_fe_web
+  #   restart: unless-stopped
 
 volumes:
   auth_mysql_data:
@@ -310,6 +354,12 @@ volumes:
   rabbitmq_data:
   redis_data:
 
+# networks:
+#   courseclash-network:
+#     driver: bridge
 networks:
-  courseclash-network:
+  public_network:
     driver: bridge
+  private_network:
+    driver: bridge
+    internal: true
