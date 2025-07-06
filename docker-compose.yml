@@ -14,7 +14,7 @@ services:
       - cc_fe_web
       - cc_ag
     networks:
-      - courseclash-network
+      - public_network
     environment:
       - NGINX_SSL_ENABLED=true
       - SSL_AUTO_GENERATE=true
@@ -85,7 +85,7 @@ services:
     networks:
       - private_network
       - public_network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload 
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 
   cc_broker:
     container_name: cc_broker
@@ -307,7 +307,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-      
+
   fail2ban:
     image: crazymax/fail2ban:latest
     container_name: fail2ban
@@ -318,7 +318,6 @@ services:
       - ./logs/uvicorn:/var/log/uvicorn:ro
       - ./fail2ban/filter.d:/data/filter.d:ro
       - ./fail2ban/jail.d:/data/jail.d:ro
-
 
   # # MySQL Database (for Courses service - commented out)
   # cc_courses_db:
