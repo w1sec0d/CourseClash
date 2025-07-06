@@ -1,5 +1,4 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 from contextlib import contextmanager
@@ -76,8 +75,8 @@ ReadSessionLocal = sessionmaker(
     expire_on_commit=False
 )
 
-# Base class for models
-Base = declarative_base()
+# Import Base from the main database module to avoid conflicts
+from ..database import Base
 
 # ============================================================================
 # CONTEXT MANAGERS PARA MANEJO DE SESIONES

@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from app.models.activity import Activity, ActivityType
 from app.schemas.activity import ActivityCreate, ActivityUpdate, ActivityList, ActivityResponse, ActivitySchema, CommentSchema
 from app.services.cache_service import CacheService
-from app.database.config import get_master_session, get_read_session, db_router
+from app.db_config.config import get_master_session, get_read_session, db_router
 
 logger = logging.getLogger(__name__)
 
@@ -352,7 +352,7 @@ class OptimizedActivityService:
         """
         Obtener métricas de rendimiento del servicio
         """
-        from app.database.config import get_database_stats
+        from app.db_config.config import get_database_stats
         
         cache_stats = self.cache.get_cache_stats()
         db_stats = get_database_stats()
@@ -370,7 +370,7 @@ class OptimizedActivityService:
         """
         Verificar salud del servicio
         """
-        from app.database.config import check_database_health
+        from app.db_config.config import check_database_health
         
         db_health = check_database_health()
         
