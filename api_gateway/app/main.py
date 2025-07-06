@@ -13,7 +13,8 @@ Estructura:
 - /health: Endpoint de verificación de estado del servicio
 """
 
-import os
+import os, json
+from starlette.responses import Response as StarletteResponse
 from typing import Any, Dict
 
 # Configuración de logging
@@ -22,13 +23,15 @@ from app.core.middleware import setup_middlewares
 
 # Importar esquema de GraphQL
 from app.graphql.schema import schema
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from strawberry.fastapi import GraphQLRouter
 
 # Configurar el logger
 logger = setup_logger("courseclash.api")
+
+
 
 # Crear la aplicación FastAPI
 app = FastAPI(
@@ -103,6 +106,52 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
 )
+
+LOG_FILE = "/var/log/uvicorn/access.log"
+#Aseguración de que la carpeta de logs exista
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+
+@app.middleware("http")
+async def log_unauthorized(request: Request, call_next):
+    # 1) Ejecuta la petición
+    response = await call_next(request)
+    status_code = response.status_code
+
+    # 2) Caso A: 401/403 “reales”
+    if status_code in (401, 403):
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(f"UNAUTHORIZED {request.client.host} "
+                    f"{request.method} {request.url.path} {status_code}\n")
+        return response
+
+    # 3) Caso B: GraphQL → inspecciona siempre el body_iterator
+    if request.url.path.startswith("/api/graphql") and status_code == 200:
+        # 3.1) Acumula todo el contenido
+        body_bytes = b""
+        async for chunk in response.body_iterator:
+            body_bytes += chunk
+
+        # 3.2) Busca tu tipo AuthError dentro de data.login
+        try:
+            payload = json.loads(body_bytes)
+            login = payload.get("data", {}).get("login")
+            if login and login.get("__typename") == "AuthError":
+                with open(LOG_FILE, "a", encoding="utf-8") as f:
+                    f.write(f"UNAUTHORIZED {request.client.host} "
+                            f"{request.method} {request.url.path} 401\n")
+        except json.JSONDecodeError:
+            pass
+
+        # 3.3) Reconstruye la respuesta para el cliente
+        return StarletteResponse(
+            content=body_bytes,
+            status_code=status_code,
+            headers=dict(response.headers),
+            media_type=response.media_type,
+        )
+
+    # 4) Resto de casos
+    return response
 
 # Configurar middlewares personalizados
 setup_middlewares(app)
