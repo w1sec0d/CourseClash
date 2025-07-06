@@ -157,6 +157,64 @@ GradeResult = strawberry.union("GradeResult", (GradeSuccess, GradeError))
 #Union para la respuesta de los comentarios
 CommentResult = strawberry.union("CommentResult", (CommentSuccess, CommentError))
 
+def _get_sample_activities(course_id: str) -> "ActivitiesResult":
+    """Devuelve actividades de muestra para el curso especificado"""
+    sample_activities = []
+    
+    # Actividades de muestra para el curso de Matemáticas Avanzadas (curso_id = "1")
+    if course_id == "1":
+        sample_activities = [
+            Activity(
+                id=1,
+                courseId=1,
+                title="Examen Parcial - Derivadas",
+                description="Evaluación de conocimientos sobre derivadas y sus aplicaciones",
+                activityType=TypeActivity.QUIZ,
+                dueDate=datetime(2024, 3, 15, 23, 59, 59),
+                createdAt=datetime(2024, 2, 20, 10, 0, 0),
+                createdBy=1,
+                comments=[]
+            ),
+            Activity(
+                id=2,
+                courseId=1,
+                title="Tarea: Ejercicios de Integrales",
+                description="Resolver los ejercicios 1-15 del capítulo 4. Entregar en formato PDF.",
+                activityType=TypeActivity.TASK,
+                dueDate=datetime(2024, 3, 20, 23, 59, 59),
+                createdAt=datetime(2024, 2, 25, 14, 30, 0),
+                createdBy=1,
+                comments=[]
+            ),
+            Activity(
+                id=3,
+                courseId=1,
+                title="Anuncio: Cambio de Horario",
+                description="La clase del viernes 22 de marzo se trasladará al aula 205. Hora: 10:00 AM",
+                activityType=TypeActivity.ANNOUNCEMENT,
+                createdAt=datetime(2024, 3, 1, 9, 0, 0),
+                createdBy=1,
+                comments=[]
+            )
+        ]
+    else:
+        # Actividades genéricas para otros cursos
+        sample_activities = [
+            Activity(
+                id=100,
+                courseId=int(course_id),
+                title="Actividad de Ejemplo",
+                description="Esta es una actividad de muestra para el curso",
+                activityType=TypeActivity.TASK,
+                dueDate=datetime(2024, 4, 15, 23, 59, 59),
+                createdAt=datetime(2024, 3, 1, 10, 0, 0),
+                createdBy=1,
+                comments=[]
+            )
+        ]
+    
+    return ActivitiesSuccess(activities=sample_activities)
+
 @strawberry.type
 class Query:
     @strawberry.field
@@ -227,7 +285,7 @@ class Query:
 
                 if response.status_code != 200:
                     # Si no hay conexión con el servicio, devolver datos de muestra
-                    return self._get_sample_activities(id_course)
+                    return _get_sample_activities(id_course)
                 
                 data = response.json()
                 activities_data = data.get("activities", [])
@@ -258,68 +316,10 @@ class Query:
                 return ActivitiesSuccess(activities = activities_list)
 
         except Exception as e:
-            print("❌ Error connecting to activities service:", str(e))
+            print(f"❌ Error connecting to activities service: {str(e)}")
             # Si hay error de conexión, devolver datos de muestra
-            return self._get_sample_activities(id_course)
+            return _get_sample_activities(id_course)
     
-    def _get_sample_activities(self, course_id: str) -> ActivitiesResult:
-        """Devuelve actividades de muestra para el curso especificado"""
-        sample_activities = []
-        
-        # Actividades de muestra para el curso de Matemáticas Avanzadas (curso_id = "1")
-        if course_id == "1":
-            sample_activities = [
-                Activity(
-                    id=1,
-                    courseId=1,
-                    title="Examen Parcial - Derivadas",
-                    description="Evaluación de conocimientos sobre derivadas y sus aplicaciones",
-                    activityType=TypeActivity.QUIZ,
-                    dueDate=datetime(2024, 3, 15, 23, 59, 59),
-                    createdAt=datetime(2024, 2, 20, 10, 0, 0),
-                    createdBy=1,
-                    comments=[]
-                ),
-                Activity(
-                    id=2,
-                    courseId=1,
-                    title="Tarea: Ejercicios de Integrales",
-                    description="Resolver los ejercicios 1-15 del capítulo 4. Entregar en formato PDF.",
-                    activityType=TypeActivity.TASK,
-                    dueDate=datetime(2024, 3, 20, 23, 59, 59),
-                    createdAt=datetime(2024, 2, 25, 14, 30, 0),
-                    createdBy=1,
-                    comments=[]
-                ),
-                Activity(
-                    id=3,
-                    courseId=1,
-                    title="Anuncio: Cambio de Horario",
-                    description="La clase del viernes 22 de marzo se trasladará al aula 205. Hora: 10:00 AM",
-                    activityType=TypeActivity.ANNOUNCEMENT,
-                    createdAt=datetime(2024, 3, 1, 9, 0, 0),
-                    createdBy=1,
-                    comments=[]
-                )
-            ]
-        else:
-            # Actividades genéricas para otros cursos
-            sample_activities = [
-                Activity(
-                    id=100,
-                    courseId=int(course_id),
-                    title="Actividad de Ejemplo",
-                    description="Esta es una actividad de muestra para el curso",
-                    activityType=TypeActivity.TASK,
-                    dueDate=datetime(2024, 4, 15, 23, 59, 59),
-                    createdAt=datetime(2024, 3, 1, 10, 0, 0),
-                    createdBy=1,
-                    comments=[]
-                )
-            ]
-        
-        return ActivitiesSuccess(activities=sample_activities)
-        
     @strawberry.field
     async def submissions(self, activity_id: str, user_id: str, user_role: str) -> SubmissionsResult:
         """

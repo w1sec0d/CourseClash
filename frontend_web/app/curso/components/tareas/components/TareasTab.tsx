@@ -11,12 +11,14 @@ import {
   FunnelIcon,
   ExclamationTriangleIcon,
   PencilIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
 import { useActivitiesApollo, Activity } from '@/lib/activities-hooks-apollo';
 import { useAuthApollo } from '@/lib/auth-context-apollo';
 import TaskDetailModal from './TaskDetailModal';
 import Link from 'next/link';
+import CreateActivityModal from '../../CreateActivityModal';
 
 interface TareasTabProps {
   courseId: string;
@@ -38,6 +40,9 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
   // Estados para el modal
   const [selectedTask, setSelectedTask] = useState<Activity | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Estado para el modal de creación de actividad
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
   // Verificar si el usuario es profesor o admin
   const isTeacherOrAdmin = user?.role === 'TEACHER' || user?.role === 'ADMIN';
@@ -249,7 +254,7 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
     <div className="space-y-6">
       {/* Header con controles */}
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-    <div>
+        <div>
           <h2 className="text-2xl font-bold text-gray-900">Tareas y Quizzes</h2>
           <p className="text-gray-600 mt-1">
             {filteredAndSortedActivities.length} de {tasksAndQuizzes.length} actividades
@@ -257,6 +262,16 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
             {quizCount > 0 && ` • ${quizCount} quizzes`}
           </p>
         </div>
+        {/* Botón Crear Actividad solo para profesores/admins */}
+        {isTeacherOrAdmin && (
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow"
+          >
+            <PlusIcon className="w-5 h-5" />
+            Crear Actividad
+          </button>
+        )}
 
         {/* Controles de búsqueda y filtros */}
         <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
@@ -505,6 +520,18 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           task={selectedTask}
+        />
+      )}
+
+      {/* Modal de creación de actividad */}
+      {isCreateModalOpen && (
+        <CreateActivityModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          courseId={courseId}
+          onActivityCreated={() => {
+            setIsCreateModalOpen(false);
+          }}
         />
       )}
     </div>

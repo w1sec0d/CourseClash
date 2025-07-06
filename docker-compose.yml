@@ -19,10 +19,11 @@ services:
       - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
       - HOSTNAME=0.0.0.0
       - PORT=3000
-    # depends_on:
-    #   - cc_ag
+    depends_on:
+      - cc_ag
     networks:
       - public_network
+
     healthcheck:
       test:
         [
@@ -33,66 +34,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-
-  # cc_fe_web_2:
-  #   container_name: cc_fe_web_2
-  #   build:
-  #     context: ./frontend_web
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - '3001:3001'
-  #   environment:
-  #     - NODE_ENV=production
-  #     - API_URL=http://cc_ag:8080
-  #     - NEXT_PUBLIC_API_URL=http://cc_ag:8080
-  #     - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
-  #     - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
-  #     - HOSTNAME=0.0.0.0
-  #     - PORT=3001
-  #   # depends_on:
-  #   #   - cc_ag
-  #   networks:
-  #     - public_network
-  #   healthcheck:
-  #     test:
-  #       [
-  #         'CMD-SHELL',
-  #         'wget --no-verbose --tries=1 --spider http://127.0.0.1:3001 || exit 1',
-  #       ]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 60s
-  # cc_fe_web_3:
-  #   container_name: cc_fe_web_3
-  #   build:
-  #     context: ./frontend_web
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - '3002:3002'
-  #   environment:
-  #     - NODE_ENV=production
-  #     - API_URL=http://cc_ag:8080
-  #     - NEXT_PUBLIC_API_URL=http://cc_ag:8080
-  #     - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
-  #     - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
-  #     - HOSTNAME=0.0.0.0
-  #     - PORT=3002
-  #   # depends_on:
-  #   #   - cc_ag
-  #   networks:
-  #     - public_network
-  #   healthcheck:
-  #     test:
-  #       [
-  #         'CMD-SHELL',
-  #         'wget --no-verbose --tries=1 --spider http://127.0.0.1:3002 || exit 1',
-  #       ]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 60s
-  
 
   # =========================================================================
   # T2 COMMUNICATION LAYER
@@ -140,6 +81,7 @@ services:
       - ./broker_service/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     networks:
       - private_network
+
     healthcheck:
       test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
       interval: 30s
@@ -159,6 +101,7 @@ services:
         condition: service_healthy
     networks:
       - private_network
+
     command: sh /init_script.sh
     restart: 'no'
 
@@ -182,8 +125,9 @@ services:
       - MAIL_SERVER=smtp.gmail.com
     volumes:
       - ./auth_user_service:/app
-    # depends_on:
-    #   - cc_authcourses_db
+    depends_on:
+      cc_authcourses_db:
+        condition: service_healthy
     networks:
       - private_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -217,8 +161,10 @@ services:
       - MONGODB_URI=mongodb://cc_duels_db:27017/duels_db
       - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
     depends_on:
-      - cc_duels_db
-      - cc_broker_init
+      cc_duels_db:
+        condition: service_healthy
+      cc_broker_init:
+        condition: service_completed_successfully
     networks:
       - private_network
     healthcheck:
@@ -239,7 +185,6 @@ services:
   # WebSocket Manager Service
   cc_websocket_manager:
     container_name: cc_websocket_manager
-    # image: python:3.11-slim
     build:
       context: ./websocket_manager
     ports:
@@ -298,6 +243,12 @@ services:
     networks:
       - private_network
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # MySQL Database (for Activities)
   cc_activities_db:
@@ -331,6 +282,12 @@ services:
       - ./mongo_service/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
       - private_network
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Redis Cache Database
   cc_redis_cache:
@@ -388,6 +345,22 @@ services:
   #     - cc_fe_web_3
   #     - cc_fe_web
   #   restart: unless-stopped
+
+  # # MySQL Database (for Courses service - commented out)
+  # cc_courses_db:
+  #   container_name: cc_courses_db
+  #   image: mysql:8.0
+  #   ports:
+  #     - "3307:3306"
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=password
+  #     - MYSQL_DATABASE=courseClash
+  #   volumes:
+  #     - courses_mysql_data:/var/lib/mysql
+  #     - ./mysql_courses:/docker-entrypoint-initdb.d
+  #   networks:
+  #     - courseclash-network
+  #   command: --default-authentication-plugin=mysql_native_password
 
 volumes:
   auth_mysql_data:
