@@ -24,4 +24,7 @@ typing-inspection==0.4.0
 typing_extensions==4.13.2
 uvicorn==0.34.2
 pymysql
+redis==5.0.1
+asyncio==3.4.3
+concurrent-futures==3.1.1
 
