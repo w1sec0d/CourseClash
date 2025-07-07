@@ -8,11 +8,17 @@ import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { getAuthToken, clearAuthTokens } from '@/lib/cookie-utils';
 
-// HTTP Link base
+// HTTP Link for client-side requests
 const httpLink = createHttpLink({
   uri: process.env.NEXT_PUBLIC_API_GATEWAY_URL
     ? `${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/api/graphql`
     : 'https://localhost/api/graphql',
+  credentials: 'include',
+});
+
+// HTTP Link for server-side requests (uses internal Docker service name)
+const ssrHttpLink = createHttpLink({
+  uri: 'http://cc_ag:8080/api/graphql',
   credentials: 'include',
 });
 
@@ -102,7 +108,7 @@ export const apolloClient = new ApolloClient({
 // Cliente Apollo para SSR (sin auth link para evitar errores de localStorage)
 export const createSSRApolloClient = () => {
   return new ApolloClient({
-    link: from([errorLink, httpLink]), // Sin auth link en el servidor
+    link: from([errorLink, ssrHttpLink]), // Use SSR-specific HTTP link
     cache: createApolloCache(),
     ssrMode: true,
     defaultOptions: {
