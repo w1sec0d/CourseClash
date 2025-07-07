@@ -51,7 +51,7 @@ services:
       test:
         [
           'CMD-SHELL',
-          'wget --no-verbose --tries=1 --spider http://127.0.0.1:3000 || exit 1',
+          'wget --no-verbose --tries=1 --spider https://localhost:443 || exit 1',
         ]
       interval: 30s
       timeout: 10s
@@ -101,7 +101,10 @@ services:
       - public_network
     healthcheck:
       test:
-        ['CMD-SHELL', 'ps aux | grep "uvicorn.*8091" | grep -v grep || exit 1']
+        [
+          'CMD-SHELL',
+          'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8091/health\")"',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -133,7 +136,10 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8092 --reload
     healthcheck:
       test:
-        ['CMD-SHELL', 'ps aux | grep "uvicorn.*8092" | grep -v grep || exit 1']
+        [
+          'CMD-SHELL',
+          'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8092/health\")"',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -164,7 +170,10 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8093 --reload
     healthcheck:
       test:
-        ['CMD-SHELL', 'ps aux | grep "uvicorn.*8093" | grep -v grep || exit 1']
+        [
+          'CMD-SHELL',
+          'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8093/health\")"',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
