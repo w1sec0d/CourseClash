@@ -273,6 +273,7 @@ services:
       - MYSQL_REPLICATION_PASSWORD=replicator123
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=activities_db
+      - MYSQL_AUTHENTICATION_PLUGIN=mysql_native_password
     volumes:
       - activities_mysql_data:/var/lib/mysql
       - ./mysql_activities:/docker-entrypoint-initdb.d
@@ -291,15 +292,17 @@ services:
     ports:
       - '3309:3306'
     environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=activities_db
       - MYSQL_REPLICATION_MODE=slave
       - MYSQL_REPLICATION_USER=replicator
       - MYSQL_REPLICATION_PASSWORD=replicator123
       - MYSQL_MASTER_HOST=cc_activities_db
+      - MYSQL_MASTER_PORT_NUMBER=3306
+      - MYSQL_MASTER_ROOT_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=activities_db
+      - MYSQL_AUTHENTICATION_PLUGIN=mysql_native_password
     volumes:
       - activities_mysql_read_data:/var/lib/mysql
-      - ./mysql_activities:/docker-entrypoint-initdb.d
     networks:
       - courseclash-network
     depends_on:
@@ -310,37 +313,37 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 60s
 
-  # Read Replica for Auth Database  
-  cc_authcourses_db_read:
-    container_name: cc_authcourses_db_read
-    image: mysql:8.0
-    ports:
-      - '3310:3306'
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=authcourses_db
-      - MYSQL_REPLICATION_MODE=slave
-      - MYSQL_REPLICATION_USER=replicator
-      - MYSQL_REPLICATION_PASSWORD=replicator123
-      - MYSQL_MASTER_HOST=cc_authcourses_db
-      - MYSQL_MASTER_PORT_NUMBER=3306
-      - MYSQL_MASTER_ROOT_PASSWORD=password
-    volumes:
-      - auth_mysql_read_data:/var/lib/mysql
-      - ./mysql_auth:/docker-entrypoint-initdb.d
-    networks:
-      - courseclash-network
-    depends_on:
-      cc_authcourses_db:
-        condition: service_healthy
-    healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+  # # Read Replica for Auth Database  
+  # cc_authcourses_db_read:
+  #   container_name: cc_authcourses_db_read
+  #   image: mysql:8.0
+  #   ports:
+  #     - '3310:3306'
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=password
+  #     - MYSQL_DATABASE=authcourses_db
+  #     - MYSQL_REPLICATION_MODE=slave
+  #     - MYSQL_REPLICATION_USER=replicator
+  #     - MYSQL_REPLICATION_PASSWORD=replicator123
+  #     - MYSQL_MASTER_HOST=cc_authcourses_db
+  #     - MYSQL_MASTER_PORT_NUMBER=3306
+  #     - MYSQL_MASTER_ROOT_PASSWORD=password
+  #   volumes:
+  #     - auth_mysql_read_data:/var/lib/mysql
+  #     - ./mysql_auth:/docker-entrypoint-initdb.d
+  #   networks:
+  #     - courseclash-network
+  #   depends_on:
+  #     cc_authcourses_db:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s
 
   # MongoDB Database (for Duels)
   cc_duels_db:

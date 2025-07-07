@@ -50,7 +50,7 @@ check_dependencies() {
     fi
     
     # Verificar Docker Compose
-    if ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker compose &> /dev/null; then
         log_error "Docker Compose no está instalado"
         exit 1
     fi
@@ -174,7 +174,7 @@ cleanup() {
     log_info "Limpiando recursos..."
     
     # Parar servicios de Docker
-    docker-compose down
+    sudo docker compose down
     
     log_success "Recursos limpiados"
 }

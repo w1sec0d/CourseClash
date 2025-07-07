@@ -165,8 +165,8 @@ class OptimizedActivityService:
                 logger.info(f"🎯 Cache HIT: course_activities:{course_id}")
                 return ActivityList(activities=cached_activities)
             
-            # 2. Cache miss - consultar read replica
-            with get_read_session() as session:
+            # 2. Cache miss - consultar master (temporal fix hasta configurar replicación)
+            with get_master_session() as session:
                 activities = session.query(Activity).filter(Activity.course_id == course_id).all()
                 
                 # Convertir a esquemas de respuesta
@@ -175,7 +175,7 @@ class OptimizedActivityService:
                 # 3. Guardar en cache
                 self.cache.cache_course_activities(course_id, activity_responses, ttl=300)
                 
-                logger.info(f"💾 Cache MISS: course_activities:{course_id} - stored in cache")
+                logger.info(f"💾 Cache MISS: course_activities:{course_id} - stored in cache (using master)")
                 return ActivityList(activities=activity_responses)
                 
         except Exception as e:
