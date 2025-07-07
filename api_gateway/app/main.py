@@ -13,7 +13,8 @@ Estructura:
 - /health: Endpoint de verificación de estado del servicio
 """
 
-import os
+import os, json
+#from starlette.responses import Response as StarletteResponse
 from typing import Any, Dict
 
 # Configuración de logging
@@ -22,13 +23,15 @@ from app.core.middleware import setup_middlewares
 
 # Importar esquema de GraphQL
 from app.graphql.schema import schema
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from strawberry.fastapi import GraphQLRouter
 
 # Configurar el logger
 logger = setup_logger("courseclash.api")
+
+
 
 # Crear la aplicación FastAPI
 app = FastAPI(
@@ -104,6 +107,7 @@ app = FastAPI(
     },
 )
 
+
 # Configurar middlewares personalizados
 setup_middlewares(app)
 
@@ -111,6 +115,8 @@ setup_middlewares(app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://localhost",
+        "https://localhost:443",
         "http://localhost",
         "http://127.0.0.1",
         "http://localhost:3000",
@@ -135,13 +141,13 @@ app.add_middleware(
 # Endpoint de GraphQL
 graphql_app = GraphQLRouter(
     schema,
-    path="/",  # Cambiado de "/api/graphql" a "/"
+    path="/graphql",  # Ruta específica para GraphQL
     graphiql=True,  # Habilita GraphiQL para desarrollo
 )
 
 app.include_router(
     graphql_app,
-    prefix="/api/graphql",  # El prefijo ya incluye la ruta completa
+    prefix="/api",  # Prefijo sin la ruta completa
     tags=["GraphQL"],
     responses={
         200: {

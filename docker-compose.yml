@@ -1,33 +1,57 @@
 services:
   # =========================================================================
+  # NGINX Reverse Proxy
+  # =========================================================================
+  cc_rp:
+    container_name: cc_rp
+    build:
+      context: ./reverse_proxy_service
+      dockerfile: Dockerfile
+    ports:
+      - '80:80' # HTTP (para redirects)
+      - '443:443' # HTTPS (Canal Seguro principal)
+    depends_on:
+      - cc_fe_web
+      - cc_ag
+    networks:
+      - public_network
+    environment:
+      - NGINX_SSL_ENABLED=true
+      - SSL_AUTO_GENERATE=true
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider --no-check-certificate https://127.0.0.1:443/health || exit 1',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # =========================================================================
   # T1 PRESENTATION LAYER
   # =========================================================================
 
-  # Frontend Web Application
   cc_fe_web:
     container_name: cc_fe_web
     build:
       context: ./frontend_web
       dockerfile: Dockerfile
-    ports:
-      - '3000:3000'
     environment:
       - NODE_ENV=production
-      - API_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_API_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
-      - HOSTNAME=0.0.0.0
-      - PORT=3000
+      - NEXT_PUBLIC_API_URL=https://localhost/api
+      - NEXT_PUBLIC_API_GATEWAY_URL=https://localhost
     depends_on:
       - cc_ag
     networks:
-      - courseclash-network
+      - public_network
+
     healthcheck:
       test:
         [
           'CMD-SHELL',
-          'wget --no-verbose --tries=1 --spider http://127.0.0.1:3000 || exit 1',
+          'wget --no-verbose --tries=1 --spider http://$(hostname -i):3000 || exit 1',
         ]
       interval: 30s
       timeout: 10s
@@ -38,16 +62,30 @@ services:
   # T2 COMMUNICATION LAYER
   # =========================================================================
 
-  # API Gateway
   cc_ag:
-    container_name: cc_ag
     build:
-      context: ./api_gateway
+      context: ./load_balancer_ag
     ports:
       - '8080:8080'
+    volumes:
+      - ./load_balancer_ag/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - cc_ag_1
+      - cc_ag_2
+      - cc_ag_3
+    networks:
+      - private_network
+      - public_network
+
+  cc_ag_1:
+    container_name: cc_ag_1
+    build:
+      context: ./api_gateway
+    expose:
+      - '8091'
     environment:
       - AUTH_SERVICE_URL=http://cc_auth_ms:8000
-      # - COURSE_SERVICE_URL=http://cc_courses_ms:8001
+      - COURSE_SERVICE_URL=http://cc_courses_ms:8001
       - DUEL_SERVICE_URL=http://cc_duels_ms:8002
       - ACTIVITIES_SERVICE_URL=http://cc_activities_ms:8003
       - WEBSOCKET_SERVICE_URL=http://cc_websocket_manager:8004
@@ -56,32 +94,108 @@ services:
       - ./api_gateway:/app
     depends_on:
       - cc_auth_ms
-      - cc_activities_ms
       - cc_duels_ms
       - cc_websocket_manager
     networks:
-      - courseclash-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+      - private_network
+      - public_network
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8091/health\")"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8091 --reload
 
-  # RabbitMQ Message Broker
+  cc_ag_2:
+    container_name: cc_ag_2
+    build:
+      context: ./api_gateway
+    expose:
+      - '8092'
+    environment:
+      - AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - COURSE_SERVICE_URL=http://cc_courses_ms:8001
+      - DUEL_SERVICE_URL=http://cc_duels_ms:8002
+      - ACTIVITIES_SERVICE_URL=http://cc_activities_ms:8003
+      - WEBSOCKET_SERVICE_URL=http://cc_websocket_manager:8004
+      - JWT_SECRET=your_jwt_secret_key
+    volumes:
+      - ./api_gateway:/app
+    depends_on:
+      - cc_auth_ms
+      - cc_duels_ms
+      - cc_websocket_manager
+    networks:
+      - private_network
+      - public_network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8092 --reload
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8092/health\")"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  cc_ag_3:
+    container_name: cc_ag_3
+    build:
+      context: ./api_gateway
+    expose:
+      - '8093'
+    environment:
+      - AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      - COURSE_SERVICE_URL=http://cc_courses_ms:8001
+      - DUEL_SERVICE_URL=http://cc_duels_ms:8002
+      - ACTIVITIES_SERVICE_URL=http://cc_activities_ms:8003
+      - WEBSOCKET_SERVICE_URL=http://cc_websocket_manager:8004
+      - JWT_SECRET=your_jwt_secret_key
+    volumes:
+      - ./api_gateway:/app
+    depends_on:
+      - cc_auth_ms
+      - cc_duels_ms
+      - cc_websocket_manager
+    networks:
+      - private_network
+      - public_network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8093 --reload
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8093/health\")"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
   cc_broker:
     container_name: cc_broker
-    image: rabbitmq:4-management
+    image: rabbitmq:3-management
     ports:
-      - '5672:5672' # AMQP port
-      - '15672:15672' # Management UI
+      - '5672:5672'
+      - '15672:15672'
     environment:
       - RABBITMQ_DEFAULT_USER=courseclash
       - RABBITMQ_DEFAULT_PASS=courseclash123
       - RABBITMQ_DEFAULT_VHOST=/courseclash
-      - RABBITMQ_MANAGEMENT_LOAD_DEFINITIONS=/etc/rabbitmq/definitions.json
-      - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - ./broker_service/definitions.json:/etc/rabbitmq/definitions.json:ro
       - ./broker_service/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     networks:
-      - courseclash-network
+      - private_network
+
     healthcheck:
       test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
       interval: 30s
@@ -89,7 +203,6 @@ services:
       retries: 5
       start_period: 30s
 
-  # RabbitMQ Initializer Service (runs once to setup broker)
   cc_broker_init:
     container_name: cc_broker_init
     image: curlimages/curl:8.4.0
@@ -100,21 +213,21 @@ services:
       cc_broker:
         condition: service_healthy
     networks:
-      - courseclash-network
+      - private_network
+
     command: sh /init_script.sh
     restart: 'no'
 
   # =========================================================================
-  # T3 LOGIC LAYER (Business Logic Microservices)
+  # T3 LOGIC LAYER
   # =========================================================================
 
-  # Authentication and User Service
   cc_auth_ms:
     container_name: cc_auth_ms
     build:
       context: ./auth_user_service
-    ports:
-      - '8000:8000'
+    expose:
+      - '8000'
     environment:
       - DATABASE_URL=mysql+pymysql://root:password@cc_authcourses_db:3306/authcourses_db
       - SECRET=Arquisoft
@@ -130,16 +243,15 @@ services:
       cc_authcourses_db:
         condition: service_healthy
     networks:
-      - courseclash-network
+      - private_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # Activities Service
   cc_activities_ms:
     container_name: cc_activities_ms
     build:
       context: ./activities_service
-    ports:
-      - '8003:8003'
+    expose:
+      - '8003'
     environment:
       - DATABASE_URL=mysql+pymysql://root:password@cc_activities_db:3306/activities_db
       - READ_DATABASE_URL=mysql+pymysql://root:password@cc_activities_db_read:3306/activities_db
@@ -155,18 +267,17 @@ services:
       cc_redis_cache:
         condition: service_healthy
     networks:
-      - courseclash-network
+      - private_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
 
-  # Duels Service
   cc_duels_ms:
+    container_name: cc_duels_ms
+    restart: unless-stopped
     build:
       context: ./duel_service
       dockerfile: Dockerfile
-    container_name: cc_duels_ms
-    ports:
-      - '8002:8002'
-    restart: unless-stopped
+    expose:
+      - '8002'
     environment:
       - GIN_MODE=debug
       - MONGODB_URI=mongodb://cc_duels_db:27017/duels_db
@@ -177,7 +288,7 @@ services:
       cc_broker_init:
         condition: service_completed_successfully
     networks:
-      - courseclash-network
+      - private_network
     healthcheck:
       test:
         [
@@ -193,14 +304,12 @@ services:
       retries: 3
       start_period: 10s
 
-  # WebSocket Manager Service
   cc_websocket_manager:
     container_name: cc_websocket_manager
-    image: python:3.11-slim
     build:
       context: ./websocket_manager
-    ports:
-      - '8004:8004'
+    expose:
+      - '8004'
     environment:
       - RABBITMQ_URL=amqp://courseclash:courseclash123@cc_broker:5672/%2Fcourseclash
       - AUTH_SERVICE_URL=http://cc_auth_ms:8000
@@ -214,37 +323,19 @@ services:
       cc_broker_init:
         condition: service_completed_successfully
     networks:
-      - courseclash-network
+      - private_network
+      - public_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload
 
-  # # Courses Service (commented out)
-  # cc_courses_ms:
-  #   container_name: cc_courses_ms
-  #   build:
-  #     context: ./course_service
-  #   ports:
-  #     - "8001:8001"
-  #   environment:
-  #     - DATABASE_URL=mysql+pymysql://root:password@cc_courses_db:3306/courseClash
-  #     - JWT_SECRET=your_jwt_secret_key
-  #   volumes:
-  #     - ./course_service:/app
-  #   depends_on:
-  #     - cc_courses_db
-  #   networks:
-  #     - courseclash-network
-  #   command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
-
   # =========================================================================
-  # T4 DATA LAYER (Databases and Storage)
+  # T4 DATA LAYER
   # =========================================================================
 
-  # MySQL Database (for Auth and Courses)
   cc_authcourses_db:
     container_name: cc_authcourses_db
     image: mysql:8.0
-    ports:
-      - '3306:3306'
+    # ports:
+    #   - '3306:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=authcourses_db
@@ -252,7 +343,7 @@ services:
       - auth_mysql_data:/var/lib/mysql
       - ./mysql_auth:/docker-entrypoint-initdb.d
     networks:
-      - courseclash-network
+      - private_network
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
@@ -261,7 +352,6 @@ services:
       retries: 5
       start_period: 30s
 
-  # MySQL Database (for Activities)
   cc_activities_db:
     container_name: cc_activities_db
     image: bitnami/mysql:8.0
@@ -279,6 +369,7 @@ services:
       - ./mysql_activities:/docker-entrypoint-initdb.d
     networks:
       - courseclash-network
+      - private_network
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
       interval: 10s
@@ -347,15 +438,15 @@ services:
 
   # MongoDB Database (for Duels)
   cc_duels_db:
-    image: mongo:latest
     container_name: cc_duels_db
+    image: mongo:latest
     ports:
       - '27018:27017'
     volumes:
       - mongo_data:/data/db
       - ./mongo_service/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
-      - courseclash-network
+      - private_network
     healthcheck:
       test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
       interval: 30s
@@ -363,19 +454,16 @@ services:
       retries: 3
       start_period: 40s
 
-  # Redis Cache Database
   cc_redis_cache:
     container_name: cc_redis_cache
     image: redis:7-alpine
-    ports:
-      - '6379:6379'
     environment:
       - REDIS_PASSWORD=courseclash123
     command: redis-server --requirepass courseclash123 --appendonly yes --save 60 1
     volumes:
       - redis_data:/data
     networks:
-      - courseclash-network
+      - private_network
     healthcheck:
       test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
       interval: 30s
@@ -398,10 +486,20 @@ services:
   #   networks:
   #     - courseclash-network
   #   command: --default-authentication-plugin=mysql_native_password
+  # fs_rp:
+  #   build: ./courseclash-ReverseProxy
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./courseclash-ReverseProxy/nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - cc_fe_web_2
+  #     - cc_fe_web_3
+  #     - cc_fe_web
+  #   restart: unless-stopped
 
 volumes:
   auth_mysql_data:
-  courses_mysql_data:
   activities_mysql_data:
   activities_mysql_read_data:
   auth_mysql_read_data:
@@ -409,6 +507,12 @@ volumes:
   rabbitmq_data:
   redis_data:
 
+# networks:
+#   courseclash-network:
+#     driver: bridge
 networks:
-  courseclash-network:
+  public_network:
     driver: bridge
+  private_network:
+    driver: bridge
+    internal: true

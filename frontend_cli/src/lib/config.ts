@@ -71,7 +71,7 @@ export class ConfigManager {
 
   private getDefaultConfig(): UserConfig {
     return {
-      apiUrl: 'http://localhost:8080',
+      apiUrl: 'https://localhost',
     }
   }
 }

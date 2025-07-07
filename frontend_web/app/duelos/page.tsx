@@ -42,7 +42,8 @@ export default async function DuelosSSRPage() {
 
 // Metadatos de la página
 export const metadata = {
-  title: 'Duelos Académicos SSR - Course Clash',
+  title:
+    'Duelos Académicos - Course Clash - Transforma tu aprendizaje en una aventura',
   description:
     'Desafía a otros estudiantes en duelos de conocimiento con carga optimizada del servidor.',
 };
