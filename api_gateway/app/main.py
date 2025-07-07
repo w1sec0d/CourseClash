@@ -160,6 +160,8 @@ setup_middlewares(app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://localhost",
+        "https://localhost:443",
         "http://localhost",
         "http://127.0.0.1",
         "http://localhost:3000",
@@ -184,13 +186,13 @@ app.add_middleware(
 # Endpoint de GraphQL
 graphql_app = GraphQLRouter(
     schema,
-    path="/",  # Cambiado de "/api/graphql" a "/"
+    path="/graphql",  # Ruta específica para GraphQL
     graphiql=True,  # Habilita GraphiQL para desarrollo
 )
 
 app.include_router(
     graphql_app,
-    prefix="/api/graphql",  # El prefijo ya incluye la ruta completa
+    prefix="/api",  # Prefijo sin la ruta completa
     tags=["GraphQL"],
     responses={
         200: {

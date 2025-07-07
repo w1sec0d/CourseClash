@@ -29,12 +29,10 @@ export interface UserData {
 // Crear cliente Apollo específico para SSR con autenticación
 function createSSRApolloClientWithAuth() {
   const httpLink = new HttpLink({
-    uri: process.env.NEXT_PUBLIC_API_GATEWAY_URL
-      ? `${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/api/graphql`
-      : 'http://localhost:8080/api/graphql',
+    uri: 'http://cc_ag:8080/api/graphql',
     fetch,
   });
-  console.log('🔧 Using API URL:', process.env.NEXT_PUBLIC_API_GATEWAY_URL);
+  console.log('🔧 Using API URL (SSR):', 'http://cc_ag:8080/api/graphql');
 
   const authLink = setContext(async (_, { headers }) => {
     try {

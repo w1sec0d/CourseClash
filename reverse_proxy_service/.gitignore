@@ -1,0 +1,23 @@
+# =========================================================================
+# CERTIFICADOS SSL Y CLAVES PRIVADAS - NO SUBIR AL REPOSITORIO
+# =========================================================================
+
+# Certificados SSL (contienen claves privadas)
+ssl/server.key
+ssl/server.crt
+ssl/dhparam.pem
+
+# Directorio SSL completo (por si hay más archivos)
+ssl/*.key
+ssl/*.crt
+ssl/*.pem
+ssl/*.p12
+ssl/*.pfx
+
+# Logs de NGINX
+logs/
+*.log
+
+# Archivos temporales
+*.tmp
+*.temp

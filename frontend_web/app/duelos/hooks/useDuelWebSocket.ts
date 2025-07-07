@@ -38,10 +38,10 @@ export const useDuelWebSocket = (): UseDuelWebSocketReturn => {
             return null;
           });
 
-          // Updated to use WebSocket Manager on port 8004
-          const wsUrl = `ws://localhost:8004/ws/duels/${duelId}/${userId}`;
+          // Updated to use WebSocket Manager through nginx (Canal Seguro)
+          const wsUrl = `wss://localhost/ws/duels/${duelId}/${userId}`;
           console.log(
-            `[${userId}] Connecting to WebSocket Manager URL: ${wsUrl}`
+            `[${userId}] Connecting to WebSocket Manager URL (WSS): ${wsUrl}`
           );
 
           const ws = new WebSocket(wsUrl);
