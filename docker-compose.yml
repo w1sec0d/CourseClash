@@ -13,14 +13,14 @@ services:
       - '3000:3000'
     environment:
       - NODE_ENV=production
-      - API_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_API_URL=http://cc_ag:8080
-      - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_ag:8080
+      - API_URL=http://cc_lb:8080
+      - NEXT_PUBLIC_API_URL=http://cc_lb:8080
+      - NEXT_PUBLIC_API_GATEWAY_URL=http://cc_lb:8080
       - NEXT_PUBLIC_AUTH_SERVICE_URL=http://cc_auth_ms:8000
       - HOSTNAME=0.0.0.0
       - PORT=3000
     depends_on:
-      - cc_ag
+      - cc_lb
     networks:
       - courseclash-network
     healthcheck:
@@ -38,13 +38,76 @@ services:
   # T2 COMMUNICATION LAYER
   # =========================================================================
 
+  cc_lb:
+    build:
+      context: ./load_balancer
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./load_balancer/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - cc_ag_1
+      - cc_ag_2
+      - cc_ag_3
+    networks:
+      - courseclash-network
+
+
   # API Gateway
-  cc_ag:
-    container_name: cc_ag
+  cc_ag_1:
+    container_name: cc_ag_1
     build:
       context: ./api_gateway
     ports:
-      - '8080:8080'
+      - '8091:8080'
+    environment:
+      - AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      # - COURSE_SERVICE_URL=http://cc_courses_ms:8001
+      - DUEL_SERVICE_URL=http://cc_duels_ms:8002
+      - ACTIVITIES_SERVICE_URL=http://cc_activities_ms:8003
+      - WEBSOCKET_SERVICE_URL=http://cc_websocket_manager:8004
+      - JWT_SECRET=your_jwt_secret_key
+    volumes:
+      - ./api_gateway:/app
+    depends_on:
+      - cc_auth_ms
+      - cc_activities_ms
+      - cc_duels_ms
+      - cc_websocket_manager
+    networks:
+      - courseclash-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+
+  cc_ag_2:
+    container_name: cc_ag_2
+    build:
+      context: ./api_gateway
+    ports:
+      - '8092:8080'
+    environment:
+      - AUTH_SERVICE_URL=http://cc_auth_ms:8000
+      # - COURSE_SERVICE_URL=http://cc_courses_ms:8001
+      - DUEL_SERVICE_URL=http://cc_duels_ms:8002
+      - ACTIVITIES_SERVICE_URL=http://cc_activities_ms:8003
+      - WEBSOCKET_SERVICE_URL=http://cc_websocket_manager:8004
+      - JWT_SECRET=your_jwt_secret_key
+    volumes:
+      - ./api_gateway:/app
+    depends_on:
+      - cc_auth_ms
+      - cc_activities_ms
+      - cc_duels_ms
+      - cc_websocket_manager
+    networks:
+      - courseclash-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+
+  cc_ag_3:
+    container_name: cc_ag_3
+    build:
+      context: ./api_gateway
+    ports:
+      - '8093:8080'
     environment:
       - AUTH_SERVICE_URL=http://cc_auth_ms:8000
       # - COURSE_SERVICE_URL=http://cc_courses_ms:8001
