@@ -87,136 +87,6 @@ async def get_activities_optimized(
             detail="Error interno del servidor"
         )
 
-@router.get("/{activity_id}", response_model=ActivitySchema)
-async def get_activity_optimized(
-    activity_id: int,
-    user_id: Optional[int] = Header(None, alias="User_id")
-):
-    """
-    Obtener una actividad específica - OPTIMIZADO
-    
-    Características:
-    - Cache L2 con TTL de 10 minutos
-    - Eager loading de comentarios
-    - Fallback automático a master
-    """
-    try:
-        # Obtener actividad usando cache y read replica
-        activity = optimized_service.get_activity_by_id(activity_id, user_id)
-
-        if not activity:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Actividad no encontrada"
-            )
-        
-        logger.info(f"📊 Actividad obtenida: {activity_id}")
-        
-        return activity
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Error obteniendo actividad optimizada {activity_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
-        )
-
-@router.put("/{activity_id}", response_model=ActivityResponse)
-async def update_activity_optimized(
-    activity_id: int,
-    activity_data: ActivityUpdate,
-    request: Request,
-):
-    """
-    Actualizar una actividad - OPTIMIZADO
-    
-    Características:
-    - Usa master database para escritura
-    - Invalidación automática de cache relacionado
-    - Verificación de permisos
-    """
-    try:
-        # Verificar permisos
-        require_teacher_or_admin(request)
-        
-        current_user = get_current_user(request)
-        
-        # Actualizar usando el servicio optimizado
-        activity = optimized_service.update_activity(
-            activity_id,
-            activity_data,
-            user_id=current_user["user_id"],
-            user_role=current_user["role"]
-        )
-        
-        if not activity:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Actividad no encontrada o sin permisos para modificar"
-            )
-        
-        logger.info(f"✅ Actividad actualizada optimizada {activity_id} por usuario {current_user['user_id']}")
-        
-        return ActivityResponse.from_orm(activity)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Error actualizando actividad optimizada {activity_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
-        )
-
-@router.delete("/{activity_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_activity_optimized(
-    activity_id: int,
-    request: Request,
-):
-    """
-    Eliminar una actividad - OPTIMIZADO
-    
-    Características:
-    - Usa master database para escritura
-    - Invalidación automática de cache relacionado
-    - Verificación de permisos
-    """
-    try:
-        # Verificar permisos
-        require_teacher_or_admin(request)
-        
-        current_user = get_current_user(request)
-        
-        # Eliminar usando el servicio optimizado
-        success = optimized_service.delete_activity(
-            activity_id,
-            user_id=current_user["user_id"],
-            user_role=current_user["role"]
-        )
-        
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Actividad no encontrada o sin permisos para eliminar"
-            )
-        
-        logger.info(f"✅ Actividad eliminada optimizada {activity_id} por usuario {current_user['user_id']}")
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Error eliminando actividad optimizada {activity_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
-        )
-
-# ============================================================================
-# ENDPOINTS AVANZADOS CON OPERACIONES CONCURRENTES
-# ============================================================================
-
 @router.post("/batch", response_model=List[Optional[ActivitySchema]])
 async def get_multiple_activities_concurrent(
     activity_ids: List[int],
@@ -412,3 +282,129 @@ async def invalidate_cache(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor"
         ) 
+
+@router.get("/{activity_id}", response_model=ActivitySchema)
+async def get_activity_optimized(
+    activity_id: int,
+    user_id: Optional[int] = Header(None, alias="User_id")
+):
+    """
+    Obtener una actividad específica - OPTIMIZADO
+    
+    Características:
+    - Cache L2 con TTL de 10 minutos
+    - Eager loading de comentarios
+    - Fallback automático a master
+    """
+    try:
+        # Obtener actividad usando cache y read replica
+        activity = optimized_service.get_activity_by_id(activity_id, user_id)
+
+        if not activity:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Actividad no encontrada"
+            )
+        
+        logger.info(f"📊 Actividad obtenida: {activity_id}")
+        
+        return activity
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo actividad optimizada {activity_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+
+@router.put("/{activity_id}", response_model=ActivityResponse)
+async def update_activity_optimized(
+    activity_id: int,
+    activity_data: ActivityUpdate,
+    request: Request,
+):
+    """
+    Actualizar una actividad - OPTIMIZADO
+    
+    Características:
+    - Usa master database para escritura
+    - Invalidación automática de cache relacionado
+    - Verificación de permisos
+    """
+    try:
+        # Verificar permisos
+        require_teacher_or_admin(request)
+        
+        current_user = get_current_user(request)
+        
+        # Actualizar usando el servicio optimizado
+        activity = optimized_service.update_activity(
+            activity_id,
+            activity_data,
+            user_id=current_user["user_id"],
+            user_role=current_user["role"]
+        )
+        
+        if not activity:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Actividad no encontrada o sin permisos para modificar"
+            )
+        
+        logger.info(f"✅ Actividad actualizada optimizada {activity_id} por usuario {current_user['user_id']}")
+        
+        return ActivityResponse.from_orm(activity)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error actualizando actividad optimizada {activity_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+
+@router.delete("/{activity_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_activity_optimized(
+    activity_id: int,
+    request: Request,
+):
+    """
+    Eliminar una actividad - OPTIMIZADO
+    
+    Características:
+    - Usa master database para escritura
+    - Invalidación automática de cache relacionado
+    - Verificación de permisos
+    """
+    try:
+        # Verificar permisos
+        require_teacher_or_admin(request)
+        
+        current_user = get_current_user(request)
+        
+        # Eliminar usando el servicio optimizado
+        success = optimized_service.delete_activity(
+            activity_id,
+            user_id=current_user["user_id"],
+            user_role=current_user["role"]
+        )
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Actividad no encontrada o sin permisos para eliminar"
+            )
+        
+        logger.info(f"✅ Actividad eliminada optimizada {activity_id} por usuario {current_user['user_id']}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error eliminando actividad optimizada {activity_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )

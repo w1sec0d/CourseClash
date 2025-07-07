@@ -264,10 +264,13 @@ services:
   # MySQL Database (for Activities)
   cc_activities_db:
     container_name: cc_activities_db
-    image: mysql:8.0
+    image: bitnami/mysql:8.0
     ports:
       - '3308:3306'
     environment:
+      - MYSQL_REPLICATION_MODE=master
+      - MYSQL_REPLICATION_USER=replicator
+      - MYSQL_REPLICATION_PASSWORD=replicator123
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=activities_db
     volumes:
@@ -275,7 +278,6 @@ services:
       - ./mysql_activities:/docker-entrypoint-initdb.d
     networks:
       - courseclash-network
-    command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
       interval: 10s
@@ -285,7 +287,7 @@ services:
   # Read Replica for Activities Database
   cc_activities_db_read:
     container_name: cc_activities_db_read
-    image: mysql:8.0
+    image: bitnami/mysql:8.0
     ports:
       - '3309:3306'
     environment:
@@ -295,8 +297,6 @@ services:
       - MYSQL_REPLICATION_USER=replicator
       - MYSQL_REPLICATION_PASSWORD=replicator123
       - MYSQL_MASTER_HOST=cc_activities_db
-      - MYSQL_MASTER_PORT_NUMBER=3306
-      - MYSQL_MASTER_ROOT_PASSWORD=password
     volumes:
       - activities_mysql_read_data:/var/lib/mysql
       - ./mysql_activities:/docker-entrypoint-initdb.d
@@ -305,7 +305,6 @@ services:
     depends_on:
       cc_activities_db:
         condition: service_healthy
-    command: --default-authentication-plugin=mysql_native_password --server-id=2 --log-bin=mysql-bin --read-only=1
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
       interval: 10s
@@ -336,7 +335,6 @@ services:
     depends_on:
       cc_authcourses_db:
         condition: service_healthy
-    command: --default-authentication-plugin=mysql_native_password --server-id=3 --log-bin=mysql-bin --read-only=1
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
       interval: 10s

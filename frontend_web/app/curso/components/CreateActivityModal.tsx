@@ -26,6 +26,14 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({
 
   const { createActivity, loading, error } = useCreateActivityApollo();
 
+  // Helper function to get current datetime in the correct format for datetime-local input
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    // Adjust for timezone offset to get local time
+    const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+    return localDate.toISOString().slice(0, 16);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -48,11 +56,13 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({
         fileUrl: ''
       });
       
-      // Notificar que se creó la actividad
-      onActivityCreated?.();
-      
-      // Cerrar modal
-      onClose();
+      // Notificar que se creó la actividad y esperar que se complete
+      if (onActivityCreated) {
+        await onActivityCreated();
+      } else {
+        // Si no hay callback, cerrar el modal directamente
+        onClose();
+      }
       
     } catch (err) {
       console.error('Error creando actividad:', err);
@@ -70,7 +80,10 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+    >
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -146,8 +159,13 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({
               name="dueDate"
               value={formData.dueDate}
               onChange={handleChange}
+              min={getCurrentDateTime()}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              title="La fecha de vencimiento debe ser en el futuro"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Solo puedes seleccionar fechas futuras
+            </p>
           </div>
 
           {/* URL de Archivo */}
