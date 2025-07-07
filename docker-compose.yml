@@ -51,7 +51,7 @@ services:
       test:
         [
           'CMD-SHELL',
-          'wget --no-verbose --tries=1 --spider https://localhost:443 || exit 1',
+          'wget --no-verbose --tries=1 --spider http://$(hostname -i):3000 || exit 1',
         ]
       interval: 30s
       timeout: 10s
