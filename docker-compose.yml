@@ -71,6 +71,8 @@ services:
       - ./load_balancer_ag/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - cc_ag_1
+      - cc_ag_2
+      - cc_ag_3
     networks:
       - private_network
       - public_network
@@ -97,8 +99,15 @@ services:
     networks:
       - private_network
       - public_network
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'ps aux | grep "uvicorn.*8091" | grep -v grep || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     command: uvicorn app.main:app --host 0.0.0.0 --port 8091 --reload
-  
+
   cc_ag_2:
     container_name: cc_ag_2
     build:
@@ -122,6 +131,13 @@ services:
       - private_network
       - public_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8092 --reload
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'ps aux | grep "uvicorn.*8092" | grep -v grep || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   cc_ag_3:
     container_name: cc_ag_3
@@ -146,6 +162,13 @@ services:
       - private_network
       - public_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8093 --reload
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'ps aux | grep "uvicorn.*8093" | grep -v grep || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   cc_broker:
     container_name: cc_broker
