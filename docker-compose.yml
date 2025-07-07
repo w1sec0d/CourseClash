@@ -77,7 +77,6 @@ services:
       - JWT_SECRET=your_jwt_secret_key
     volumes:
       - ./api_gateway:/app
-      - ./logs/uvicorn:/var/log/uvicorn
     depends_on:
       - cc_auth_ms
       - cc_duels_ms
@@ -307,17 +306,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-
-  fail2ban:
-    image: crazymax/fail2ban:latest
-    container_name: fail2ban
-    privileged: true
-    restart: unless-stopped
-    network_mode: host
-    volumes:
-      - ./logs/uvicorn:/var/log/uvicorn:ro
-      - ./fail2ban/filter.d:/data/filter.d:ro
-      - ./fail2ban/jail.d:/data/jail.d:ro
 
   # # MySQL Database (for Courses service - commented out)
   # cc_courses_db:
