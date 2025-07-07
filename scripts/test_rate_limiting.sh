@@ -17,13 +17,15 @@ test_normal() {
     
     for i in $(seq 1 $count); do
         start_time=$(date +%s.%N)
-        response=$(curl -s -w "%{http_code}" -o /dev/null "$endpoint" 2>/dev/null)
+        response=$(curl -s -k -w "%{http_code}" -o /dev/null "$endpoint" 2>/dev/null)
         end_time=$(date +%s.%N)
         duration=$(awk "BEGIN {printf \"%.3f\", $end_time - $start_time}")
         
         case $response in
             "200"|"404"|"307") status="PASS" ;;
             "429") status="RATE LIMITED" ;;
+            "301"|"302") status="REDIRECT" ;;
+            "000") status="SSL/CONNECTION ERROR" ;;
             *) status="UNKNOWN ($response)" ;;
         esac
         
@@ -53,13 +55,15 @@ test_extreme() {
     for i in $(seq 1 $count); do
         (
             start_time=$(date +%s.%N)
-            response=$(curl -s -w "%{http_code}" -o /dev/null "$endpoint" 2>/dev/null)
+            response=$(curl -s -k -w "%{http_code}" -o /dev/null "$endpoint" 2>/dev/null)
             end_time=$(date +%s.%N)
             duration=$(awk "BEGIN {printf \"%.3f\", $end_time - $start_time}")
             
             case $response in
                 "200"|"404"|"307") status="PASS" ;;
                 "429") status="RATE LIMITED" ;;
+                "301"|"302") status="REDIRECT" ;;
+                "000") status="SSL/CONNECTION ERROR" ;;
                 *) status="UNKNOWN ($response)" ;;
             esac
             
@@ -83,12 +87,12 @@ echo "INICIANDO PRUEBAS..."
 echo ""
 
 # Pruebas normales
-test_normal "http://localhost/api/" "API Gateway" 10
-test_normal "http://localhost/" "Frontend" 15
+test_normal "https://localhost/api/" "API Gateway" 10
+test_normal "https://localhost/" "Frontend" 15
 
 # Pruebas extremas
-test_extreme "http://localhost/api/" "API Gateway - Saturacion Total" 20
-test_extreme "http://localhost/" "Frontend - Saturacion Total" 30
+test_extreme "https://localhost/api/" "API Gateway - Saturacion Total" 20
+test_extreme "https://localhost/" "Frontend - Saturacion Total" 30
 
 echo "PRUEBAS COMPLETADAS"
 # echo ""
