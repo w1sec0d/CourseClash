@@ -1,0 +1,18 @@
+# Forzar LF para todos los scripts de shell
+*.sh text eol=lf
+
+# Forzar LF para archivos de configuración críticos  
+*.conf text eol=lf
+Dockerfile text eol=lf
+docker-compose.yml text eol=lf
+
+# Forzar LF para archivos de desarrollo
+*.js text eol=lf
+*.ts text eol=lf
+*.json text eol=lf
+*.py text eol=lf
+
+# Archivos binarios
+*.png binary
+*.jpg binary
+*.svg binary
