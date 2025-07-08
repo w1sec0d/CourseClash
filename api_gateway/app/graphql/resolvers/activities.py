@@ -218,7 +218,7 @@ def _get_sample_activities(course_id: str) -> "ActivitiesResult":
 @strawberry.type
 class Query:
     @strawberry.field
-    async def activity(self, id: str) -> Optional[Activity]:
+    async def activity(self, info, id: str) -> Optional[Activity]:
         """
         Obtiene la información de una actividad en especifico. 
         Se requiere el id de la actividad
@@ -227,9 +227,25 @@ class Query:
             Optional[Activity]: De vuelve la información de la actividad junto con sus comentarios
         """
         try:
+            # Extraer user_id del contexto si está disponible
+            user_id = None
+            request = info.context.get("request")
+            if request:
+                auth_header = request.headers.get("authorization")
+                if auth_header and auth_header.startswith("Bearer "):
+                    # Si tienes token, podrías extraer user_id aquí
+                    # Por ahora, usemos un valor por defecto
+                    user_id = 1
+            
+            # Preparar headers
+            headers = {}
+            if user_id:
+                headers["User_id"] = str(user_id)
+            
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
-                    f"{ACTIVITIES_SERVICE_URL}/api/activities/{id}"
+                    f"{ACTIVITIES_SERVICE_URL}/api/v2/activities/{id}",
+                    headers=headers
                 )
 
                 if response.status_code != 200:
@@ -279,12 +295,18 @@ class Query:
         """
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
+                # Añadir log para debug
+                print(f"🔍 Calling v2 endpoint: {ACTIVITIES_SERVICE_URL}/api/v2/activities/list/{id_course}")
+                
                 response = await client.get(
-                    f"{ACTIVITIES_SERVICE_URL}/api/activities/list/{id_course}"
+                    f"{ACTIVITIES_SERVICE_URL}/api/v2/activities/list/{id_course}"
                 )
-
+                
+                print(f"🔍 V2 Response status: {response.status_code}")
+                print(f"🔍 V2 Response content: {response.text[:500]}...")  # Primeros 500 chars
+                
                 if response.status_code != 200:
-                    # Si no hay conexión con el servicio, devolver datos de muestra
+                    print(f"❌ V2 failed, using sample data")
                     return _get_sample_activities(id_course)
                 
                 data = response.json()
@@ -369,7 +391,7 @@ class Query:
                     #Mapeo de la calificación si existe
                     latest_grade_data = submission.get("latest_grade")
                     latest_grade = None
-                    if latest_grade_data:
+                    if latest_grade_data and isinstance(latest_grade_data, dict):
                         latest_grade = gradeSubmission(
                             id=latest_grade_data["id"],
                             gradedBy=latest_grade_data["graded_by"],
@@ -482,7 +504,7 @@ class Mutation:
                 }
 
                 activity_response = await client.post(
-                    f"{ACTIVITIES_SERVICE_URL}/api/activities/",
+                    f"{ACTIVITIES_SERVICE_URL}/api/v2/activities/",
                     json = activity_payload,
                     headers={"User_id": str(user_data["id"])}
                 )
@@ -590,7 +612,7 @@ class Mutation:
                     activity_payload["file_url"] = fileUrl
 
                 activity_response = await client.put(
-                    f"{ACTIVITIES_SERVICE_URL}/api/activities/{id}",
+                    f"{ACTIVITIES_SERVICE_URL}/api/v2/activities/{id}",
                     json=activity_payload,
                     headers={"User_id": str(user_data["id"])}
                 )
@@ -712,6 +734,24 @@ class Mutation:
                     return SubmissionsError(message=error_detail, code=error_code)
                 
                 submission_data = submission_response.json()
+                # Mapear latestGrade correctamente
+                latest_grade_data = submission_data.get("latest_grade")
+                latest_grade = None
+                if latest_grade_data and isinstance(latest_grade_data, dict):
+                    latest_grade = gradeSubmission(
+                        id=latest_grade_data["id"],
+                        gradedBy=latest_grade_data["graded_by"],
+                        gradedAt=datetime.fromisoformat(latest_grade_data["graded_at"].replace("Z", "+00:00"))
+                            if latest_grade_data.get("graded_at") else None,
+                        score=latest_grade_data["score"],
+                        feedback=latest_grade_data.get("feedback")
+                    )
+
+                # Mapear additionalFiles correctamente
+                additional_files = submission_data.get("additional_files")
+                if additional_files and not isinstance(additional_files, list):
+                    additional_files = []  # Si no es lista, usar lista vacía
+
                 created_submission = Submissions(
                     id = submission_data["id"],
                     activityId = submission_data["activity_id"],
@@ -719,10 +759,10 @@ class Mutation:
                         if submission_data.get("submitted_at") else None,
                     content = submission_data["content"],
                     fileUrl = submission_data["file_url"],
-                    additionalFiles = submission_data["additional_files"],
+                    additionalFiles = additional_files,
                     isGraded = submission_data["is_graded"],
                     canEdit = submission_data["can_edit"],
-                    latestGrade = submission_data["latest_grade"]
+                    latestGrade = latest_grade  # ✅ CORREGIDO
                 )
 
                 return SubmissionsSuccess(submission = created_submission)
@@ -818,17 +858,35 @@ class Mutation:
                     return SubmissionsError(message=error_detail, code=str(submission_response.status_code))
 
                 submission_data = submission_response.json()
+                # Mapear latestGrade correctamente
+                latest_grade_data = submission_data.get("latest_grade")
+                latest_grade = None
+                if latest_grade_data and isinstance(latest_grade_data, dict):
+                    latest_grade = gradeSubmission(
+                        id=latest_grade_data["id"],
+                        gradedBy=latest_grade_data["graded_by"],
+                        gradedAt=datetime.fromisoformat(latest_grade_data["graded_at"].replace("Z", "+00:00"))
+                            if latest_grade_data.get("graded_at") else None,
+                        score=latest_grade_data["score"],
+                        feedback=latest_grade_data.get("feedback")
+                    )
+
+                # Mapear additionalFiles correctamente
+                additional_files = submission_data.get("additional_files")
+                if additional_files and not isinstance(additional_files, list):
+                    additional_files = []  # Si no es lista, usar lista vacía
+
                 updated_submission = Submissions(
                     id = submission_data["id"],
                     activityId = submission_data["activity_id"],
                     submittedAt = datetime.fromisoformat(submission_data["submitted_at"].replace("Z", "+00:00"))
                         if submission_data.get("submitted_at") else None,
-                    content = submission_data["content"],
-                    fileUrl = submission_data["file_url"],
-                    additionalFiles = submission_data["additional_files"],
+                    content = submission_data.get("content"),
+                    fileUrl = submission_data.get("file_url"),
+                    additionalFiles = additional_files,
                     isGraded = submission_data["is_graded"],
                     canEdit = submission_data["can_edit"],
-                    latestGrade = submission_data["latest_grade"]
+                    latestGrade = latest_grade  # ✅ CORREGIDO
                 )
 
                 return SubmissionsSuccess(submission=updated_submission)
@@ -1112,7 +1170,7 @@ class Mutation:
                     "content": content
                 }
                 comment_response = await client.post(
-                    f"{ACTIVITIES_SERVICE_URL}/api/activities/{activityId}/comments",
+                    f"{ACTIVITIES_SERVICE_URL}/api/v2/activities/{activityId}/comments",
                     json = comment_payload,
                     headers={"User_id": str(user_data["id"])}
                 )
