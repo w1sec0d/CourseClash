@@ -8,8 +8,8 @@ services:
       context: ./reverse_proxy_service
       dockerfile: Dockerfile
     ports:
-      - '80:80' # HTTP (para redirects)
-      - '443:443' # HTTPS (Canal Seguro principal)
+      - '80:80'
+      - '443:443'
     depends_on:
       - cc_fe_web
       - cc_ag
@@ -19,11 +19,7 @@ services:
       - NGINX_SSL_ENABLED=true
       - SSL_AUTO_GENERATE=true
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'wget --no-verbose --tries=1 --spider --no-check-certificate https://127.0.0.1:443/health || exit 1',
-        ]
+      test: ['CMD-SHELL', 'wget --no-verbose --tries=1 --spider --no-check-certificate https://127.0.0.1:443/health || exit 1']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -32,7 +28,6 @@ services:
   # =========================================================================
   # T1 PRESENTATION LAYER
   # =========================================================================
-
   cc_fe_web:
     container_name: cc_fe_web
     build:
@@ -46,13 +41,8 @@ services:
       - cc_ag
     networks:
       - public_network
-
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'wget --no-verbose --tries=1 --spider http://$(hostname -i):3000 || exit 1',
-        ]
+      test: ['CMD-SHELL', 'wget --no-verbose --tries=1 --spider http://$(hostname -i):3000 || exit 1']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -61,7 +51,6 @@ services:
   # =========================================================================
   # T2 COMMUNICATION LAYER
   # =========================================================================
-
   cc_ag:
     build:
       context: ./load_balancer_ag
@@ -100,11 +89,7 @@ services:
       - private_network
       - public_network
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8091/health\")"',
-        ]
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8091/health\")"']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -135,11 +120,7 @@ services:
       - public_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8092 --reload
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8092/health\")"',
-        ]
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8092/health\")"']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -169,11 +150,7 @@ services:
       - public_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8093 --reload
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8093/health\")"',
-        ]
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8093/health\")"']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -195,7 +172,6 @@ services:
       - ./broker_service/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     networks:
       - private_network
-
     healthcheck:
       test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
       interval: 30s
@@ -214,14 +190,12 @@ services:
         condition: service_healthy
     networks:
       - private_network
-
     command: sh /init_script.sh
     restart: 'no'
 
   # =========================================================================
   # T3 LOGIC LAYER
   # =========================================================================
-
   cc_auth_ms:
     container_name: cc_auth_ms
     build:
@@ -290,15 +264,7 @@ services:
     networks:
       - private_network
     healthcheck:
-      test:
-        [
-          'CMD',
-          'wget',
-          '--no-verbose',
-          '--tries=1',
-          '--spider',
-          'http://localhost:8002/swagger/index.html',
-        ]
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:8002/swagger/index.html']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -330,12 +296,9 @@ services:
   # =========================================================================
   # T4 DATA LAYER
   # =========================================================================
-
   cc_authcourses_db:
     container_name: cc_authcourses_db
     image: mysql:8.0
-    # ports:
-    #   - '3306:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=authcourses_db
@@ -368,7 +331,6 @@ services:
       - activities_mysql_data:/var/lib/mysql
       - ./mysql_activities:/docker-entrypoint-initdb.d
     networks:
-      - courseclash-network
       - private_network
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
@@ -376,7 +338,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Read Replica for Activities Database
   cc_activities_db_read:
     container_name: cc_activities_db_read
     image: bitnami/mysql:8.0
@@ -395,7 +356,7 @@ services:
     volumes:
       - activities_mysql_read_data:/var/lib/mysql
     networks:
-      - courseclash-network
+      - private_network
     depends_on:
       cc_activities_db:
         condition: service_healthy
@@ -406,37 +367,6 @@ services:
       retries: 5
       start_period: 60s
 
-  # # Read Replica for Auth Database  
-  # cc_authcourses_db_read:
-  #   container_name: cc_authcourses_db_read
-  #   image: mysql:8.0
-  #   ports:
-  #     - '3310:3306'
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD=password
-  #     - MYSQL_DATABASE=authcourses_db
-  #     - MYSQL_REPLICATION_MODE=slave
-  #     - MYSQL_REPLICATION_USER=replicator
-  #     - MYSQL_REPLICATION_PASSWORD=replicator123
-  #     - MYSQL_MASTER_HOST=cc_authcourses_db
-  #     - MYSQL_MASTER_PORT_NUMBER=3306
-  #     - MYSQL_MASTER_ROOT_PASSWORD=password
-  #   volumes:
-  #     - auth_mysql_read_data:/var/lib/mysql
-  #     - ./mysql_auth:/docker-entrypoint-initdb.d
-  #   networks:
-  #     - courseclash-network
-  #   depends_on:
-  #     cc_authcourses_db:
-  #       condition: service_healthy
-  #   healthcheck:
-  #     test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #     start_period: 30s
-
-  # MongoDB Database (for Duels)
   cc_duels_db:
     container_name: cc_duels_db
     image: mongo:latest
@@ -471,33 +401,6 @@ services:
       retries: 3
       start_period: 10s
 
-  # # MySQL Database (for Courses service - commented out)
-  # cc_courses_db:
-  #   container_name: cc_courses_db
-  #   image: mysql:8.0
-  #   ports:
-  #     - "3307:3306"
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD=password
-  #     - MYSQL_DATABASE=courseClash
-  #   volumes:
-  #     - courses_mysql_data:/var/lib/mysql
-  #     - ./mysql_courses:/docker-entrypoint-initdb.d
-  #   networks:
-  #     - courseclash-network
-  #   command: --default-authentication-plugin=mysql_native_password
-  # fs_rp:
-  #   build: ./courseclash-ReverseProxy
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - ./courseclash-ReverseProxy/nginx.conf:/etc/nginx/nginx.conf:ro
-  #   depends_on:
-  #     - cc_fe_web_2
-  #     - cc_fe_web_3
-  #     - cc_fe_web
-  #   restart: unless-stopped
-
 volumes:
   auth_mysql_data:
   activities_mysql_data:
@@ -507,9 +410,6 @@ volumes:
   rabbitmq_data:
   redis_data:
 
-# networks:
-#   courseclash-network:
-#     driver: bridge
 networks:
   public_network:
     driver: bridge
