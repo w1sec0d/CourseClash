@@ -28,7 +28,7 @@ type FilterType = 'all' | 'tasks' | 'quizzes' | 'pending' | 'submitted' | 'grade
 type SortType = 'dueDate' | 'title' | 'type' | 'status';
 
 const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
-  const { activities, loading: activitiesLoading, error: activitiesError } = useActivitiesApollo(courseId);
+  const { activities, loading: activitiesLoading, error: activitiesError, refetch } = useActivitiesApollo(courseId);
   const { user } = useAuthApollo();
   
   // Estados para filtros y búsqueda
@@ -529,7 +529,9 @@ const TareasTab: React.FC<TareasTabProps> = ({ courseId }) => {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           courseId={courseId}
-          onActivityCreated={() => {
+          onActivityCreated={async () => {
+            // Refrescar la lista de actividades para mostrar la nueva actividad
+            await refetch();
             setIsCreateModalOpen(false);
           }}
         />

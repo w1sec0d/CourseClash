@@ -10,29 +10,35 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   XCircleIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import ActivityStatsCard from './ActivityStatsCard';
 import QuickFilters from './QuickFilters';
-import { Activity } from '@/lib/activities-hooks-apollo';
+import { useActivitiesApollo } from '@/lib/activities-hooks-apollo';
+import { useAuthApollo } from '@/lib/auth-context-apollo';
+import CreateActivityModal from '../../CreateActivityModal';
 
 interface EnhancedActivitiesTabProps {
-  activities: Activity[];
-  loading?: boolean;
-  error?: string;
+  courseId: string;
 }
 
 type SortOption = 'dueDate' | 'createdAt' | 'title' | 'type';
 type FilterOption = 'all' | 'TASK' | 'QUIZ' | 'ANNOUNCEMENT' | 'upcoming' | 'overdue';
 
-const EnhancedActivitiesTab: React.FC<EnhancedActivitiesTabProps> = ({ 
-  activities = [], 
-  loading = false, 
-  error = null 
-}) => {
+const EnhancedActivitiesTab: React.FC<EnhancedActivitiesTabProps> = ({ courseId }) => {
+  // Usar el hook para obtener actividades
+  const { activities, loading, error, refetch } = useActivitiesApollo(courseId);
+  const { user } = useAuthApollo();
+  
+  // Estados para filtros, búsqueda y modal
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<FilterOption>('all');
   const [sortBy, setSortBy] = useState<SortOption>('dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
+  // Verificar si el usuario es profesor o admin
+  const isTeacherOrAdmin = user?.role === 'TEACHER' || user?.role === 'ADMIN';
 
   // Filtrar y ordenar actividades
   const filteredAndSortedActivities = useMemo(() => {
@@ -362,6 +368,32 @@ const EnhancedActivitiesTab: React.FC<EnhancedActivitiesTabProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Botón flotante para crear actividad - Solo para profesores/administradores */}
+      {isTeacherOrAdmin && (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsCreateModalOpen(true)}
+          className="fixed bottom-8 right-8 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg transition-colors z-10"
+        >
+          <PlusIcon className="w-6 h-6" />
+        </motion.button>
+      )}
+
+      {/* Modal de creación de actividad */}
+      {isCreateModalOpen && (
+        <CreateActivityModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          courseId={courseId}
+          onActivityCreated={async () => {
+            // Refrescar la lista de actividades para mostrar la nueva actividad
+            await refetch();
+            setIsCreateModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };

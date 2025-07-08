@@ -6,7 +6,7 @@ import logging
 import os
 
 from app.database import engine, create_tables
-from app.routers import activities, submissions, files
+from app.routers import activities, submissions, files, optimized_activities
 from app.middleware.auth import AuthMiddleware
 
 # Configure logging
@@ -42,6 +42,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(activities.router, prefix="/api/activities", tags=["Activities"])
+app.include_router(optimized_activities.router, prefix="/api/v2/activities", tags=["Optimized Activities"])
 app.include_router(submissions.router, prefix="/api/submissions", tags=["Submissions"])
 app.include_router(files.router, prefix="/api/files", tags=["Files"])
 
