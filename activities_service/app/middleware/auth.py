@@ -1,9 +1,10 @@
-from fastapi import Request, HTTPException, status
+from fastapi import Request, HTTPException, status, Header
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import jwt
 import os
 import logging
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -96,19 +97,41 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
 def get_current_user(request: Request):
     """
-    Obtiene la información del usuario actual desde el estado de la petición
+    Obtiene la información del usuario actual desde el estado de la petición o headers del API Gateway
     """
+    # Primero intentar obtener desde el estado (middleware JWT)
+    user_id = getattr(request.state, "user_id", None)
+    user_role = getattr(request.state, "user_role", None)
+    user_email = getattr(request.state, "user_email", None)
+    
+    # Si no está en el estado, obtener desde headers del API Gateway
+    if not user_id:
+        user_id = request.headers.get("User_id")
+        # Asumir rol de teacher si viene del API Gateway (ya validado)
+        user_role = "teacher"
+        user_email = request.headers.get("User_email")
+    
     return {
-        "user_id": getattr(request.state, "user_id", None),
-        "role": getattr(request.state, "user_role", "student"),
-        "email": getattr(request.state, "user_email", None)
+        "user_id": user_id,
+        "role": user_role or "student",
+        "email": user_email
     }
 
 def require_teacher_or_admin(request: Request):
     """
     Verifica que el usuario tenga rol de profesor o administrador
     """
-    user_role = getattr(request.state, "user_role", "student")
+    # Obtener información del usuario
+    current_user = get_current_user(request)
+    user_role = current_user.get("role", "student")
+    user_id = current_user.get("user_id")
+    
+    # Si viene del API Gateway (tiene User_id header), asumir que ya está autorizado
+    if request.headers.get("User_id") and user_id:
+        logger.info(f"Usuario autorizado via API Gateway: {user_id}")
+        return
+    
+    # Si no, verificar roles tradicionales
     if user_role not in ["teacher", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

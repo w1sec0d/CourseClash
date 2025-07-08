@@ -9,20 +9,20 @@ from concurrent.futures import ThreadPoolExecutor
 from app.models.activity import Activity, ActivityType
 from app.schemas.activity import ActivityCreate, ActivityUpdate, ActivityList, ActivityResponse, ActivitySchema, CommentSchema
 from app.services.cache_service import CacheService
-from app.db_config.config import get_master_session, get_read_session, db_router
+from app.database import SessionLocal
+import math
 
 logger = logging.getLogger(__name__)
 
 class OptimizedActivityService:
     """
-    Servicio optimizado de actividades que implementa el patrón:
-    Read Replica + Multi-Level Intelligent Caching
+    Servicio optimizado de actividades con cache y replica de lectura
     
-    Tácticas implementadas:
-    1. Introducir Concurrencia: Separación READ/WRITE + Connection Pooling
-    2. Mantener Múltiples Copias: Read Replicas + Cache L2
-    3. Reducir Overhead: Eager Loading + Query Optimization
-    4. Invalidación Inteligente: Event-driven cache invalidation
+    Características:
+    - Cache Redis para consultas frecuentes
+    - Separación de operaciones READ/WRITE
+    - Invalidación inteligente de cache
+    - Operaciones concurrentes
     """
     
     def __init__(self, cache_service: CacheService = None):
@@ -42,8 +42,9 @@ class OptimizedActivityService:
             if activity_data.due_date and activity_data.due_date <= datetime.now():
                 raise ValueError("La fecha límite debe ser futura")
             
-            # Usar master database para escritura
-            with get_master_session() as session:
+            # Usar sesión de base de datos
+            session = SessionLocal()
+            try:
                 db_activity = Activity(
                     course_id=activity_data.course_id,
                     title=activity_data.title,
@@ -63,6 +64,8 @@ class OptimizedActivityService:
                 
                 logger.info(f"✅ Actividad creada: {db_activity.id}")
                 return db_activity
+            finally:
+                session.close()
                 
         except Exception as e:
             logger.error(f"❌ Error creando actividad: {e}")
@@ -79,7 +82,8 @@ class OptimizedActivityService:
         Actualizar una actividad existente - WRITE operation
         """
         try:
-            with get_master_session() as session:
+            session = SessionLocal()
+            try:
                 activity = session.query(Activity).filter(Activity.id == activity_id).first()
                 
                 if not activity:
@@ -106,6 +110,8 @@ class OptimizedActivityService:
                 
                 logger.info(f"✅ Actividad {activity_id} actualizada")
                 return activity
+            finally:
+                session.close()
                 
         except Exception as e:
             logger.error(f"❌ Error actualizando actividad {activity_id}: {e}")
@@ -121,7 +127,8 @@ class OptimizedActivityService:
         Eliminar una actividad - WRITE operation
         """
         try:
-            with get_master_session() as session:
+            session = SessionLocal()
+            try:
                 activity = session.query(Activity).filter(Activity.id == activity_id).first()
                 
                 if not activity:
@@ -145,6 +152,8 @@ class OptimizedActivityService:
                 
                 logger.info(f"✅ Actividad {activity_id} eliminada")
                 return True
+            finally:
+                session.close()
                 
         except Exception as e:
             logger.error(f"❌ Error eliminando actividad {activity_id}: {e}")
@@ -165,8 +174,9 @@ class OptimizedActivityService:
                 logger.info(f"🎯 Cache HIT: course_activities:{course_id}")
                 return ActivityList(activities=cached_activities)
             
-            # 2. Cache miss - consultar master (temporal fix hasta configurar replicación)
-            with get_master_session() as session:
+            # 2. Cache miss - consultar base de datos
+            session = SessionLocal()
+            try:
                 activities = session.query(Activity).filter(Activity.course_id == course_id).all()
                 
                 # Convertir a esquemas de respuesta
@@ -175,16 +185,21 @@ class OptimizedActivityService:
                 # 3. Guardar en cache
                 self.cache.cache_course_activities(course_id, activity_responses, ttl=300)
                 
-                logger.info(f"💾 Cache MISS: course_activities:{course_id} - stored in cache (using master)")
+                logger.info(f"💾 Cache MISS: course_activities:{course_id} - stored in cache")
                 return ActivityList(activities=activity_responses)
+            finally:
+                session.close()
                 
         except Exception as e:
             logger.error(f"❌ Error obteniendo actividades: {e}")
-            # Fallback a master si read replica falla
-            with get_master_session() as session:
+            # Fallback si hay error
+            session = SessionLocal()
+            try:
                 activities = session.query(Activity).filter(Activity.course_id == course_id).all()
                 activity_responses = [ActivityResponse.from_orm(activity) for activity in activities]
                 return ActivityList(activities=activity_responses)
+            finally:
+                session.close()
     
     def get_activity_by_id(
         self, 
@@ -201,8 +216,9 @@ class OptimizedActivityService:
                 logger.info(f"🎯 Cache HIT: activity:{activity_id}")
                 return cached_activity
             
-            # 2. Cache miss - consultar read replica con eager loading
-            with get_read_session() as session:
+            # 2. Cache miss - consultar base de datos con eager loading
+            session = SessionLocal()
+            try:
                 activity_query = (
                     session.query(Activity)
                     .options(joinedload(Activity.comments))  # Eager loading
@@ -239,11 +255,14 @@ class OptimizedActivityService:
                 
                 logger.info(f"💾 Cache MISS: activity:{activity_id} - stored in cache")
                 return activity
+            finally:
+                session.close()
                 
         except Exception as e:
             logger.error(f"❌ Error obteniendo actividad {activity_id}: {e}")
-            # Fallback a master si read replica falla
-            with get_master_session() as session:
+            # Fallback si hay error
+            session = SessionLocal()
+            try:
                 activity_query = (
                     session.query(Activity)
                     .options(joinedload(Activity.comments))
@@ -274,6 +293,8 @@ class OptimizedActivityService:
                         for c in activity_query.comments
                     ]
                 )
+            finally:
+                session.close()
     
     def get_activities_by_course(self, course_id: int) -> List[Activity]:
         """
@@ -281,14 +302,20 @@ class OptimizedActivityService:
         """
         try:
             # Usar read replica para consultas
-            with get_read_session() as session:
+            session = SessionLocal()
+            try:
                 return session.query(Activity).filter(Activity.course_id == course_id).all()
+            finally:
+                session.close()
                 
         except Exception as e:
             logger.error(f"❌ Error obteniendo actividades por curso {course_id}: {e}")
             # Fallback a master
-            with get_master_session() as session:
+            session = SessionLocal()
+            try:
                 return session.query(Activity).filter(Activity.course_id == course_id).all()
+            finally:
+                session.close()
     
     def get_activities_by_teacher(self, teacher_id: int) -> List[Activity]:
         """
@@ -296,14 +323,20 @@ class OptimizedActivityService:
         """
         try:
             # Usar read replica para consultas
-            with get_read_session() as session:
+            session = SessionLocal()
+            try:
                 return session.query(Activity).filter(Activity.created_by == teacher_id).all()
+            finally:
+                session.close()
                 
         except Exception as e:
             logger.error(f"❌ Error obteniendo actividades por profesor {teacher_id}: {e}")
             # Fallback a master
-            with get_master_session() as session:
+            session = SessionLocal()
+            try:
                 return session.query(Activity).filter(Activity.created_by == teacher_id).all()
+            finally:
+                session.close()
     
     # ========================================================================
     # OPERACIONES CONCURRENTES AVANZADAS

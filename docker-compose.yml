@@ -368,7 +368,6 @@ services:
       - activities_mysql_data:/var/lib/mysql
       - ./mysql_activities:/docker-entrypoint-initdb.d
     networks:
-      - courseclash-network
       - private_network
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
@@ -395,7 +394,7 @@ services:
     volumes:
       - activities_mysql_read_data:/var/lib/mysql
     networks:
-      - courseclash-network
+      - private_network
     depends_on:
       cc_activities_db:
         condition: service_healthy
