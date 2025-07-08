@@ -371,22 +371,12 @@ services:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=activities_db
       - MYSQL_AUTHENTICATION_PLUGIN=mysql_native_password
+      - MYSQL_EXTRA_FLAGS=--default-authentication-plugin=mysql_native_password --max_connections=200 --innodb_buffer_pool_size=256M --innodb_log_file_size=64M --innodb_flush_log_at_trx_commit=2 --thread_cache_size=16 --table_open_cache=2000 --tmp_table_size=64M --max_heap_table_size=64M
     volumes:
       - activities_mysql_data:/var/lib/mysql
       - ./mysql_activities:/docker-entrypoint-initdb.d
     networks:
       - private_network
-    command: >
-      --default-authentication-plugin=mysql_native_password
-      --max_connections=200
-      --innodb_buffer_pool_size=256M
-      --innodb_log_file_size=64M
-      --innodb_flush_log_at_trx_commit=2
-      --thread_cache_size=16
-      --table_open_cache=2000
-      --tmp_table_size=64M
-      --max_heap_table_size=64M
-
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
       interval: 10s
@@ -423,7 +413,7 @@ services:
       retries: 5
       start_period: 60s
 
-  # # Read Replica for Auth Database  
+  # # Read Replica for Auth Database
   # cc_authcourses_db_read:
   #   container_name: cc_authcourses_db_read
   #   image: mysql:8.0
