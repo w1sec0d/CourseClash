@@ -26,6 +26,14 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
   const { updateActivity, loading, error } = useUpdateActivityApollo();
 
+  // Helper function to get current datetime in the correct format for datetime-local input
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    // Adjust for timezone offset to get local time
+    const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+    return localDate.toISOString().slice(0, 16);
+  };
+
   // Inicializar formulario con datos de la actividad
   useEffect(() => {
     if (activity) {
@@ -74,7 +82,10 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+    >
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -150,8 +161,13 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
               name="dueDate"
               value={formData.dueDate}
               onChange={handleChange}
+              min={getCurrentDateTime()}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              title="La fecha de vencimiento debe ser en el futuro"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Solo puedes seleccionar fechas futuras (deja vacío para mantener la fecha actual)
+            </p>
           </div>
 
           {/* URL de Archivo */}

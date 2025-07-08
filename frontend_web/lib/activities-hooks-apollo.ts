@@ -292,7 +292,53 @@ export function useActivityApollo(activityId: string) {
 
 // Hook para crear una actividad
 export function useCreateActivityApollo() {
-  const [createActivityMutation, { loading, error }] = useMutation(CREATE_ACTIVITY_MUTATION);
+  const [createActivityMutation, { loading, error }] = useMutation(CREATE_ACTIVITY_MUTATION, {
+    // Refrescar queries relacionadas después de la creación
+    refetchQueries: (result) => {
+      // Solo refetch si la creación fue exitosa
+      if (result.data?.createActivity?.__typename === 'ActivitySuccess') {
+        const newActivity = result.data.createActivity.activity;
+        return [{
+          query: GET_ACTIVITIES_QUERY,
+          variables: { idCourse: newActivity.courseId.toString() }
+        }];
+      }
+      return [];
+    },
+    // Actualizar cache de forma optimista
+    update: (cache, { data }) => {
+      if (data?.createActivity?.__typename === 'ActivitySuccess') {
+        const newActivity = data.createActivity.activity;
+        
+        // Intentar actualizar la lista de actividades en cache
+        try {
+          // Leer la query existente del cache
+          const existingData = cache.readQuery({
+            query: GET_ACTIVITIES_QUERY,
+            variables: { idCourse: newActivity.courseId.toString() }
+          }) as { activities?: { __typename: string; activities?: Activity[] } } | null;
+
+          if (existingData?.activities?.__typename === 'ActivitiesSuccess' && existingData.activities.activities) {
+            // Escribir la query actualizada con la nueva actividad
+            cache.writeQuery({
+              query: GET_ACTIVITIES_QUERY,
+              variables: { idCourse: newActivity.courseId.toString() },
+              data: {
+                activities: {
+                  __typename: 'ActivitiesSuccess',
+                  activities: [newActivity, ...existingData.activities.activities]
+                }
+              }
+            });
+            console.log('✅ Cache actualizado con nueva actividad:', newActivity.title);
+          }
+        } catch (cacheError) {
+          // Si no puede actualizar el cache, no es crítico - refetchQueries se encargará
+          console.warn('No se pudo actualizar el cache de actividades, pero se hará refetch:', cacheError);
+        }
+      }
+    }
+  });
 
   const createActivity = async (activityData: {
     courseId: number;
