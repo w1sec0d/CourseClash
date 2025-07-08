@@ -1,6 +1,6 @@
 services:
   # =========================================================================
-  # NGINX Reverse Proxy
+  # T1 INFRASTRUCTURE LAYER
   # =========================================================================
   cc_rp:
     container_name: cc_rp
@@ -12,7 +12,7 @@ services:
       - '443:443' # HTTPS (Canal Seguro principal)
     depends_on:
       - cc_fe_web
-      - cc_ag
+      - cc_lb
     networks:
       - public_network
     environment:
@@ -29,8 +29,23 @@ services:
       retries: 3
       start_period: 15s
 
+  cc_lb:
+    build:
+      context: ./load_balancer_ag
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./load_balancer_ag/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - cc_ag_1
+      - cc_ag_2
+      - cc_ag_3
+    networks:
+      - private_network
+      - public_network
+
   # =========================================================================
-  # T1 PRESENTATION LAYER
+  # T2 PRESENTATION LAYER
   # =========================================================================
 
   cc_fe_web:
@@ -43,7 +58,7 @@ services:
       - NEXT_PUBLIC_API_URL=https://localhost/api
       - NEXT_PUBLIC_API_GATEWAY_URL=https://localhost
     depends_on:
-      - cc_ag
+      - cc_lb
     networks:
       - public_network
 
@@ -59,23 +74,8 @@ services:
       start_period: 60s
 
   # =========================================================================
-  # T2 COMMUNICATION LAYER
+  # T3 COMMUNICATION LAYER
   # =========================================================================
-
-  cc_ag:
-    build:
-      context: ./load_balancer_ag
-    ports:
-      - '8080:8080'
-    volumes:
-      - ./load_balancer_ag/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - cc_ag_1
-      - cc_ag_2
-      - cc_ag_3
-    networks:
-      - private_network
-      - public_network
 
   cc_ag_1:
     container_name: cc_ag_1
@@ -219,7 +219,7 @@ services:
     restart: 'no'
 
   # =========================================================================
-  # T3 LOGIC LAYER
+  # T4 LOGIC LAYER
   # =========================================================================
 
   cc_auth_ms:
@@ -328,7 +328,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload
 
   # =========================================================================
-  # T4 DATA LAYER
+  # T5 DATA LAYER
   # =========================================================================
 
   cc_authcourses_db:
@@ -344,7 +344,14 @@ services:
       - ./mysql_auth:/docker-entrypoint-initdb.d
     networks:
       - private_network
-    command: --default-authentication-plugin=mysql_native_password
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --max_connections=1000
+      --innodb_buffer_pool_size=1G
+      --max_heap_table_size=256M
+      --tmp_table_size=256M
+      --thread_cache_size=100
+      --table_open_cache=4000
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
       interval: 10s
@@ -369,6 +376,17 @@ services:
       - ./mysql_activities:/docker-entrypoint-initdb.d
     networks:
       - private_network
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --max_connections=200
+      --innodb_buffer_pool_size=256M
+      --innodb_log_file_size=64M
+      --innodb_flush_log_at_trx_commit=2
+      --thread_cache_size=16
+      --table_open_cache=2000
+      --tmp_table_size=64M
+      --max_heap_table_size=64M
+
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-uroot', '-ppassword']
       interval: 10s
@@ -485,17 +503,6 @@ services:
   #   networks:
   #     - courseclash-network
   #   command: --default-authentication-plugin=mysql_native_password
-  # fs_rp:
-  #   build: ./courseclash-ReverseProxy
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - ./courseclash-ReverseProxy/nginx.conf:/etc/nginx/nginx.conf:ro
-  #   depends_on:
-  #     - cc_fe_web_2
-  #     - cc_fe_web_3
-  #     - cc_fe_web
-  #   restart: unless-stopped
 
 volumes:
   auth_mysql_data:
@@ -506,9 +513,6 @@ volumes:
   rabbitmq_data:
   redis_data:
 
-# networks:
-#   courseclash-network:
-#     driver: bridge
 networks:
   public_network:
     driver: bridge

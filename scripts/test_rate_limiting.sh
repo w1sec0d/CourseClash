@@ -91,7 +91,7 @@ test_normal "https://localhost/api/" "API Gateway" 10
 test_normal "https://localhost/" "Frontend" 15
 
 # Pruebas extremas
-test_extreme "https://localhost/api/" "API Gateway - Saturacion Total" 20
+test_extreme "https://localhost/api/" "API Gateway - Saturacion Total" 100
 test_extreme "https://localhost/" "Frontend - Saturacion Total" 30
 
 echo "PRUEBAS COMPLETADAS"

@@ -1,0 +1,4 @@
+Label,# Samples,Average,Min,Max,Std. Dev.,Error %,Throughput,Received KB/sec,Sent KB/sec,Avg. Bytes
+1. GraphQL Login,5,533,516,555,12.83,0.000%,3.69276,3.27,1.99,907.0
+2. GraphQL Me Query,5,82,72,91,6.48,0.000%,5.62430,2.28,2.70,415.0
+TOTAL,10,307,72,555,226.13,0.000%,7.00771,4.52,3.57,661.0
