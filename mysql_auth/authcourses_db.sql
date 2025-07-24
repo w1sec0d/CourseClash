@@ -1,7 +1,7 @@
 -- Crear la base de datos si no existe
--- CREATE DATABASE IF NOT EXISTS authcourses_db;
+CREATE DATABASE IF NOT EXISTS authcourses_db;
 -- Usar la base de datos recién creada
--- USE authcourses_db;
+USE authcourses_db;
 
 -- Crear la tabla "users"
 CREATE TABLE IF NOT EXISTS users (
