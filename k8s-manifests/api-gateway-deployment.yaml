@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway-deployment
+  labels:
+    app: api-gateway
+spec:
+  replicas: 3 # Equivalente a cc_ag_1, cc_ag_2, cc_ag_3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0  # No crear pods extra durante el update
+      maxUnavailable: 1  # Solo un pod puede estar no disponible a la vez
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - api-gateway
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: api-gateway
+          image: gcr.io/ambient-climate-466502-h1/courseclash-api-gateway:latest
+          ports:
+            - containerPort: 8091
+          envFrom:
+            - configMapRef:
+                name: api-gateway-config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8091
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8091
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          command:
+            ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8091"]

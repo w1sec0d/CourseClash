@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+data:
+  # URLs de tus servicios en Cloud Run (reemplaza con las URLs reales de tus servicios desplegados)
+  AUTH_SERVICE_URL: "https://courseclash-auth-433766410684.us-central1.run.app"
+  COURSE_SERVICE_URL: "http://cc_courses_ms:8001"
+  DUEL_SERVICE_URL: "http://cc_duels_ms:8002"
+  ACTIVITIES_SERVICE_URL: "https://cc-activities-ms-433766410684.us-central1.run.app"
+  WEBSOCKET_SERVICE_URL: "http://cc_websocket_manager:8004"
+  JWT_SECRET: "your_jwt_secret_key"
