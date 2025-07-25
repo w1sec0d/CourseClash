@@ -1,37 +1,23 @@
 # =========================================================================
-# DOCKERFILE PARA REVERSE PROXY CON CANAL SEGURO AUTOMÁTICO
+# DOCKERFILE PARA REVERSE PROXY EN GOOGLE CLOUD RUN
 # =========================================================================
 
 FROM nginx:alpine
 
-# Instalar OpenSSL para generar certificados
-RUN apk add --no-cache openssl
+# Instalar certificados CA para verificación SSL
+RUN apk add --no-cache ca-certificates && update-ca-certificates
 
-# Crear directorio para SSL
-RUN mkdir -p /etc/nginx/ssl
-
-# Copiar configuración SSL
-COPY ssl/ssl.conf /etc/nginx/ssl/ssl.conf
-
-# Copiar script de generación SSL
-COPY scripts/generate_ssl.sh /usr/local/bin/generate_ssl.sh
-RUN chmod +x /usr/local/bin/generate_ssl.sh
-
-# Copiar script de inicio
-COPY scripts/docker_entrypoint.sh /usr/local/bin/docker_entrypoint.sh
-RUN chmod +x /usr/local/bin/docker_entrypoint.sh
-
-# Copiar configuración NGINX
+# Copiar configuración NGINX para Cloud Run
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Generar certificados SSL durante el build
-RUN cd /etc/nginx/ssl && /usr/local/bin/generate_ssl.sh
+# Crear directorios necesarios
+RUN mkdir -p /var/cache/nginx /var/run/nginx
 
-# Establecer el script de inicio personalizado
-ENTRYPOINT ["/usr/local/bin/docker_entrypoint.sh"]
+# Verificar configuración de nginx
+RUN nginx -t
 
-# Exponer puertos
-EXPOSE 80 443
+# Exponer puerto 8080 (requerido por Cloud Run)
+EXPOSE 8080
 
-# Comando por defecto
+# Comando por defecto (ejecutar como root para Cloud Run)
 CMD ["nginx", "-g", "daemon off;"] 
