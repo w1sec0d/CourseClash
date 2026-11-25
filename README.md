@@ -1,6 +1,6 @@
 # CourseClash - Gamified Learning Platform
 
-**CourseClash** is an educational project designed to learn and practice system architecture concepts. It's a gamified learning platform that motivates students through interactive elements such as achievements, rankings, and profile personalization.
+**CourseClash** is a gamified learning platform that levels up the current virtual classroom experience. It motivates students through interactive elements such as realtime educational games, ranking system and many more gamified features.
 
 ## About This Project
 
