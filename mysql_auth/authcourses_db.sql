@@ -19,5 +19,5 @@ CREATE TABLE IF NOT EXISTS users (
 ); 
 
 INSERT INTO users (username, email, hashed_password, full_name, is_active, is_superuser) 
-VALUES ('profesor', 'profesor@gmail.com', '$2b$12$ZMvtGFcPHaAOw505skhUXOVZnNDYkgaaquM8HC8t4Ga7vkxL4z5Be', 'Teacher', TRUE, TRUE),
-('estudiante', 'estudiante@gmail.com', '$2b$12$ZMvtGFcPHaAOw505skhUXOVZnNDYkgaaquM8HC8t4Ga7vkxL4z5Be', 'Student', TRUE, FALSE);
+VALUES ('profesor', 'profesor@example.com', '$2b$12$ZMvtGFcPHaAOw505skhUXOVZnNDYkgaaquM8HC8t4Ga7vkxL4z5Be', 'Teacher', TRUE, TRUE),
+('estudiante', 'estudiante@example.com', '$2b$12$ZMvtGFcPHaAOw505skhUXOVZnNDYkgaaquM8HC8t4Ga7vkxL4z5Be', 'Student', TRUE, FALSE);

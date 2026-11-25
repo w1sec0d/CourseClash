@@ -2,7 +2,7 @@
   "name": "frontend-cli",
   "description": "Cliente CLI para el sistema CourseClash",
   "version": "0.0.0",
-  "author": "Carlos Ramírez",
+  "author": "CourseClash Contributors",
   "bin": {
     "frontend-cli": "./bin/run.js"
   },

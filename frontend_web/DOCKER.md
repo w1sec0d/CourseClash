@@ -16,7 +16,7 @@ To build and run the entire CourseClash application including the frontend:
 
 ```bash
 # Navigate to the root directory of CourseClash
-cd /home/carlos/dev/CourseClash
+cd ~/dev/CourseClash
 
 # Build and start all services
 docker-compose up -d
@@ -36,7 +36,7 @@ If you need to build just the frontend container:
 
 ```bash
 # Navigate to the root directory
-cd /home/carlos/dev/CourseClash
+cd ~/dev/CourseClash
 
 # Build only the frontend service
 docker-compose build frontend

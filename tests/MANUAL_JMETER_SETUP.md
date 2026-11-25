@@ -30,7 +30,7 @@ Si tienes problemas al cargar archivos `.jmx`, es mejor crear el test plan manua
 | SERVER   | localhost            |
 | PORT     | 443                  |
 | PROTOCOL | https                |
-| EMAIL    | estudiante@gmail.com |
+| EMAIL    | estudiante@example.com |
 | PASSWORD | password123          |
 
 ### 4. Agregar Cookie Manager
@@ -132,7 +132,7 @@ Si tienes problemas al cargar archivos `.jmx`, es mejor crear el test plan manua
    - **Name**: `Verify Me Query Success`
    - **Response Field**: `Response Data`
    - **Pattern Matching Rules**: `Contains`
-   - **Patterns to Test**: `estudiante@gmail.com`
+   - **Patterns to Test**: `estudiante@example.com`
 
 ### 12. Listeners para Ver Resultados
 
@@ -178,7 +178,7 @@ CourseClash Login Test
       "user": {
         "id": "3",
         "username": "estudiante",
-        "email": "estudiante@gmail.com"
+        "email": "estudiante@example.com"
       },
       "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
     }
@@ -194,7 +194,7 @@ CourseClash Login Test
     "me": {
       "id": "3",
       "username": "estudiante",
-      "email": "estudiante@gmail.com",
+      "email": "estudiante@example.com",
       "fullName": "Estudiante Ejemplo",
       "role": "STUDENT"
     }

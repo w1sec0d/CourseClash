@@ -115,7 +115,7 @@
           <hashTree/>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Verify Me Query Success" enabled="true">
             <collectionProp name="Asserion.test_strings">
-              <stringProp name="-1285554877">estudiante@gmail.com</stringProp>
+              <stringProp name="-1285554877">estudiante@example.com</stringProp>
             </collectionProp>
             <stringProp name="Assertion.custom_message"></stringProp>
             <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
@@ -279,7 +279,7 @@
           </elementProp>
           <elementProp name="EMAIL" elementType="Argument">
             <stringProp name="Argument.name">EMAIL</stringProp>
-            <stringProp name="Argument.value">estudiante@gmail.com</stringProp>
+            <stringProp name="Argument.value">estudiante@example.com</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="PASSWORD" elementType="Argument">

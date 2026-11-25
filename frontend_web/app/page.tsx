@@ -1102,7 +1102,7 @@ export default function Page() {
                   </div>
                   <div className='ml-3 text-gray-700'>
                     <p className='text-lg font-medium'>Email</p>
-                    <p>cramirezmun@unal.edu.co</p>
+                    <p>contacto@example.com</p>
                   </div>
                 </div>
                 <div className='items-start flex'>
@@ -1126,7 +1126,7 @@ export default function Page() {
                   </div>
                   <div className='ml-3 text-gray-700'>
                     <p className='text-lg font-medium'>Teléfono</p>
-                    <p>+57 300 214 67 46</p>
+                    <p>+00 000 000 00 00</p>
                   </div>
                 </div>
               </div>

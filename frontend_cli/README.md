@@ -263,7 +263,7 @@ Si encuentras algún problema, por favor crea un issue en: [GitHub Issues](https
 
 ## 📞 Soporte
 
-- **Autor**: Carlos Ramírez
+- **Autor**: CourseClash Contributors
 - **Proyecto**: [CourseClash](https://github.com/w1sec0d/CourseClash)
 - **Issues**: [GitHub Issues](https://github.com/w1sec0d/CourseClash/issues)
 

@@ -62,7 +62,7 @@ mock_users = [
     {
         "id": 1,
         "username": "admin",
-        "email": "admin@gmail.com",
+        "email": "admin@example.com",
         "password": bcrypt.hashpw(
             "password123".encode("utf-8"), bcrypt.gensalt()
         ).decode(
@@ -76,7 +76,7 @@ mock_users = [
     {
         "id": 2,
         "username": "profesor",
-        "email": "profesor@gmail.com",
+        "email": "profesor@example.com",
         "password": bcrypt.hashpw(
             "password123".encode("utf-8"), bcrypt.gensalt()
         ).decode(
@@ -90,7 +90,7 @@ mock_users = [
     {
         "id": 3,
         "username": "estudiante",
-        "email": "estudiante@gmail.com",
+        "email": "estudiante@example.com",
         "password": bcrypt.hashpw(
             "password123".encode("utf-8"), bcrypt.gensalt()
         ).decode(
@@ -104,7 +104,7 @@ mock_users = [
     {
         "id": 4,
         "username": "estudiante2",
-        "email": "cadavid4003@gmail.com",
+        "email": "estudiante2@example.com",
         "password": bcrypt.hashpw(
             "password123".encode("utf-8"), bcrypt.gensalt()
         ).decode(

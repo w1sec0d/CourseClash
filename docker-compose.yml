@@ -232,9 +232,9 @@ services:
       - DATABASE_URL=mysql+pymysql://root:password@cc_authcourses_db:3306/authcourses_db
       - SECRET=Arquisoft
       - ALGORITM=HS256
-      - MAIL_USERNAME=courseclasheducation@gmail.com
-      - MAIL_PASSWORD=omhdrobuncjwjmoh
-      - MAIL_FROM=courseclasheducation@gmail.com
+      - MAIL_USERNAME=no-reply@example.com
+      - MAIL_PASSWORD=CHANGE_ME_APP_PASSWORD
+      - MAIL_FROM=no-reply@example.com
       - MAIL_PORT=587
       - MAIL_SERVER=smtp.gmail.com
     volumes:
